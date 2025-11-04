@@ -1,0 +1,26 @@
+{
+	"name": "touch-slide-docs",
+	"version": "0.0.27",
+	"description": "Documentation and demo site for touch-slide.",
+	"private": true,
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:e2e:headed": "playwright test --headed",
+		"test:e2e:ci": "playwright test --reporter=list"
+	},
+	"author": "Lucio D'Alessandro",
+	"license": "MIT",
+	"dependencies": {
+		"@luciodale/touch-slide": "workspace:*"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.53.1",
+		"@types/node": "^24.0.0",
+		"@vitejs/plugin-react": "^4.3.1",
+		"vite": "^5.3.1"
+	}
+}

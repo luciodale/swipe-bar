@@ -1,0 +1,20 @@
+{
+	"name": "@luciodale/touch-slide",
+	"version": "0.0.1",
+	"author": "Lucio D'Alessandro",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/luciodale/touch-slide"
+	},
+	"main": "dist/touch-slide.umd.js",
+	"module": "dist/touch-slide.es.js",
+	"peerDependencies": {
+		"react": ">=16 || >=17 || >= 18 || >= 19",
+		"react-dom": ">=16 || >=17 || >= 18 || >=19"
+	},
+	"description": "Sliding panels like in a native app, built with React.",
+	"files": ["dist", "README.md"],
+	"keywords": ["react", "sliding", "panels", "sliding panels", "native", "app"],
+	"license": "MIT",
+	"types": "dist/index.d.ts"
+}
