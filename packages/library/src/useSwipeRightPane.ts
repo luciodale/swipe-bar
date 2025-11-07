@@ -18,38 +18,52 @@ const handleRightDragMove = (
   callbacks: RightPaneCallbacks,
   currentX: number,
   preventDefault: () => void,
-  onActivate: () => void
+  lockPane: () => void
 ) => {
   if (!refs.draggingRef.current) return;
 
-  const deltaX = currentX - refs.draggingRef.current.startX;
+  const viewportWidth = window.innerWidth;
+
+  const swipingDistanceFromInitialDrag =
+    currentX - refs.draggingRef.current.startX;
+
+  const isLegalSwipeDistanceWhenRightIsClosed =
+    refs.draggingRef.current.startX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX;
+
+  const isPaneActiveted = refs.draggingRef.current.isActivated;
 
   if (
-    !refs.draggingRef.current.isActivated &&
-    Math.abs(deltaX) >= ACTIVATION_DELTA_X_PX
+    !isPaneActiveted &&
+    Math.abs(swipingDistanceFromInitialDrag) >= ACTIVATION_DELTA_X_PX
   ) {
     refs.draggingRef.current.isActivated = true;
-    onActivate();
+    lockPane();
   }
 
-  if (!refs.draggingRef.current.isActivated) return;
+  // The legal distance for activating the pane has not been reached yet.
+  if (!isPaneActiveted) return;
 
   refs.prevXRef.current = refs.currentXRef.current;
   refs.currentXRef.current = currentX;
 
   const rightOpen = callbacks.getIsRightOpen();
-  const viewportWidth = window.innerWidth;
 
   let isValidGesture = false;
 
   if (rightOpen) {
     isValidGesture = true;
-  } else if (
-    refs.draggingRef.current.startX >=
-    viewportWidth - EDGE_SWIPE_THRESHOLD_PX
-  ) {
+  } else if (isLegalSwipeDistanceWhenRightIsClosed) {
     isValidGesture = true;
   }
+
+  // defensive case:
+  // The user starts dragging when the right pane is open
+  // (from anywhere on screen), but then during the drag,
+  // the right pane gets programmatically closed by something else.
+  // This is defensive code protecting against:
+  // - Race conditions where the pane state changes during an active drag
+  // - Programmatic pane closes while user is dragging
+  // - External state mutations
 
   if (!isValidGesture) {
     refs.draggingRef.current = null;
@@ -57,29 +71,40 @@ const handleRightDragMove = (
     return;
   }
 
+  // when the gesture is valid, we prevent the default browser behavior
+  // to avoid scrolling the page while dragging the pane.
   preventDefault();
 
+  // Closing the pane
   if (rightOpen) {
-    const translateX = Math.max(0, Math.min(RIGHT_PANE_WIDTH_PX, deltaX));
-    callbacks.onRightDrag?.(translateX);
-    refs.lastTranslateRef.current = translateX;
-  } else if (
-    refs.draggingRef.current.startX >=
-    viewportWidth - EDGE_SWIPE_THRESHOLD_PX
-  ) {
     const translateX = Math.max(
       0,
-      Math.min(RIGHT_PANE_WIDTH_PX, RIGHT_PANE_WIDTH_PX + deltaX)
+      Math.min(
+        RIGHT_PANE_WIDTH_PX,
+        // we subtract the activation delta to avoid a sudden jump when starting to swipe to close the pane.
+        swipingDistanceFromInitialDrag - ACTIVATION_DELTA_X_PX
+      )
+    );
+
+    callbacks.onRightDrag?.(translateX);
+
+    // Opening the pane
+  } else {
+    const translateX = Math.max(
+      0,
+      Math.min(
+        RIGHT_PANE_WIDTH_PX,
+        RIGHT_PANE_WIDTH_PX + swipingDistanceFromInitialDrag
+      )
     );
     callbacks.onRightDrag?.(translateX);
-    refs.lastTranslateRef.current = translateX;
   }
 };
 
 const handleRightDragEnd = (
   refs: DragRefs,
   callbacks: RightPaneCallbacks,
-  onDeactivate: () => void
+  unlockPane: () => void
 ) => {
   if (!refs.draggingRef.current) return;
 
@@ -98,38 +123,45 @@ const handleRightDragEnd = (
 
   const moreThanEdgeSwipeThreshold =
     startX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX;
-  const canOpenRight = moreThanEdgeSwipeThreshold && swipedLeft;
+
+  let shouldUnlock = false;
 
   if (rightOpen) {
     if (swipedRight) {
       callbacks.closeRight();
+      shouldUnlock = true; // Pane closed, unlock
     } else {
       callbacks.openRight();
+      // Pane stays open, keep locked
     }
     callbacks.onRightDrag?.(null);
   } else if (moreThanEdgeSwipeThreshold && swipedLeft) {
     callbacks.openRight();
+    // Pane opened, keep locked
     callbacks.onRightDrag?.(null);
   } else {
+    shouldUnlock = true; // Gesture ended without opening
     callbacks.onRightDrag?.(null);
   }
 
-  const unlockPane =
-    (rightOpen && swipedRight) ||
-    (!canOpenRight && startX <= EDGE_SWIPE_THRESHOLD_PX);
-  if (unlockPane) {
-    onDeactivate();
+  if (shouldUnlock) {
+    unlockPane();
   }
 };
 
-export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
+export function useSwipeRightPane() {
   const isSmallScreen = useMediaQuery("small");
-  const { lockedPane, setLockedPane } = useSwipePaneContext();
-
-  console.log("useSwipeRightPane lockedPane", lockedPane);
+  const {
+    lockedPane,
+    setLockedPane,
+    isRightOpen,
+    openRight,
+    closeRight,
+    setRightDragX,
+    rightDragX,
+  } = useSwipePaneContext();
 
   const draggingRef = useRef<DragState | null>(null);
-  const lastTranslateRef = useRef<number | null>(null);
   const currentXRef = useRef<number | null>(null);
   const prevXRef = useRef<number | null>(null);
 
@@ -137,18 +169,23 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
     if (!isSmallScreen) return;
     if (lockedPane === "left") return;
 
+    const callbacks: RightPaneCallbacks = {
+      getIsRightOpen: () => isRightOpen,
+      openRight,
+      closeRight,
+      onRightDrag: setRightDragX,
+    };
+
     const refs: DragRefs = {
       draggingRef,
-      lastTranslateRef,
       currentXRef,
       prevXRef,
     };
 
-    const onActivate = () => setLockedPane("right");
-    const onDeactivate = () => setLockedPane(null);
+    const lockPane = () => setLockedPane("right");
+    const unlockPane = () => setLockedPane(null);
 
     function onTouchStart(e: TouchEvent) {
-      console.log("onTouchStart");
       if (lockedPane === "left") return;
       if (isEditableTarget(e.target)) return;
       if (e.changedTouches.length === 0) return;
@@ -156,17 +193,6 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
       const firstTouch = e.changedTouches[0];
       const viewportWidth = window.innerWidth;
 
-      console.log(
-        "onTouchStart",
-        "isRightOpen",
-        callbacks.getIsRightOpen(),
-        "clientX",
-        firstTouch.clientX,
-        "viewportWidth - EDGE_SWIPE_THRESHOLD_PX",
-        viewportWidth - EDGE_SWIPE_THRESHOLD_PX,
-        "firstTouch.clientX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX",
-        firstTouch.clientX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX
-      );
       if (
         callbacks.getIsRightOpen() ||
         firstTouch.clientX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX
@@ -182,7 +208,6 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
     }
 
     function onTouchMove(e: TouchEvent) {
-      console.log("onTouchMove");
       if (lockedPane === "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
 
@@ -197,19 +222,16 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
       }
       if (!changedTouch) return;
 
-      console.log("onTouchMove", changedTouch.clientX);
-
       handleRightDragMove(
         refs,
         callbacks,
         changedTouch.clientX,
         () => e.preventDefault(),
-        onActivate
+        lockPane
       );
     }
 
     function onTouchEnd(e: TouchEvent) {
-      console.log("onTouchEnd");
       if (lockedPane === "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
 
@@ -223,32 +245,21 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
       }
       if (!endedTracked) return;
 
-      console.log("onTouchEnd", trackedId, endedTracked);
-      handleRightDragEnd(refs, callbacks, onDeactivate);
+      handleRightDragEnd(refs, callbacks, unlockPane);
     }
 
     function onTouchCancel() {
       if (lockedPane === "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
-      handleDragCancel(refs, callbacks.onRightDrag, onDeactivate);
+      handleDragCancel(refs, callbacks.onRightDrag, unlockPane);
     }
 
     function onMouseDown(e: MouseEvent) {
-      console.log("onMouseDown");
       if (lockedPane === "left") return;
       if (isEditableTarget(e.target)) return;
       if (e.button !== 0) return;
 
       const viewportWidth = window.innerWidth;
-      console.log(
-        "onMouseDown",
-        "clientX",
-        e.clientX,
-        "viewportWidth - EDGE_SWIPE_THRESHOLD_PX",
-        viewportWidth - EDGE_SWIPE_THRESHOLD_PX,
-        "e.clientX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX",
-        e.clientX >= viewportWidth - EDGE_SWIPE_THRESHOLD_PX
-      );
 
       if (
         callbacks.getIsRightOpen() ||
@@ -259,29 +270,23 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
     }
 
     function onMouseMove(e: MouseEvent) {
-      console.log("onMouseMove");
       if (lockedPane === "left") return;
       if (!draggingRef.current || !draggingRef.current.isMouse) return;
-
-      console.log("onMouseMove", e.clientX);
 
       handleRightDragMove(
         refs,
         callbacks,
         e.clientX,
         () => e.preventDefault(),
-        onActivate
+        lockPane
       );
     }
 
     function onMouseUp() {
-      console.log("onMouseUp");
       if (lockedPane === "left") return;
       if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
-      console.log("onMouseUp");
-
-      handleRightDragEnd(refs, callbacks, onDeactivate);
+      handleRightDragEnd(refs, callbacks, unlockPane);
     }
 
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -303,5 +308,22 @@ export const useSwipeRightPane = (callbacks: RightPaneCallbacks) => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isSmallScreen, callbacks, lockedPane, setLockedPane]);
-};
+  }, [
+    isSmallScreen,
+    isRightOpen,
+    openRight,
+    closeRight,
+    setRightDragX,
+    lockedPane,
+    setLockedPane,
+  ]);
+
+  return {
+    isRightOpen,
+    openRight,
+    closeRight,
+    setRightDragX,
+    setLockedPane,
+    rightDragX,
+  };
+}

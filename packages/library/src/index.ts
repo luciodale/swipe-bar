@@ -1,8 +1,6 @@
 export { Overlay } from "./components/Overlay";
-export { Sidebar } from "./components/Sidebar";
+export { SidebarLeft } from "./components/SidebarLeft";
+export { SidebarRight } from "./components/SidebarRight";
 export { Toggle } from "./Toggle";
 export { useMediaQuery } from "./useMediaQuery";
-export { SwipePaneProvider } from "./SwipePaneProvider";
-export { useSwipeLeftPane } from "./useSwipeLeftPane";
-export { useSwipeRightPane } from "./useSwipeRightPane";
-export type { LeftPaneCallbacks, RightPaneCallbacks } from "./swipePaneShared";
+export { SwipePaneProvider, useSwipePaneContext } from "./SwipePaneProvider";

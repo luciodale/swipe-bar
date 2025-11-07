@@ -1,59 +1,12 @@
-import { useMemo, useState } from "react";
-import {
-  Sidebar,
-  Toggle,
-  useSwipeLeftPane,
-  useSwipeRightPane,
-} from "@luciodale/swipe-pane";
+import { SidebarLeft, SidebarRight, Toggle } from "@luciodale/swipe-pane";
 
 export function App() {
-  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(true);
-  const [isRightSidebarCollapsed, setIsRightSidebarCollapsed] = useState(false);
-  const [leftDragX, setLeftDragX] = useState<number | null>(null);
-  const [rightDragX, setRightDragX] = useState<number | null>(null);
-
-  const leftCallbacks = useMemo(
-    () => ({
-      getIsLeftOpen: () => !isLeftSidebarCollapsed,
-      openLeft: () => setIsLeftSidebarCollapsed(false),
-      closeLeft: () => setIsLeftSidebarCollapsed(true),
-      onLeftDrag: (translateX: number | null) => {
-        setLeftDragX(translateX);
-      },
-    }),
-    [isLeftSidebarCollapsed]
-  );
-
-  const rightCallbacks = useMemo(
-    () => ({
-      getIsRightOpen: () => !isRightSidebarCollapsed,
-      openRight: () => setIsRightSidebarCollapsed(false),
-      closeRight: () => setIsRightSidebarCollapsed(true),
-      onRightDrag: (translateX: number | null) => {
-        setRightDragX(translateX);
-      },
-    }),
-    [isRightSidebarCollapsed]
-  );
-
-  useSwipeLeftPane(leftCallbacks);
-  useSwipeRightPane(rightCallbacks);
-
   return (
     <>
       <div className="flex" style={{ height: "100dvh" }}>
         <div className="relative flex h-full w-full overflow-hidden">
-          <Sidebar
-            isCollapsed={isLeftSidebarCollapsed}
-            setIsCollapsed={setIsLeftSidebarCollapsed}
-            translateX={leftDragX}
-            side="left"
-          />
-          <Toggle
-            isCollapsed={isLeftSidebarCollapsed}
-            setIsCollapsed={setIsLeftSidebarCollapsed}
-            side="left"
-          />
+          <SidebarLeft />
+          <Toggle side="left" />
           <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
             <div className="h-full relative flex w-full grow overflow-hidden">
               <div className="flex flex-col transition-width relative h-full w-full flex-1 overflow-auto bg-presentation">
@@ -74,17 +27,8 @@ export function App() {
               </div>
             </div>
           </div>
-          <Sidebar
-            isCollapsed={isRightSidebarCollapsed}
-            setIsCollapsed={setIsRightSidebarCollapsed}
-            translateX={rightDragX}
-            side="right"
-          />
-          <Toggle
-            isCollapsed={isRightSidebarCollapsed}
-            setIsCollapsed={setIsRightSidebarCollapsed}
-            side="right"
-          />
+          <SidebarRight />
+          <Toggle side="right" />
         </div>
       </div>
     </>

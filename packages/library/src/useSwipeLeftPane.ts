@@ -58,14 +58,12 @@ const handleLeftDragMove = (
   if (leftOpen) {
     const translateX = Math.min(0, Math.max(-LEFT_PANE_WIDTH_PX, deltaX));
     callbacks.onLeftDrag?.(translateX);
-    refs.lastTranslateRef.current = translateX;
   } else if (refs.draggingRef.current.startX <= EDGE_SWIPE_THRESHOLD_PX) {
     const translateX = Math.min(
       0,
       Math.max(-LEFT_PANE_WIDTH_PX, -LEFT_PANE_WIDTH_PX + deltaX)
     );
     callbacks.onLeftDrag?.(translateX);
-    refs.lastTranslateRef.current = translateX;
   }
 };
 
@@ -104,12 +102,19 @@ const handleLeftDragEnd = (
   }
 };
 
-export const useSwipeLeftPane = (callbacks: LeftPaneCallbacks) => {
+export function useSwipeLeftPane() {
   const isSmallScreen = useMediaQuery("small");
-  const { lockedPane, setLockedPane } = useSwipePaneContext();
+  const {
+    lockedPane,
+    setLockedPane,
+    leftDragX,
+    isLeftOpen,
+    openLeft,
+    closeLeft,
+    setLeftDragX,
+  } = useSwipePaneContext();
 
   const draggingRef = useRef<DragState | null>(null);
-  const lastTranslateRef = useRef<number | null>(null);
   const currentXRef = useRef<number | null>(null);
   const prevXRef = useRef<number | null>(null);
 
@@ -117,9 +122,15 @@ export const useSwipeLeftPane = (callbacks: LeftPaneCallbacks) => {
     if (!isSmallScreen) return;
     if (lockedPane === "right") return;
 
+    const callbacks: LeftPaneCallbacks = {
+      getIsLeftOpen: () => isLeftOpen,
+      openLeft,
+      closeLeft,
+      onLeftDrag: setLeftDragX,
+    };
+
     const refs: DragRefs = {
       draggingRef,
-      lastTranslateRef,
       currentXRef,
       prevXRef,
     };
@@ -128,6 +139,8 @@ export const useSwipeLeftPane = (callbacks: LeftPaneCallbacks) => {
     const onDeactivate = () => setLockedPane(null);
 
     function onTouchStart(e: TouchEvent) {
+      console.log("locked", lockedPane);
+
       if (lockedPane === "right") return;
       if (isEditableTarget(e.target)) return;
       if (e.changedTouches.length === 0) return;
@@ -244,5 +257,22 @@ export const useSwipeLeftPane = (callbacks: LeftPaneCallbacks) => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [isSmallScreen, callbacks, lockedPane, setLockedPane]);
-};
+  }, [
+    isSmallScreen,
+    isLeftOpen,
+    openLeft,
+    closeLeft,
+    setLeftDragX,
+    lockedPane,
+    setLockedPane,
+  ]);
+
+  return {
+    isLeftOpen,
+    openLeft,
+    closeLeft,
+    setLeftDragX,
+    leftDragX,
+    setLockedPane,
+  };
+}

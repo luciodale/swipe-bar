@@ -2,13 +2,24 @@ import { useSwipePaneContext } from "./SwipePaneProvider";
 import { cn } from "./utils";
 
 type ToggleProps = {
-  isCollapsed: boolean;
-  setIsCollapsed: (isCollapsed: boolean) => void;
   side: "left" | "right";
+  className?: string;
 };
 
-export function Toggle({ isCollapsed, setIsCollapsed, side }: ToggleProps) {
-  const { setLockedPane } = useSwipePaneContext();
+export function Toggle({ side, className }: ToggleProps) {
+  const {
+    setLockedPane,
+    isLeftOpen,
+    isRightOpen,
+    openLeft,
+    closeLeft,
+    openRight,
+    closeRight,
+  } = useSwipePaneContext();
+
+  const isCollapsed = side === "left" ? !isLeftOpen : !isRightOpen;
+  const openSidebar = side === "left" ? openLeft : openRight;
+  const closeSidebar = side === "left" ? closeLeft : closeRight;
 
   const style = {
     transition: "transform 0.3s ease, opacity 0.2s ease",
@@ -28,15 +39,17 @@ export function Toggle({ isCollapsed, setIsCollapsed, side }: ToggleProps) {
       <button
         type="button"
         onClick={() => {
-          console.log("clicked");
-          setIsCollapsed(!isCollapsed);
-          if (!isCollapsed) {
+          if (isCollapsed) {
+            openSidebar();
+          } else {
+            closeSidebar();
             setLockedPane(null);
           }
         }}
         className={cn(
           "fixed top-1/2 -translate-y-1/2 cursor-pointer",
-          side === "left" ? "ml-12" : "mr-12"
+          side === "left" ? "ml-12" : "mr-12",
+          className
         )}
       >
         <div

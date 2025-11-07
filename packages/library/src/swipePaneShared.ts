@@ -24,7 +24,6 @@ export type DragState = {
 
 export type DragRefs = {
   draggingRef: RefObject<DragState | null>;
-  lastTranslateRef: RefObject<number | null>;
   currentXRef: RefObject<number | null>;
   prevXRef: RefObject<number | null>;
 };
@@ -48,7 +47,6 @@ export const handleDragStart = (
     isMouse,
     isActivated: false,
   };
-  refs.lastTranslateRef.current = null;
   refs.currentXRef.current = clientX;
   refs.prevXRef.current = clientX;
 };
