@@ -25,7 +25,7 @@ export function SidebarLeft({
 	ToggleComponent?: FunctionComponent<Required<Pick<SwipePaneContextProps, "isLeftOpen">>>;
 }) {
 	const { globalOptions, isLeftOpen, closePane, leftPaneRef } = useSwipePaneContext();
-	console.log("globalOptions in sidebar left", globalOptions);
+
 	const options = useMemo(
 		() => ({
 			paneWidthPx: paneWidthPx ?? globalOptions.paneWidthPx,
@@ -56,8 +56,6 @@ export function SidebarLeft({
 	);
 
 	useSwipeLeftPane(options);
-
-	console.log("global options merged in sidebar left", options);
 
 	return (
 		<>
