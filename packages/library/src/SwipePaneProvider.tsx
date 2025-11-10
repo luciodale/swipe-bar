@@ -2,6 +2,9 @@ import { type ReactNode, createContext, useCallback, useRef, useState } from "re
 import {
 	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
+	DEFAULT_TOGGLE_ICON_COLOR,
+	DEFAULT_TOGGLE_ICON_EDGE_DISTANCE_PX,
+	DEFAULT_TOGGLE_ICON_SIZE_PX,
 	DRAG_ACTIVATION_DELTA_PX,
 	EDGE_ACTIVATION_REGION_PX,
 	IS_ABSOLUTE,
@@ -42,6 +45,9 @@ export const SwipePaneProvider = ({
 	closeSidebarOnOverlayClick,
 	isAbsolute,
 	overlayBackgroundColor,
+	toggleIconColor,
+	toggleIconSizePx,
+	toggleIconEdgeDistancePx,
 }: { children: ReactNode } & SwipeBarProps) => {
 	const [lockedPane, setLockedPane] = useState<LockedPane>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
@@ -57,6 +63,9 @@ export const SwipePaneProvider = ({
 		closeSidebarOnOverlayClick: closeSidebarOnOverlayClick ?? CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 		isAbsolute: isAbsolute ?? IS_ABSOLUTE,
 		overlayBackgroundColor: overlayBackgroundColor ?? DEFAULT_OVERLAY_BACKGROUND_COLOR,
+		toggleIconColor: toggleIconColor ?? DEFAULT_TOGGLE_ICON_COLOR,
+		toggleIconSizePx: toggleIconSizePx ?? DEFAULT_TOGGLE_ICON_SIZE_PX,
+		toggleIconEdgeDistancePx: toggleIconEdgeDistancePx ?? DEFAULT_TOGGLE_ICON_EDGE_DISTANCE_PX,
 	});
 
 	console.log("globalOptions", globalOptions);

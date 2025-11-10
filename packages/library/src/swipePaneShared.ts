@@ -31,6 +31,9 @@ export type SwipeBarProps = {
 	showOverlay?: boolean;
 	closeSidebarOnOverlayClick?: boolean;
 	overlayBackgroundColor?: string;
+	toggleIconSizePx?: number;
+	toggleIconColor?: string;
+	toggleIconEdgeDistancePx?: number;
 };
 
 export type TLeftSwipeBar = SwipeBarProps & {
@@ -53,6 +56,9 @@ export const IS_ABSOLUTE = false;
 export const DEFAULT_OVERLAY_BACKGROUND_COLOR = "rgba(0, 0, 0, 0.5)";
 
 export const DEFAULT_SIDEBAR_BACKGROUND_COLOR = "rgb(36,36,36)";
+export const DEFAULT_TOGGLE_ICON_COLOR = "white";
+export const DEFAULT_TOGGLE_ICON_SIZE_PX = 40;
+export const DEFAULT_TOGGLE_ICON_EDGE_DISTANCE_PX = 40;
 
 export const swipeBarStyle = {
 	zIndex: 30,
@@ -96,7 +102,7 @@ export const overlayIsOpenStyle = {
 	pointerEvents: "auto",
 } satisfies CSSProperties;
 
-export const toggleStyle = {
+export const toggleWrapperStyle = {
 	position: "fixed",
 	zIndex: 15,
 	top: "50%",
@@ -106,10 +112,14 @@ export const toggleStyle = {
 	justifyContent: "center",
 } satisfies CSSProperties;
 
-export type ToggleProps = {
-	className?: string;
-	transitionMs?: number;
-};
+export const toggleIconWrapperStyle = {
+	position: "relative",
+	cursor: "pointer",
+	display: "flex",
+	height: "72px",
+	alignItems: "center",
+	justifyContent: "center",
+} satisfies CSSProperties;
 
 export type PaneSide = "left" | "right";
 
@@ -272,6 +282,9 @@ export const useMergedOptions = <T extends PaneSide>(
 		closeSidebarOnOverlayClick,
 		isAbsolute,
 		overlayBackgroundColor,
+		toggleIconColor,
+		toggleIconSizePx,
+		toggleIconEdgeDistancePx,
 		showToggle,
 		ToggleComponent,
 	} = options;
@@ -287,6 +300,10 @@ export const useMergedOptions = <T extends PaneSide>(
 					closeSidebarOnOverlayClick ?? globalOptions.closeSidebarOnOverlayClick,
 				isAbsolute: isAbsolute ?? globalOptions.isAbsolute,
 				overlayBackgroundColor: overlayBackgroundColor ?? globalOptions.overlayBackgroundColor,
+				toggleIconColor: toggleIconColor ?? globalOptions.toggleIconColor,
+				toggleIconSizePx: toggleIconSizePx ?? globalOptions.toggleIconSizePx,
+				toggleIconEdgeDistancePx:
+					toggleIconEdgeDistancePx ?? globalOptions.toggleIconEdgeDistancePx,
 				showToggle,
 				ToggleComponent,
 			}) as TMergedSwipeBar<T>,
@@ -299,6 +316,9 @@ export const useMergedOptions = <T extends PaneSide>(
 			closeSidebarOnOverlayClick,
 			isAbsolute,
 			overlayBackgroundColor,
+			toggleIconColor,
+			toggleIconSizePx,
+			toggleIconEdgeDistancePx,
 			showToggle,
 			ToggleComponent,
 			globalOptions,
