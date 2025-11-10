@@ -135,7 +135,8 @@ const handleLeftDragEnd = ({ refs, callbacks, options }: HandleLeftDragEndProps)
 };
 
 export function useSwipeLeftPane(options: Required<SwipeBarProps>) {
-	const isSmallScreen = useMediaQuery("small");
+	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
+
 	const { lockedPane, setLockedPane, isLeftOpen, openPane, closePane, dragPane, leftPaneRef } =
 		useSwipePaneContext();
 

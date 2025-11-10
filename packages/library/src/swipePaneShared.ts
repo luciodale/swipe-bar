@@ -35,6 +35,7 @@ export type SwipeBarProps = {
 	toggleIconColor?: string;
 	toggleIconEdgeDistancePx?: number;
 	showToggle?: boolean;
+	mediaQueryWidth?: number;
 };
 
 export const TRANSITION_MS = 200;
@@ -51,6 +52,7 @@ export const DEFAULT_TOGGLE_ICON_COLOR = "white";
 export const DEFAULT_TOGGLE_ICON_SIZE_PX = 40;
 export const DEFAULT_TOGGLE_ICON_EDGE_DISTANCE_PX = 40;
 export const SHOW_TOGGLE = true;
+export const MEDIA_QUERY_WIDTH = 640;
 
 export const swipeBarStyle = {
 	zIndex: 30,
@@ -271,6 +273,7 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
 		toggleIconSizePx,
 		toggleIconEdgeDistancePx,
 		showToggle,
+		mediaQueryWidth,
 	} = options;
 
 	const mergedOptions = useMemo(
@@ -288,6 +291,7 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
 			toggleIconSizePx: toggleIconSizePx ?? globalOptions.toggleIconSizePx,
 			toggleIconEdgeDistancePx: toggleIconEdgeDistancePx ?? globalOptions.toggleIconEdgeDistancePx,
 			showToggle: showToggle ?? globalOptions.showToggle,
+			mediaQueryWidth: mediaQueryWidth ?? globalOptions.mediaQueryWidth,
 		}),
 		[
 			paneWidthPx,
@@ -303,6 +307,7 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
 			toggleIconEdgeDistancePx,
 			showToggle,
 			globalOptions,
+			mediaQueryWidth,
 		],
 	) satisfies Required<SwipeBarProps>;
 
