@@ -1,4 +1,4 @@
-import { SidebarLeft, SidebarRight, Toggle } from "@luciodale/swipe-pane";
+import { SidebarLeft, SidebarRight } from "@luciodale/swipe-pane";
 
 export function App() {
 	return (
@@ -6,7 +6,6 @@ export function App() {
 			<div className="flex" style={{ height: "100dvh" }}>
 				<div className="relative flex h-full w-full overflow-hidden">
 					<SidebarLeft />
-					<Toggle side="left" />
 					<div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
 						<div className="h-full relative flex w-full grow overflow-hidden">
 							<div className="flex flex-col transition-width relative h-full w-full flex-1 overflow-auto bg-presentation">
@@ -26,7 +25,6 @@ export function App() {
 						</div>
 					</div>
 					<SidebarRight />
-					<Toggle side="right" />
 				</div>
 			</div>
 		</>

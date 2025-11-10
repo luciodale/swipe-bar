@@ -1,42 +1,99 @@
-import { type ReactNode, createContext, useCallback, useContext, useRef, useState } from "react";
+import { type ReactNode, createContext, useCallback, useRef, useState } from "react";
+import {
+	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
+	DRAG_ACTIVATION_DELTA_PX,
+	EDGE_ACTIVATION_REGION_PX,
+	IS_ABSOLUTE,
+	PANE_WIDTH_PX,
+	type PaneSide,
+	SHOW_OVERLAY,
+	type SwipeBarProps,
+	TRANSITION_CLOSE_MS,
+	TRANSITION_OPEN_MS,
+	applyClosePaneStyles,
+	applyDragPaneStyles,
+	applyOpenPaneStyles,
+} from "./swipePaneShared";
 
-type LockedPane = "left" | "right" | null;
+type LockedPane = PaneSide | null;
 
-type SwipePaneContextType = {
+export type SwipePaneContextProps = {
 	lockedPane: LockedPane;
 	setLockedPane: (pane: LockedPane) => void;
 	leftPaneRef: React.RefObject<HTMLDivElement | null>;
 	rightPaneRef: React.RefObject<HTMLDivElement | null>;
 	isLeftOpen: boolean;
 	isRightOpen: boolean;
-	rightDragX: number | null;
-	openLeft: () => void;
-	closeLeft: () => void;
-	openRight: () => void;
-	closeRight: () => void;
-	setRightDragX: (x: number | null) => void;
+	openPane: (side: PaneSide, options: SwipeBarProps) => void;
+	closePane: (side: PaneSide, options: SwipeBarProps) => void;
+	dragPane: (side: PaneSide, translateX: number | null, options: SwipeBarProps) => void;
+	globalOptions: Required<SwipeBarProps>;
 };
 
-const SwipePaneContext = createContext<SwipePaneContextType | null>(null);
+export const SwipePaneContext = createContext<SwipePaneContextProps | null>(null);
 
-export const SwipePaneProvider = ({ children }: { children: ReactNode }) => {
+export const SwipePaneProvider = ({
+	children,
+	paneWidthPx,
+	transitionMsOpen,
+	transitionMsClose,
+	edgeActivationWidthPx,
+	dragActivationDeltaPx,
+	showOverlay,
+	closeSidebarOnOverlayClick,
+	isAbsolute,
+}: { children: ReactNode } & SwipeBarProps) => {
 	const [lockedPane, setLockedPane] = useState<LockedPane>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
 	const [isRightOpen, setIsRightOpen] = useState(false);
-	const [rightDragX, setRightDragX] = useState<number | null>(null);
 	const leftPaneRef = useRef<HTMLDivElement>(null);
 	const rightPaneRef = useRef<HTMLDivElement>(null);
+	const [globalOptions] = useState<Required<SwipeBarProps>>({
+		paneWidthPx: paneWidthPx ?? PANE_WIDTH_PX,
+		transitionMsOpen: transitionMsOpen ?? TRANSITION_OPEN_MS,
+		transitionMsClose: transitionMsClose ?? TRANSITION_CLOSE_MS,
+		edgeActivationWidthPx: edgeActivationWidthPx ?? EDGE_ACTIVATION_REGION_PX,
+		dragActivationDeltaPx: dragActivationDeltaPx ?? DRAG_ACTIVATION_DELTA_PX,
+		showOverlay: showOverlay ?? SHOW_OVERLAY,
+		closeSidebarOnOverlayClick: closeSidebarOnOverlayClick ?? CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
+		isAbsolute: isAbsolute ?? IS_ABSOLUTE,
+	});
 
-	const openLeft = useCallback(() => setIsLeftOpen(true), []);
-	const closeLeft = useCallback(() => {
-		setIsLeftOpen(false);
-		setLockedPane(null);
+	console.log("globalOptions", globalOptions);
+
+	const openPane = useCallback((side: PaneSide, options: SwipeBarProps) => {
+		applyOpenPaneStyles({
+			ref: side === "left" ? leftPaneRef : rightPaneRef,
+			options,
+			afterApply: () => {
+				side === "left" ? setIsLeftOpen(true) : setIsRightOpen(true);
+				setLockedPane(side);
+			},
+		});
 	}, []);
-	const openRight = useCallback(() => setIsRightOpen(true), []);
-	const closeRight = useCallback(() => {
-		setIsRightOpen(false);
-		setLockedPane(null);
+
+	const closePane = useCallback((side: PaneSide, options: SwipeBarProps) => {
+		applyClosePaneStyles({
+			ref: side === "left" ? leftPaneRef : rightPaneRef,
+			options,
+			side,
+			afterApply: () => {
+				side === "left" ? setIsLeftOpen(false) : setIsRightOpen(false);
+				setLockedPane(null);
+			},
+		});
 	}, []);
+
+	const dragPane = useCallback(
+		(side: PaneSide, translateX: number | null, options: SwipeBarProps) => {
+			applyDragPaneStyles({
+				ref: side === "left" ? leftPaneRef : rightPaneRef,
+				options,
+				translateX,
+			});
+		},
+		[],
+	);
 
 	return (
 		<SwipePaneContext.Provider
@@ -45,25 +102,15 @@ export const SwipePaneProvider = ({ children }: { children: ReactNode }) => {
 				setLockedPane,
 				isLeftOpen,
 				isRightOpen,
-				rightDragX,
 				leftPaneRef,
 				rightPaneRef,
-				openLeft,
-				closeLeft,
-				openRight,
-				closeRight,
-				setRightDragX,
+				openPane,
+				closePane,
+				dragPane,
+				globalOptions,
 			}}
 		>
 			{children}
 		</SwipePaneContext.Provider>
 	);
-};
-
-export const useSwipePaneContext = () => {
-	const context = useContext(SwipePaneContext);
-	if (!context) {
-		throw new Error("useSwipePaneContext must be used within SwipePaneProvider");
-	}
-	return context;
 };

@@ -1,17 +1,10 @@
 import type { RefObject } from "react";
 
-export type LeftPaneCallbacks = {
+export type SidebarCallbacks = {
 	getIsOpen: () => boolean;
 	openPane: () => void;
 	closePane: () => void;
-	onDrag?: (translateX: number | null) => void;
-};
-
-export type RightPaneCallbacks = {
-	getIsOpen: () => boolean;
-	openPane: () => void;
-	closePane: () => void;
-	onDrag?: (translateX: number | null) => void;
+	dragPane: (translateX: number | null) => void;
 };
 
 export type DragState = {
@@ -28,9 +21,9 @@ export type DragRefs = {
 	prevXRef: RefObject<number | null>;
 };
 
-export type SidebarProps = {
-	className?: string;
-	transitionMs?: number;
+export type SwipeBarProps = {
+	transitionMsOpen?: number;
+	transitionMsClose?: number;
 	paneWidthPx?: number;
 	isAbsolute?: boolean;
 	edgeActivationWidthPx?: number;
@@ -39,42 +32,38 @@ export type SidebarProps = {
 	closeSidebarOnOverlayClick?: boolean;
 };
 
-export const LEFT_TRANSITION_OPEN_MS = 200;
-export const LEFT_TRANSITION_CLOSE_MS = 300;
-export const RIGHT_TRANSITION_OPEN_MS = 200;
-export const RIGHT_TRANSITION_CLOSE_MS = 200;
-// Activation regions and deltas (defaults)
-export const LEFT_EDGE_ACTIVATION_REGION_PX = 40;
-export const LEFT_DRAG_ACTIVATION_DELTA_PX = 20;
-export const RIGHT_EDGE_ACTIVATION_REGION_PX = 40;
-export const RIGHT_DRAG_ACTIVATION_DELTA_PX = 20;
-export const LEFT_PANE_WIDTH_PX = 320;
-export const RIGHT_PANE_WIDTH_PX = 352;
+export const TRANSITION_OPEN_MS = 200;
+export const TRANSITION_CLOSE_MS = 300;
+export const EDGE_ACTIVATION_REGION_PX = 40;
+export const DRAG_ACTIVATION_DELTA_PX = 20;
+export const PANE_WIDTH_PX = 320;
+export const SHOW_OVERLAY = true;
+export const CLOSE_SIDEBAR_ON_OVERLAY_CLICK = true;
+export const IS_ABSOLUTE = false;
+
+export type ToggleProps = {
+	className?: string;
+	transitionMs?: number;
+};
 
 export type PaneSide = "left" | "right";
 
-export type PaneConfig = {
-	widthPx: number;
-	transitionMsOpen: number;
-	transitionMsClose: number;
-};
-
 type ApplyOpenPaneStylesProps = {
 	ref: RefObject<HTMLDivElement | null>;
-	config: PaneConfig;
+	options: SwipeBarProps;
 	afterApply: () => void;
 };
 
-export const applyOpenPaneStyles = ({ ref, config, afterApply }: ApplyOpenPaneStylesProps) => {
+export const applyOpenPaneStyles = ({ ref, options, afterApply }: ApplyOpenPaneStylesProps) => {
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
-		ref.current.style.transition = `transform ${config.transitionMsOpen}ms ease, width ${config.transitionMsOpen}ms ease`;
+		ref.current.style.transition = `transform ${options.transitionMsOpen}ms ease, width ${options.transitionMsOpen}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
 			// clearing transform opens to its natural position for left and right
 			ref.current.style.transform = "";
-			ref.current.style.width = `${config.widthPx}px`;
+			ref.current.style.width = `${options.paneWidthPx}px`;
 			afterApply();
 		});
 	});
@@ -85,19 +74,19 @@ export const applyOpenPaneStyles = ({ ref, config, afterApply }: ApplyOpenPaneSt
 type ApplyClosePaneStylesProps = {
 	ref: RefObject<HTMLDivElement | null>;
 	side: PaneSide;
-	config: PaneConfig;
+	options: SwipeBarProps;
 	afterApply: () => void;
 };
 
 export const applyClosePaneStyles = ({
 	ref,
-	config,
+	options,
 	side,
 	afterApply,
 }: ApplyClosePaneStylesProps) => {
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
-		ref.current.style.transition = `transform ${config.transitionMsClose}ms ease, width ${config.transitionMsClose}ms ease`;
+		ref.current.style.transition = `transform ${options.transitionMsClose}ms ease, width ${options.transitionMsClose}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
@@ -110,17 +99,17 @@ export const applyClosePaneStyles = ({
 
 type ApplyDragPaneStylesProps = {
 	ref: RefObject<HTMLDivElement | null>;
-	config: PaneConfig;
+	options: SwipeBarProps;
 	translateX: number | null;
 };
 
-export const applyDragPaneStyles = ({ ref, config, translateX }: ApplyDragPaneStylesProps) => {
+export const applyDragPaneStyles = ({ ref, options, translateX }: ApplyDragPaneStylesProps) => {
 	if (!ref.current) return;
 	ref.current.style.transition = "none";
 
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
-		ref.current.style.width = `${config.widthPx}px`;
+		ref.current.style.width = `${options.paneWidthPx}px`;
 		if (translateX !== null) {
 			ref.current.style.transform = `translateX(${translateX}px)`;
 		}
@@ -155,15 +144,15 @@ export const handleDragStart = ({
 
 type HandleDragCancelProps = {
 	refs: DragRefs;
-	onDrag: ((translateX: number | null) => void) | undefined;
+	dragPane: (translateX: number | null) => void;
 	onDeactivate: () => void;
 };
 
-export const handleDragCancel = ({ refs, onDrag, onDeactivate }: HandleDragCancelProps) => {
+export const handleDragCancel = ({ refs, dragPane, onDeactivate }: HandleDragCancelProps) => {
 	refs.draggingRef.current = null;
 	refs.currentXRef.current = null;
 	refs.prevXRef.current = null;
-	onDrag?.(null);
+	dragPane(null);
 	onDeactivate();
 };
 

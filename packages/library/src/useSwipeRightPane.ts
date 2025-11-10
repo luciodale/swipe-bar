@@ -1,18 +1,9 @@
-import { useEffect, useMemo, useRef } from "react";
-import { useSwipePaneContext } from "./SwipePaneProvider";
+import { useEffect, useRef } from "react";
 import {
 	type DragRefs,
 	type DragState,
-	type PaneConfig,
-	RIGHT_DRAG_ACTIVATION_DELTA_PX,
-	RIGHT_EDGE_ACTIVATION_REGION_PX,
-	RIGHT_PANE_WIDTH_PX,
-	RIGHT_TRANSITION_CLOSE_MS,
-	RIGHT_TRANSITION_OPEN_MS,
-	type RightPaneCallbacks,
-	applyClosePaneStyles,
-	applyDragPaneStyles,
-	applyOpenPaneStyles,
+	type SidebarCallbacks,
+	type SwipeBarProps,
 	findChangedTouch,
 	handleDragCancel,
 	handleDragStart,
@@ -20,16 +11,15 @@ import {
 	isEditableTarget,
 } from "./swipePaneShared";
 import { useMediaQuery } from "./useMediaQuery";
+import { useSwipePaneContext } from "./useSwipePaneContext";
 
 type HandleRightDragMoveProps = {
 	refs: DragRefs;
-	callbacks: RightPaneCallbacks;
+	callbacks: SidebarCallbacks;
 	currentX: number;
 	preventDefault: () => void;
 	lockPane: () => void;
-	config: PaneConfig;
-	edgeActivationWidthPx: number;
-	dragActivationDeltaPx: number;
+	options: Required<SwipeBarProps>;
 };
 
 const handleRightDragMove = ({
@@ -38,9 +28,7 @@ const handleRightDragMove = ({
 	currentX,
 	preventDefault,
 	lockPane,
-	config,
-	edgeActivationWidthPx,
-	dragActivationDeltaPx,
+	options,
 }: HandleRightDragMoveProps) => {
 	if (!refs.draggingRef.current) return;
 
@@ -49,11 +37,14 @@ const handleRightDragMove = ({
 	const swipingDistanceFromInitialDrag = currentX - refs.draggingRef.current.startX;
 
 	const isLegalSwipeDistanceWhenRightIsClosed =
-		refs.draggingRef.current.startX >= viewportWidth - edgeActivationWidthPx;
+		refs.draggingRef.current.startX >= viewportWidth - options.edgeActivationWidthPx;
 
 	const isPaneActiveted = refs.draggingRef.current.isActivated;
 
-	if (!isPaneActiveted && Math.abs(swipingDistanceFromInitialDrag) >= dragActivationDeltaPx) {
+	if (
+		!isPaneActiveted &&
+		Math.abs(swipingDistanceFromInitialDrag) >= options.dragActivationDeltaPx
+	) {
 		refs.draggingRef.current.isActivated = true;
 		lockPane();
 	}
@@ -85,7 +76,7 @@ const handleRightDragMove = ({
 
 	if (!isValidGesture) {
 		refs.draggingRef.current = null;
-		callbacks.onDrag?.(null);
+		callbacks.dragPane(null);
 		return;
 	}
 
@@ -93,44 +84,38 @@ const handleRightDragMove = ({
 	// to avoid scrolling the page while dragging the pane.
 	preventDefault();
 
-	const paneWidthPx = config.widthPx;
+	const paneWidthPx = options.paneWidthPx;
 
 	// Closing the pane
 	if (rightOpen) {
 		const translateX = Math.max(
 			0,
-			Math.min(paneWidthPx, swipingDistanceFromInitialDrag - dragActivationDeltaPx),
+			Math.min(paneWidthPx, swipingDistanceFromInitialDrag - options.dragActivationDeltaPx),
 		);
 
-		callbacks.onDrag?.(translateX);
+		callbacks.dragPane(translateX);
 
 		// Opening the pane
 	} else {
 		const translateX = Math.max(
 			0,
-			Math.min(paneWidthPx, paneWidthPx + swipingDistanceFromInitialDrag + dragActivationDeltaPx),
+			Math.min(
+				paneWidthPx,
+				paneWidthPx + swipingDistanceFromInitialDrag + options.dragActivationDeltaPx,
+			),
 		);
-		callbacks.onDrag?.(translateX);
+		callbacks.dragPane(translateX);
 	}
 };
 
 type HandleRightDragEndProps = {
 	refs: DragRefs;
 	rightPaneRef: React.RefObject<HTMLDivElement | null>;
-	callbacks: RightPaneCallbacks;
-	unlockPane: () => void;
-	config: PaneConfig;
-	edgeActivationWidthPx: number;
+	callbacks: SidebarCallbacks;
+	options: Required<SwipeBarProps>;
 };
 
-const handleRightDragEnd = ({
-	refs,
-	rightPaneRef,
-	callbacks,
-	unlockPane,
-	config,
-	edgeActivationWidthPx,
-}: HandleRightDragEndProps) => {
+const handleRightDragEnd = ({ refs, callbacks, options }: HandleRightDragEndProps) => {
 	if (!refs.draggingRef.current) return;
 
 	const currentX = refs.currentXRef.current ?? refs.draggingRef.current.startX;
@@ -146,88 +131,44 @@ const handleRightDragEnd = ({
 	const swipedRight = currentX > prevX;
 	const swipedLeft = currentX < prevX;
 
-	const moreThanEdgeSwipeThreshold = startX >= viewportWidth - edgeActivationWidthPx;
-
-	let shouldUnlock = false;
+	const moreThanEdgeSwipeThreshold = startX >= viewportWidth - options.edgeActivationWidthPx;
 
 	if (rightOpen) {
 		if (swipedRight) {
-			applyClosePaneStyles({
-				ref: rightPaneRef,
-				config,
-				side: "right",
-				afterApply: callbacks.closePane,
-			});
-			shouldUnlock = true; // Pane closed, unlock
+			callbacks.closePane();
 		} else {
-			applyOpenPaneStyles({
-				ref: rightPaneRef,
-				config,
-				afterApply: callbacks.openPane,
-			});
+			callbacks.openPane();
 			// Pane stays open, keep locked
 		}
-		callbacks.onDrag?.(null);
+		callbacks.dragPane(null);
 	} else if (moreThanEdgeSwipeThreshold && swipedLeft) {
-		applyOpenPaneStyles({
-			ref: rightPaneRef,
-			config,
-			afterApply: callbacks.openPane,
-		});
+		callbacks.openPane();
 		// Pane opened, keep locked
-		callbacks.onDrag?.(null);
+		callbacks.dragPane(null);
 	} else {
-		shouldUnlock = true; // Gesture ended without opening
-		applyClosePaneStyles({
-			ref: rightPaneRef,
-			config,
-			side: "right",
-			afterApply: callbacks.closePane,
-		});
-		callbacks.onDrag?.(null);
-	}
-
-	if (shouldUnlock) {
-		unlockPane();
+		callbacks.closePane();
+		callbacks.dragPane(null);
 	}
 };
 
-type PaneOptions = {
-	transitionMs?: number;
-	paneWidthPx?: number;
-	edgeActivationWidthPx?: number;
-	dragActivationDeltaPx?: number;
-};
-
-export function useSwipeRightPane(options?: PaneOptions) {
+export function useSwipeRightPane(options: Required<SwipeBarProps>) {
 	const isSmallScreen = useMediaQuery("small");
-	const { lockedPane, setLockedPane, isRightOpen, openRight, closeRight, rightPaneRef } =
+	const { lockedPane, setLockedPane, isRightOpen, openPane, closePane, dragPane, rightPaneRef } =
 		useSwipePaneContext();
 
 	const draggingRef = useRef<DragState | null>(null);
 	const currentXRef = useRef<number | null>(null);
 	const prevXRef = useRef<number | null>(null);
 
-	const config: PaneConfig = useMemo(
-		() => ({
-			widthPx: options?.paneWidthPx ?? RIGHT_PANE_WIDTH_PX,
-			transitionMsOpen: options?.transitionMs ?? RIGHT_TRANSITION_OPEN_MS,
-			transitionMsClose: options?.transitionMs ?? RIGHT_TRANSITION_CLOSE_MS,
-		}),
-		[options?.paneWidthPx, options?.transitionMs],
-	);
-	const edgeActivationWidthPx = options?.edgeActivationWidthPx ?? RIGHT_EDGE_ACTIVATION_REGION_PX;
-	const dragActivationDeltaPx = options?.dragActivationDeltaPx ?? RIGHT_DRAG_ACTIVATION_DELTA_PX;
-
 	useEffect(() => {
 		if (!isSmallScreen) return;
 		if (lockedPane === "left") return;
 
-		const callbacks: RightPaneCallbacks = {
+		const callbacks: SidebarCallbacks = {
 			getIsOpen: () => isRightOpen,
-			openPane: openRight,
-			closePane: closeRight,
-			onDrag: (px) => applyDragPaneStyles({ ref: rightPaneRef, config, translateX: px }),
+			openPane: () => openPane("right", options),
+			closePane: () => closePane("right", options),
+			dragPane: (translateX) => dragPane("right", translateX, options),
 		};
 
 		const refs: DragRefs = {
@@ -247,7 +188,10 @@ export function useSwipeRightPane(options?: PaneOptions) {
 			const firstTouch = e.changedTouches[0];
 			const viewportWidth = window.innerWidth;
 
-			if (callbacks.getIsOpen() || firstTouch.clientX >= viewportWidth - edgeActivationWidthPx) {
+			if (
+				callbacks.getIsOpen() ||
+				firstTouch.clientX >= viewportWidth - options.edgeActivationWidthPx
+			) {
 				handleDragStart({
 					refs,
 					clientX: firstTouch.clientX,
@@ -272,9 +216,7 @@ export function useSwipeRightPane(options?: PaneOptions) {
 				currentX: changedTouch.clientX,
 				preventDefault: () => e.preventDefault(),
 				lockPane,
-				config,
-				edgeActivationWidthPx,
-				dragActivationDeltaPx,
+				options,
 			});
 		}
 
@@ -289,16 +231,14 @@ export function useSwipeRightPane(options?: PaneOptions) {
 				refs,
 				rightPaneRef,
 				callbacks,
-				unlockPane,
-				config,
-				edgeActivationWidthPx,
+				options,
 			});
 		}
 
 		function onTouchCancel() {
 			if (lockedPane === "left") return;
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
-			handleDragCancel({ refs, onDrag: callbacks.onDrag, onDeactivate: unlockPane });
+			handleDragCancel({ refs, dragPane: callbacks.dragPane, onDeactivate: unlockPane });
 		}
 
 		function onMouseDown(e: MouseEvent) {
@@ -308,7 +248,7 @@ export function useSwipeRightPane(options?: PaneOptions) {
 
 			const viewportWidth = window.innerWidth;
 
-			if (callbacks.getIsOpen() || e.clientX >= viewportWidth - edgeActivationWidthPx) {
+			if (callbacks.getIsOpen() || e.clientX >= viewportWidth - options.edgeActivationWidthPx) {
 				handleDragStart({
 					refs,
 					clientX: e.clientX,
@@ -329,9 +269,7 @@ export function useSwipeRightPane(options?: PaneOptions) {
 				currentX: e.clientX,
 				preventDefault: () => e.preventDefault(),
 				lockPane,
-				config,
-				edgeActivationWidthPx,
-				dragActivationDeltaPx,
+				options,
 			});
 		}
 
@@ -343,9 +281,7 @@ export function useSwipeRightPane(options?: PaneOptions) {
 				refs,
 				rightPaneRef,
 				callbacks,
-				unlockPane,
-				config,
-				edgeActivationWidthPx,
+				options,
 			});
 		}
 
@@ -371,21 +307,12 @@ export function useSwipeRightPane(options?: PaneOptions) {
 	}, [
 		isSmallScreen,
 		isRightOpen,
-		openRight,
-		closeRight,
+		openPane,
+		closePane,
+		dragPane,
 		lockedPane,
 		setLockedPane,
 		rightPaneRef,
-		config,
-		edgeActivationWidthPx,
-		dragActivationDeltaPx,
+		options,
 	]);
-
-	return {
-		isRightOpen,
-		openRight,
-		closeRight,
-		setLockedPane,
-		rightPaneRef,
-	};
 }
