@@ -1,6 +1,6 @@
 {
 	"name": "@luciodale/swipe-bar",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"author": "Lucio D'Alessandro",
 	"repository": {
 		"type": "git",
@@ -10,6 +10,7 @@
 	"module": "dist/swipe-bar.es.js",
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/swipe-bar.es.js",
 			"require": "./dist/swipe-bar.umd.js"
 		}
