@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import { ToggleIcon } from "./components/ToggleIcon";
-import { type SwipeBarProps, toggleWrapperStyle } from "./swipePaneShared";
-import { useSwipePaneContext } from "./useSwipePaneContext";
+import {
+  type TSwipeBarOptions,
+  toggleWrapperStyle,
+} from "./swipeSidebarShared";
+import { useSwipeBarContext } from "./useSwipeBarContext";
 
 type ToggleProps = {
   showToggle?: boolean;
   ToggleComponent?: ReactNode;
-  options: Required<SwipeBarProps>;
+  options: Required<TSwipeBarOptions>;
 };
 
 export function ToggleRight({
@@ -14,8 +17,8 @@ export function ToggleRight({
   showToggle = true,
   ToggleComponent,
 }: ToggleProps) {
-  const { openPane, rightToggleRef, isRightOpen, closePane } =
-    useSwipePaneContext();
+  const { openSidebar, rightToggleRef, isRightOpen, closeSidebar } =
+    useSwipeBarContext();
 
   if (!showToggle) return null;
 
@@ -32,7 +35,9 @@ export function ToggleRight({
       {(!isRightOpen || (isRightOpen && !options.showOverlay)) && (
         <button
           type="button"
-          onClick={() => (isRightOpen ? closePane("right") : openPane("right"))}
+          onClick={() =>
+            isRightOpen ? closeSidebar("right") : openSidebar("right")
+          }
           style={{
             marginRight: `${options.toggleIconEdgeDistancePx}px`,
             // reverse because we are using the same icon for both left and right

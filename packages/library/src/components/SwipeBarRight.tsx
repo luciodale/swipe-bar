@@ -1,39 +1,34 @@
-import type { ReactNode } from "react";
 import { ToggleRight } from "../ToggleRight";
 import {
   DEFAULT_SIDEBAR_BACKGROUND_COLOR,
-  type SwipeBarProps,
+  type TSwipeSidebar,
   rightSwipeBarAbsoluteStyle,
   swipeBarStyle,
   useSetMergedOptions,
-} from "../swipePaneShared";
+} from "../swipeSidebarShared";
 import { useMediaQuery } from "../useMediaQuery";
-import { useSwipePaneContext } from "../useSwipePaneContext";
-import { useSwipeRightPane } from "../useSwipeRightPane";
+import { useSwipeBarContext } from "../useSwipeBarContext";
+import { useSwipeRightSidebar } from "../useSwipeRightSidebar";
 import { Overlay } from "./Overlay";
 
-export function SidebarRight({
+export function SwipeBarRight({
   className,
   children,
   ToggleComponent,
   ...currentOptions
-}: SwipeBarProps & {
-  className?: string;
-  children?: ReactNode;
-  ToggleComponent?: ReactNode;
-}) {
-  const { isRightOpen, closePane, rightPaneRef } = useSwipePaneContext();
+}: TSwipeSidebar) {
+  const { isRightOpen, closeSidebar, rightSidebarRef } = useSwipeBarContext();
 
   const options = useSetMergedOptions("right", currentOptions);
   const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
-  useSwipeRightPane(options);
+  useSwipeRightSidebar(options);
 
   return (
     <>
       {options.showOverlay && (
         <Overlay
           isCollapsed={!isRightOpen}
-          setCollapsed={() => closePane("right")}
+          setCollapsed={() => closeSidebar("right")}
           closeSidebarOnClick={options.closeSidebarOnOverlayClick}
           transitionMs={options.transitionMs}
         />
@@ -46,7 +41,7 @@ export function SidebarRight({
       />
 
       <div
-        ref={rightPaneRef}
+        ref={rightSidebarRef}
         style={{
           ...swipeBarStyle,
           ...(options.isAbsolute || isSmallScreen

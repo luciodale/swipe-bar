@@ -1,20 +1,31 @@
 {
-	"name": "@luciodale/swipe-pane",
+	"name": "@luciodale/swipe-bar",
 	"version": "0.0.1",
 	"author": "Lucio D'Alessandro",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/luciodale/swipe-pane"
+		"url": "https://github.com/luciodale/swipe-bar"
 	},
-	"main": "dist/swipe-pane.umd.js",
-	"module": "dist/swipe-pane.es.js",
+	"main": "dist/swipe-bar.umd.js",
+	"module": "dist/swipe-bar.es.js",
 	"peerDependencies": {
 		"react": ">=16 || >=17 || >= 18 || >= 19",
 		"react-dom": ">=16 || >=17 || >= 18 || >=19"
 	},
-	"description": "Sliding panels like in a native app, built with React.",
+	"description": "Sliding barls like in a native app, built with React.",
 	"files": ["dist", "README.md"],
-	"keywords": ["react", "sliding", "panels", "sliding panels", "native", "app"],
+	"keywords": [
+		"react",
+		"sliding",
+		"swipe sidebar",
+		"swipe bar",
+		"sliding bar",
+		"swipe",
+		"menu",
+		"sliding menu",
+		"swiping menu",
+		"native swiping"
+	],
 	"license": "MIT",
 	"types": "dist/index.d.ts",
 	"dependencies": {

@@ -1,13 +1,13 @@
 import {
-  SidebarLeft,
-  SidebarRight,
-  useSwipePaneContext,
-} from "@luciodale/swipe-pane";
+  SwipeBarLeft,
+  SwipeBarRight,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
 import { CustomToggle } from "./components/CustomToggle";
 import { cn } from "./utils";
 
 export function App() {
-  const { openPane, isLeftOpen } = useSwipePaneContext();
+  const { openSidebar, isLeftOpen } = useSwipeBarContext();
 
   return (
     <>
@@ -23,8 +23,8 @@ export function App() {
           </div>
 
           {/* Left sidebar with glass content */}
-          <SidebarLeft
-            paneWidthPx={320}
+          <SwipeBarLeft
+            sidebarWidthPx={320}
             toggleIconEdgeDistancePx={60}
             ToggleComponent={<CustomToggle />}
             className={cn(
@@ -86,7 +86,7 @@ export function App() {
                 </div>
               </div>
             </div>
-          </SidebarLeft>
+          </SwipeBarLeft>
 
           <div className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden">
             <div className="h-full relative flex w-full grow overflow-hidden">
@@ -116,7 +116,7 @@ export function App() {
                         Liquid Glass Experience
                       </h1>
                       <p className="mt-2 text-white/80">
-                        Responsive, swipeable side panes with a modern
+                        Responsive, swipeable side bars with a modern
                         glassmorphism aesthetic.
                       </p>
                       <div className="mt-4 flex flex-wrap gap-3">
@@ -168,7 +168,7 @@ export function App() {
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
                           <div className="text-white/80 text-sm">
-                            Try the right pane
+                            Try the right bar
                           </div>
                           <div className="text-white font-medium">
                             Quick Settings
@@ -176,7 +176,45 @@ export function App() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => openPane("right")}
+                          onClick={() => openSidebar("right")}
+                          className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15"
+                        >
+                          Open Right Pane
+                        </button>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white md:col-span-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-white/80 text-sm">
+                            Try the right bar
+                          </div>
+                          <div className="text-white font-medium">
+                            Quick Settings
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openSidebar("right")}
+                          className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15"
+                        >
+                          Open Right Pane
+                        </button>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white md:col-span-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-white/80 text-sm">
+                            Try the right bar
+                          </div>
+                          <div className="text-white font-medium">
+                            Quick Settings
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openSidebar("right")}
                           className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/15"
                         >
                           Open Right Pane
@@ -190,7 +228,7 @@ export function App() {
           </div>
 
           {/* Right sidebar with glass content */}
-          <SidebarRight
+          <SwipeBarRight
             // ToggleComponent={RightToggle}
             showOverlay={false}
             className="w-80 max-w-[85vw] h-full p-4
@@ -233,12 +271,12 @@ export function App() {
               <div className="mt-auto rounded-xl border border-white/20 bg-white/5 p-4">
                 <div className="text-sm text-white/70">About</div>
                 <p className="mt-2 text-sm text-white/80">
-                  This pane demonstrates swipe interactions with a liquid glass
+                  This bar demonstrates swipe interactions with a liquid glass
                   theme.
                 </p>
               </div>
             </div>
-          </SidebarRight>
+          </SwipeBarRight>
         </div>
       </div>
     </>

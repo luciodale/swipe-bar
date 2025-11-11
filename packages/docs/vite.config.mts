@@ -15,7 +15,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@luciodale/swipe-pane": resolve(__dirname, "../library/src"),
+      "@luciodale/swipe-bar": resolve(__dirname, "../library/src"),
     },
   },
 });

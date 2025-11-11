@@ -1,14 +1,20 @@
-import { type CSSProperties, type RefObject, useEffect, useMemo } from "react";
-import { useSwipePaneContext } from "./useSwipePaneContext";
+import {
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useMemo,
+} from "react";
+import { useSwipeBarContext } from "./useSwipeBarContext";
 
-export type SidebarCallbacks = {
+export type TSidebarCallbacks = {
   getIsOpen: () => boolean;
-  openPane: () => void;
-  closePane: () => void;
-  dragPane: (translateX: number | null) => void;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+  dragSidebar: (translateX: number | null) => void;
 };
 
-export type DragState = {
+export type TDragState = {
   startX: number;
   startY: number;
   activeTouchId: number | null;
@@ -16,15 +22,15 @@ export type DragState = {
   isActivated: boolean;
 };
 
-export type DragRefs = {
-  draggingRef: RefObject<DragState | null>;
+export type TDragRefs = {
+  draggingRef: RefObject<TDragState | null>;
   currentXRef: RefObject<number | null>;
   prevXRef: RefObject<number | null>;
 };
 
-export type SwipeBarProps = {
+export type TSwipeBarOptions = {
   transitionMs?: number;
-  paneWidthPx?: number;
+  sidebarWidthPx?: number;
   isAbsolute?: boolean;
   edgeActivationWidthPx?: number;
   dragActivationDeltaPx?: number;
@@ -36,6 +42,17 @@ export type SwipeBarProps = {
   toggleIconEdgeDistancePx?: number;
   showToggle?: boolean;
   mediaQueryWidth?: number;
+};
+
+export type TSwipeSidebar = TSwipeBarOptions & {
+  className?: string;
+  ToggleComponent?: ReactNode;
+  children?: ReactNode;
+};
+
+export type TToggle = {
+  side: TSidebarSide;
+  className?: string;
 };
 
 export const TRANSITION_MS = 200;
@@ -115,12 +132,12 @@ export const toggleIconWrapperStyle = {
   justifyContent: "center",
 } satisfies CSSProperties;
 
-export type PaneSide = "left" | "right";
+export type TSidebarSide = "left" | "right";
 
-type ApplyOpenPaneStylesProps = {
+type TApplyOpenPaneStyles = {
   ref: RefObject<HTMLDivElement | null>;
-  side: PaneSide;
-  options: SwipeBarProps;
+  side: TSidebarSide;
+  options: TSwipeBarOptions;
   toggleRef: RefObject<HTMLDivElement | null>;
   afterApply: () => void;
 };
@@ -131,7 +148,7 @@ export const applyOpenPaneStyles = ({
   options,
   toggleRef,
   afterApply,
-}: ApplyOpenPaneStylesProps) => {
+}: TApplyOpenPaneStyles) => {
   requestAnimationFrame(() => {
     if (!ref.current) return;
     ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
@@ -140,12 +157,12 @@ export const applyOpenPaneStyles = ({
       if (!ref.current) return;
       // clearing transform opens to its natural position for left and right
       ref.current.style.transform = "";
-      ref.current.style.width = `${options.paneWidthPx}px`;
+      ref.current.style.width = `${options.sidebarWidthPx}px`;
 
-      if (toggleRef.current && options.paneWidthPx) {
+      if (toggleRef.current && options.sidebarWidthPx) {
         toggleRef.current.style.opacity = "1";
         toggleRef.current.style.transform = `translateY(-50%) translateX(${
-          side === "left" ? options.paneWidthPx : -options.paneWidthPx
+          side === "left" ? options.sidebarWidthPx : -options.sidebarWidthPx
         }px)`;
       }
 
@@ -156,10 +173,10 @@ export const applyOpenPaneStyles = ({
   setTimeout(() => {}, 0);
 };
 
-type ApplyClosePaneStylesProps = {
+type TApplyClosePaneStyles = {
   ref: RefObject<HTMLDivElement | null>;
-  side: PaneSide;
-  options: SwipeBarProps;
+  side: TSidebarSide;
+  options: TSwipeBarOptions;
   toggleRef: RefObject<HTMLDivElement | null>;
   afterApply: () => void;
 };
@@ -170,7 +187,7 @@ export const applyClosePaneStyles = ({
   side,
   toggleRef,
   afterApply,
-}: ApplyClosePaneStylesProps) => {
+}: TApplyClosePaneStyles) => {
   requestAnimationFrame(() => {
     if (!ref.current) return;
     ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
@@ -191,10 +208,10 @@ export const applyClosePaneStyles = ({
   });
 };
 
-type ApplyDragPaneStylesProps = {
+type TApplyDragPaneStyles = {
   ref: RefObject<HTMLDivElement | null>;
   toggleRef: RefObject<HTMLDivElement | null>;
-  options: SwipeBarProps;
+  options: TSwipeBarOptions;
   translateX: number | null;
 };
 
@@ -203,13 +220,13 @@ export const applyDragPaneStyles = ({
   toggleRef,
   options,
   translateX,
-}: ApplyDragPaneStylesProps) => {
+}: TApplyDragPaneStyles) => {
   if (!ref.current || translateX === null) return;
   ref.current.style.transition = "none";
 
   requestAnimationFrame(() => {
     if (!ref.current) return;
-    const desiredWidth = `${options.paneWidthPx}px`;
+    const desiredWidth = `${options.sidebarWidthPx}px`;
     // Apply width only if it changed to avoid unnecessary layout
     if (ref.current.style.width !== desiredWidth) {
       ref.current.style.width = desiredWidth;
@@ -223,8 +240,8 @@ export const applyDragPaneStyles = ({
   });
 };
 
-type HandleDragStartProps = {
-  refs: DragRefs;
+type THandleDragStart = {
+  refs: TDragRefs;
   clientX: number;
   clientY: number;
   touchId: number | null;
@@ -237,7 +254,7 @@ export const handleDragStart = ({
   clientY,
   touchId,
   isMouse,
-}: HandleDragStartProps) => {
+}: THandleDragStart) => {
   refs.draggingRef.current = {
     startX: clientX,
     startY: clientY,
@@ -249,21 +266,21 @@ export const handleDragStart = ({
   refs.prevXRef.current = clientX;
 };
 
-type HandleDragCancelProps = {
-  refs: DragRefs;
-  dragPane: (translateX: number | null) => void;
+type THandleDragCancel = {
+  refs: TDragRefs;
+  dragSidebar: (translateX: number | null) => void;
   onDeactivate: () => void;
 };
 
 export const handleDragCancel = ({
   refs,
-  dragPane,
+  dragSidebar,
   onDeactivate,
-}: HandleDragCancelProps) => {
+}: THandleDragCancel) => {
   refs.draggingRef.current = null;
   refs.currentXRef.current = null;
   refs.prevXRef.current = null;
-  dragPane(null);
+  dragSidebar(null);
   onDeactivate();
 };
 
@@ -298,11 +315,14 @@ export const hasTrackedTouchEnded = (
   return false;
 };
 
-export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
-  const { globalOptions, setLeftPaneOptions, setRightPaneOptions } =
-    useSwipePaneContext();
+export const useSetMergedOptions = (
+  side: TSidebarSide,
+  options: TSwipeBarOptions
+) => {
+  const { globalOptions, setLeftSidebarOptions, setRightSidebarOptions } =
+    useSwipeBarContext();
   const {
-    paneWidthPx,
+    sidebarWidthPx,
     transitionMs,
     edgeActivationWidthPx,
     dragActivationDeltaPx,
@@ -319,7 +339,7 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
 
   const mergedOptions = useMemo(
     () => ({
-      paneWidthPx: paneWidthPx ?? globalOptions.paneWidthPx,
+      sidebarWidthPx: sidebarWidthPx ?? globalOptions.sidebarWidthPx,
       transitionMs: transitionMs ?? globalOptions.transitionMs,
       edgeActivationWidthPx:
         edgeActivationWidthPx ?? globalOptions.edgeActivationWidthPx,
@@ -339,7 +359,7 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
       mediaQueryWidth: mediaQueryWidth ?? globalOptions.mediaQueryWidth,
     }),
     [
-      paneWidthPx,
+      sidebarWidthPx,
       transitionMs,
       edgeActivationWidthPx,
       dragActivationDeltaPx,
@@ -354,15 +374,15 @@ export const useSetMergedOptions = (side: PaneSide, options: SwipeBarProps) => {
       globalOptions,
       mediaQueryWidth,
     ]
-  ) satisfies Required<SwipeBarProps>;
+  ) satisfies Required<TSwipeBarOptions>;
 
   useEffect(() => {
     if (side === "left") {
-      setLeftPaneOptions(mergedOptions);
+      setLeftSidebarOptions(mergedOptions);
     } else {
-      setRightPaneOptions(mergedOptions);
+      setRightSidebarOptions(mergedOptions);
     }
-  }, [side, mergedOptions, setLeftPaneOptions, setRightPaneOptions]);
+  }, [side, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions]);
 
   return mergedOptions;
 };

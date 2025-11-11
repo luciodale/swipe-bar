@@ -16,44 +16,44 @@ import {
   IS_ABSOLUTE,
   MEDIA_QUERY_WIDTH,
   PANE_WIDTH_PX,
-  type PaneSide,
+  type TSidebarSide,
   SHOW_OVERLAY,
   SHOW_TOGGLE,
-  type SwipeBarProps,
+  type TSwipeBarOptions,
   TRANSITION_MS,
   applyClosePaneStyles,
   applyDragPaneStyles,
   applyOpenPaneStyles,
-} from "./swipePaneShared";
+} from "./swipeSidebarShared";
 
-type LockedPane = PaneSide | null;
+type TLockedSidebar = TSidebarSide | null;
 
-export type SwipePaneContextProps = {
-  lockedPane: LockedPane;
-  setLockedPane: (pane: LockedPane) => void;
-  leftPaneRef: React.RefObject<HTMLDivElement | null>;
-  rightPaneRef: React.RefObject<HTMLDivElement | null>;
+type TSwipeSidebarContext = {
+  lockedSidebar: TLockedSidebar;
+  setLockedSidebar: (side: TLockedSidebar) => void;
+  leftSidebarRef: React.RefObject<HTMLDivElement | null>;
+  rightSidebarRef: React.RefObject<HTMLDivElement | null>;
   isLeftOpen: boolean;
   isRightOpen: boolean;
-  openPane: (side: PaneSide) => void;
-  closePane: (side: PaneSide) => void;
-  dragPane: (side: PaneSide, translateX: number | null) => void;
-  globalOptions: Required<SwipeBarProps>;
-  leftPaneOptions: SwipeBarProps;
-  rightPaneOptions: SwipeBarProps;
-  setLeftPaneOptions: (options: SwipeBarProps) => void;
-  setRightPaneOptions: (options: SwipeBarProps) => void;
+  openSidebar: (side: TSidebarSide) => void;
+  closeSidebar: (side: TSidebarSide) => void;
+  dragSidebar: (side: TSidebarSide, translateX: number | null) => void;
+  globalOptions: Required<TSwipeBarOptions>;
+  leftSidebarOptions: TSwipeBarOptions;
+  rightSidebarOptions: TSwipeBarOptions;
+  setLeftSidebarOptions: (options: TSwipeBarOptions) => void;
+  setRightSidebarOptions: (options: TSwipeBarOptions) => void;
   leftToggleRef: React.RefObject<HTMLDivElement | null>;
   rightToggleRef: React.RefObject<HTMLDivElement | null>;
 };
 
-export const SwipeBarContext = createContext<SwipePaneContextProps | null>(
+export const SwipeSidebarContext = createContext<TSwipeSidebarContext | null>(
   null
 );
 
 export const SwipeBarProvider = ({
   children,
-  paneWidthPx,
+  sidebarWidthPx,
   transitionMs,
   edgeActivationWidthPx,
   dragActivationDeltaPx,
@@ -66,18 +66,20 @@ export const SwipeBarProvider = ({
   toggleIconEdgeDistancePx,
   showToggle,
   mediaQueryWidth,
-}: { children: ReactNode } & SwipeBarProps) => {
-  const [lockedPane, setLockedPane] = useState<LockedPane>(null);
+}: { children: ReactNode } & TSwipeBarOptions) => {
+  const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
   const [isLeftOpen, setIsLeftOpen] = useState(false);
   const [isRightOpen, setIsRightOpen] = useState(false);
-  const [leftPaneOptions, setLeftPaneOptions] = useState<SwipeBarProps>({});
-  const [rightPaneOptions, setRightPaneOptions] = useState<SwipeBarProps>({});
-  const leftPaneRef = useRef<HTMLDivElement>(null);
-  const rightPaneRef = useRef<HTMLDivElement>(null);
+  const [leftSidebarOptions, setLeftSidebarOptions] =
+    useState<TSwipeBarOptions>({});
+  const [rightSidebarOptions, setRightSidebarOptions] =
+    useState<TSwipeBarOptions>({});
+  const leftSidebarRef = useRef<HTMLDivElement>(null);
+  const rightSidebarRef = useRef<HTMLDivElement>(null);
   const leftToggleRef = useRef<HTMLDivElement>(null);
   const rightToggleRef = useRef<HTMLDivElement>(null);
-  const [globalOptions] = useState<Required<SwipeBarProps>>({
-    paneWidthPx: paneWidthPx ?? PANE_WIDTH_PX,
+  const [globalOptions] = useState<Required<TSwipeBarOptions>>({
+    sidebarWidthPx: sidebarWidthPx ?? PANE_WIDTH_PX,
     transitionMs: transitionMs ?? TRANSITION_MS,
     edgeActivationWidthPx: edgeActivationWidthPx ?? EDGE_ACTIVATION_REGION_PX,
     dragActivationDeltaPx: dragActivationDeltaPx ?? DRAG_ACTIVATION_DELTA_PX,
@@ -95,72 +97,72 @@ export const SwipeBarProvider = ({
     mediaQueryWidth: mediaQueryWidth ?? MEDIA_QUERY_WIDTH,
   });
 
-  const openPane = useCallback(
-    (side: PaneSide) => {
+  const openSidebar = useCallback(
+    (side: TSidebarSide) => {
       applyOpenPaneStyles({
         side,
-        ref: side === "left" ? leftPaneRef : rightPaneRef,
-        options: side === "left" ? leftPaneOptions : rightPaneOptions,
+        ref: side === "left" ? leftSidebarRef : rightSidebarRef,
+        options: side === "left" ? leftSidebarOptions : rightSidebarOptions,
         toggleRef: side === "left" ? leftToggleRef : rightToggleRef,
         afterApply: () => {
           side === "left" ? setIsLeftOpen(true) : setIsRightOpen(true);
-          setLockedPane(side);
+          setLockedSidebar(side);
         },
       });
     },
-    [leftPaneOptions, rightPaneOptions]
+    [leftSidebarOptions, rightSidebarOptions]
   );
 
-  const closePane = useCallback(
-    (side: PaneSide) => {
+  const closeSidebar = useCallback(
+    (side: TSidebarSide) => {
       applyClosePaneStyles({
-        ref: side === "left" ? leftPaneRef : rightPaneRef,
-        options: side === "left" ? leftPaneOptions : rightPaneOptions,
+        ref: side === "left" ? leftSidebarRef : rightSidebarRef,
+        options: side === "left" ? leftSidebarOptions : rightSidebarOptions,
         toggleRef: side === "left" ? leftToggleRef : rightToggleRef,
         side,
         afterApply: () => {
           side === "left" ? setIsLeftOpen(false) : setIsRightOpen(false);
-          setLockedPane(null);
+          setLockedSidebar(null);
         },
       });
     },
-    [leftPaneOptions, rightPaneOptions]
+    [leftSidebarOptions, rightSidebarOptions]
   );
 
-  const dragPane = useCallback(
-    (side: PaneSide, translateX: number | null) => {
+  const dragSidebar = useCallback(
+    (side: TSidebarSide, translateX: number | null) => {
       applyDragPaneStyles({
-        ref: side === "left" ? leftPaneRef : rightPaneRef,
+        ref: side === "left" ? leftSidebarRef : rightSidebarRef,
         toggleRef: side === "left" ? leftToggleRef : rightToggleRef,
-        options: side === "left" ? leftPaneOptions : rightPaneOptions,
+        options: side === "left" ? leftSidebarOptions : rightSidebarOptions,
         translateX,
       });
     },
-    [leftPaneOptions, rightPaneOptions]
+    [leftSidebarOptions, rightSidebarOptions]
   );
 
   return (
-    <SwipeBarContext.Provider
+    <SwipeSidebarContext.Provider
       value={{
-        lockedPane,
-        setLockedPane,
+        lockedSidebar,
+        setLockedSidebar,
         isLeftOpen,
         isRightOpen,
-        leftPaneRef,
-        rightPaneRef,
-        openPane,
-        closePane,
-        dragPane,
+        leftSidebarRef,
+        rightSidebarRef,
+        openSidebar,
+        closeSidebar,
+        dragSidebar,
         globalOptions,
-        leftPaneOptions,
-        rightPaneOptions,
-        setLeftPaneOptions,
-        setRightPaneOptions,
+        leftSidebarOptions,
+        rightSidebarOptions,
+        setLeftSidebarOptions,
+        setRightSidebarOptions,
         leftToggleRef,
         rightToggleRef,
       }}
     >
       {children}
-    </SwipeBarContext.Provider>
+    </SwipeSidebarContext.Provider>
   );
 };

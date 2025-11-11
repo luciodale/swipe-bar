@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "swipe-pane-monorepo",
+      "name": "swipe-bar-monorepo",
       "devDependencies": {
         "@biomejs/biome": "^1.9.4",
         "@testing-library/jest-dom": "^6.6.3",
@@ -26,10 +26,10 @@
       },
     },
     "packages/docs": {
-      "name": "swipe-pane-docs",
+      "name": "swipe-bar-docs",
       "version": "0.0.27",
       "dependencies": {
-        "@luciodale/swipe-pane": "workspace:*",
+        "@luciodale/swipe-bar": "workspace:*",
         "@tailwindcss/vite": "^4.1.16",
         "clsx": "^2.1.1",
         "tailwind-merge": "^3.3.1",
@@ -43,7 +43,7 @@
       },
     },
     "packages/library": {
-      "name": "@luciodale/swipe-pane",
+      "name": "@luciodale/swipe-bar",
       "version": "0.0.1",
       "dependencies": {
         "clsx": "^2.1.1",
@@ -192,7 +192,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@luciodale/swipe-pane": ["@luciodale/swipe-pane@workspace:packages/library"],
+    "@luciodale/swipe-bar": ["@luciodale/swipe-bar@workspace:packages/library"],
 
     "@microsoft/api-extractor": ["@microsoft/api-extractor@7.43.0", "", { "dependencies": { "@microsoft/api-extractor-model": "7.28.13", "@microsoft/tsdoc": "0.14.2", "@microsoft/tsdoc-config": "~0.16.1", "@rushstack/node-core-library": "4.0.2", "@rushstack/rig-package": "0.5.2", "@rushstack/terminal": "0.10.0", "@rushstack/ts-command-line": "4.19.1", "lodash": "~4.17.15", "minimatch": "~3.0.3", "resolve": "~1.22.1", "semver": "~7.5.4", "source-map": "~0.6.1", "typescript": "5.4.2" }, "bin": { "api-extractor": "bin/api-extractor" } }, "sha512-GFhTcJpB+MI6FhvXEI9b2K0snulNLWHqC/BbcJtyNYcKUiw7l3Lgis5ApsYncJ0leALX7/of4XfmXk+maT111w=="],
 
@@ -716,7 +716,7 @@
 
     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
 
-    "swipe-pane-docs": ["swipe-pane-docs@workspace:packages/docs"],
+    "swipe-bar-docs": ["swipe-bar-docs@workspace:packages/docs"],
 
     "symbol-tree": ["symbol-tree@3.2.4", "", {}, "sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw=="],
 

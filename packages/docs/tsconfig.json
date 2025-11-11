@@ -23,7 +23,7 @@
 		/* Path mapping */
 		"baseUrl": ".",
 		"paths": {
-			"@luciodale/swipe-pane": ["../library/src"]
+			"@luciodale/swipe-bar": ["../library/src"]
 		}
 	},
 	"include": ["src", "../library/src/components/Sidebar.tsx"]

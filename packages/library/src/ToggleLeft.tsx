@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import { ToggleIcon } from "./components/ToggleIcon";
-import { type SwipeBarProps, toggleWrapperStyle } from "./swipePaneShared";
-import { useSwipePaneContext } from "./useSwipePaneContext";
+import {
+  type TSwipeBarOptions,
+  toggleWrapperStyle,
+} from "./swipeSidebarShared";
+import { useSwipeBarContext } from "./useSwipeBarContext";
 
 type ToggleProps = {
   showToggle?: boolean;
   ToggleComponent?: ReactNode;
-  options: Required<SwipeBarProps>;
+  options: Required<TSwipeBarOptions>;
 };
 
 export function ToggleLeft({
@@ -14,8 +17,8 @@ export function ToggleLeft({
   showToggle = true,
   ToggleComponent,
 }: ToggleProps) {
-  const { openPane, leftToggleRef, isLeftOpen, closePane } =
-    useSwipePaneContext();
+  const { openSidebar, leftToggleRef, isLeftOpen, closeSidebar } =
+    useSwipeBarContext();
 
   if (!showToggle) return null;
 
@@ -31,7 +34,9 @@ export function ToggleLeft({
       {(!isLeftOpen || (isLeftOpen && !options.showOverlay)) && (
         <button
           type="button"
-          onClick={() => (isLeftOpen ? closePane("left") : openPane("left"))}
+          onClick={() =>
+            isLeftOpen ? closeSidebar("left") : openSidebar("left")
+          }
           style={{
             marginLeft: `${options.toggleIconEdgeDistancePx}px`,
             ...(isLeftOpen ? { transform: "rotate(180deg)" } : {}),

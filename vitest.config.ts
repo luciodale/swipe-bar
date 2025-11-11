@@ -17,7 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "swipe-pane": "packages/library/src",
+      "swipe-bar": "packages/library/src",
     },
   },
 });
