@@ -16,6 +16,7 @@ SwipeBar provides an intuitive, native-app-like experience for mobile and deskto
 
 ## Features
 
+- 📦 **Lightweight** - zero dependencies
 - 📱 **Native Mobile Gestures** - Swipe from screen edges just like native apps
 - 🖱️ **Desktop Support** - Works seamlessly with mouse interactions
 - 🎨 **Fully Customizable** - Complete control over styling, animations, and behavior
@@ -39,7 +40,13 @@ bun add @luciodale/swipe-bar
 
 ## Quick Start
 
-### 1. Add the Provider
+### 1. Install
+
+```bash
+npm install @luciodale/swipe-bar
+```
+
+### 2. Add the Provider
 
 Wrap your app with `SwipeBarProvider`:
 
@@ -55,7 +62,7 @@ function App() {
 }
 ```
 
-### 2. Add Left Sidebar
+### 3. Add Left Sidebar
 
 ```tsx
 import { SwipeBarLeft } from "@luciodale/swipe-bar";
@@ -65,7 +72,7 @@ import { SwipeBarLeft } from "@luciodale/swipe-bar";
 </SwipeBarLeft>
 ```
 
-### 3. Add Right Sidebar
+### 4. Add Right Sidebar
 
 ```tsx
 import { SwipeBarRight } from "@luciodale/swipe-bar";
@@ -75,7 +82,7 @@ import { SwipeBarRight } from "@luciodale/swipe-bar";
 </SwipeBarRight>
 ```
 
-### 4. Programmatic Control
+### 5. Programmatic Control
 
 Use the context hook to control sidebars from anywhere:
 

@@ -9,6 +9,8 @@ import { PropsCustomization } from "./components/PropsCustomization";
 import { QuickStart, PropsConfiguration } from "./components/CodeSnippets";
 import { QuickSettings } from "./components/QuickSettings";
 import { useState } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function App() {
   const { openSidebar, closeSidebar, isLeftOpen, isRightOpen } =
@@ -156,12 +158,34 @@ export function App() {
                         alt="Touch Slide Logo"
                         className="w-52 mx-auto"
                       />
-                      <div className="text-4xl font-bold mb-6 bg-linear-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">
+                      <div className="text-4xl font-bold mb-2 bg-linear-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">
                         SwipeBar
                       </div>
 
+                      <div className="my-4 inline-block rounded-lg bg-black/20 border border-white/10 overflow-hidden">
+                        <SyntaxHighlighter
+                          language="bash"
+                          style={vscDarkPlus}
+                          customStyle={{
+                            margin: 0,
+                            padding: "0.5rem 0.75rem",
+                            background: "transparent",
+                            fontSize: "0.875rem",
+                            lineHeight: "1.5",
+                          }}
+                          codeTagProps={{
+                            style: {
+                              fontFamily: "ui-monospace, monospace",
+                            },
+                          }}
+                        >
+                          npm install @luciodale/swipe-bar
+                        </SyntaxHighlighter>
+                      </div>
+
                       <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-                        A native swipe bar experience
+                        A native swipe bar experience <br /> with zero
+                        dependencies
                       </h1>
                       <p className="mt-2 text-white/80">
                         Responsive, swipeable side bars with a modern
