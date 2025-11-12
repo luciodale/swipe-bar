@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import {
-	DEFAULT_TOGGLE_ICON_OPACITY,
-	DEFAULT_TOGGLE_ICON_OPACITY_TRANSITION_MS,
+	TOGGLE_ICON_OPACITY,
+	TOGGLE_ICON_OPACITY_TRANSITION_MS,
 	toggleIconWrapperStyle,
 } from "../swipeSidebarShared";
 
@@ -16,7 +16,7 @@ export function ToggleIcon({ size, color }: { size: number; color: string }) {
 		};
 		const handleMouseLeave = () => {
 			if (ref.current) {
-				ref.current.style.opacity = `${DEFAULT_TOGGLE_ICON_OPACITY}`;
+				ref.current.style.opacity = `${TOGGLE_ICON_OPACITY}`;
 			}
 		};
 		if (ref.current) {
@@ -38,8 +38,8 @@ export function ToggleIcon({ size, color }: { size: number; color: string }) {
 		>
 			<svg
 				style={{
-					transition: `opacity ${DEFAULT_TOGGLE_ICON_OPACITY_TRANSITION_MS}ms ease`,
-					opacity: `${DEFAULT_TOGGLE_ICON_OPACITY}`,
+					transition: `opacity ${TOGGLE_ICON_OPACITY_TRANSITION_MS}ms ease`,
+					opacity: `${TOGGLE_ICON_OPACITY}`,
 				}}
 				ref={ref}
 				aria-hidden="true"

@@ -70,8 +70,9 @@ export const LATENCY_OPACITY_TRANSITION_MS = 100;
 export const DEFAULT_SWIPEBAR_Z_INDEX = 30;
 export const DEFAULT_TOGGLE_Z_INDEX = 15;
 export const DEFAULT_OVERLAY_Z_INDEX = 20;
-export const DEFAULT_TOGGLE_ICON_OPACITY = 0.6;
-export const DEFAULT_TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
+export const TOGGLE_ICON_OPACITY = 0.6;
+export const TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
+export const SWIPBAR_CONTENT_OPACITY_TRANSITION_MS = 100;
 
 export const swipeBarStyle = {
 	width: 0,
@@ -163,7 +164,7 @@ export const applyOpenPaneStyles = ({
 
 		if (!ref.current || !child) return;
 		ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
-		child.style.transition = `opacity ${delayMs}ms ease`;
+		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
@@ -205,12 +206,11 @@ export const applyClosePaneStyles = ({
 	afterApply,
 }: TApplyClosePaneStyles) => {
 	const child = getChildElement(ref);
-	const delayMs = options.transitionMs ? (options.transitionMs * 1) / 3 : 0;
 
 	requestAnimationFrame(() => {
 		if (!ref.current || !child) return;
 		ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
-		child.style.transition = `opacity ${delayMs}ms ease`;
+		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
