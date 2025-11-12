@@ -153,7 +153,7 @@ export const applyOpenPaneStyles = ({
 	afterApply,
 }: TApplyOpenPaneStyles) => {
 	const child = getChildElement(ref);
-	const delayMs = options.transitionMs ? (options.transitionMs * 2) / 3 : 0;
+	const delayMs = options.transitionMs ? options.transitionMs / 2 : 0;
 	if (child) {
 		child.style.opacity = "0";
 	}
