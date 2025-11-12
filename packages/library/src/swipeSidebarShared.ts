@@ -70,6 +70,8 @@ export const LATENCY_OPACITY_TRANSITION_MS = 100;
 export const DEFAULT_SWIPEBAR_Z_INDEX = 30;
 export const DEFAULT_TOGGLE_Z_INDEX = 15;
 export const DEFAULT_OVERLAY_Z_INDEX = 20;
+export const DEFAULT_TOGGLE_ICON_OPACITY = 0.6;
+export const DEFAULT_TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
 
 export const swipeBarStyle = {
 	width: 0,
