@@ -4,23 +4,26 @@ import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 export const QuickSettings = () => {
   const toggleComponentCode = `import { CustomToggle } from "./CustomToggle";
 
-// ToggleComponent is only available on SwipeBarLeft and SwipeBarRight
+// ToggleComponent available on all three sidebars
 <SwipeBarLeft ToggleComponent={<CustomToggle />}>
   {/* sidebar content */}
 </SwipeBarLeft>
 
-// Or pass undefined to use the default toggle
-<SwipeBarRight ToggleComponent={undefined}>
+<SwipeBarRight ToggleComponent={<CustomToggle />}>
   {/* sidebar content */}
-</SwipeBarRight>`;
+</SwipeBarRight>
+
+<SwipeBarBottom ToggleComponent={<CustomToggle />}>
+  {/* bottom sheet content */}
+</SwipeBarBottom>`;
 
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white md:col-span-2">
+    <div className="rounded-2xl border border-white/10 bg-slate-800/50 p-5 text-white md:col-span-2">
       <h2 className="text-xl font-semibold mb-4">Custom Toggle Component</h2>
       <p className="text-white/70 text-sm mb-4">
-        The ToggleComponent prop is only available on SwipeBarLeft and
-        SwipeBarRight components. Use it to replace the default toggle button
-        with your own custom component.
+        The ToggleComponent prop is available on SwipeBarLeft, SwipeBarRight,
+        and SwipeBarBottom. Use it to replace the default toggle button with
+        your own custom component.
       </p>
 
       <div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden">

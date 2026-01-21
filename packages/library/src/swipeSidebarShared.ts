@@ -5,7 +5,7 @@ export type TSidebarCallbacks = {
 	getIsOpen: () => boolean;
 	openSidebar: () => void;
 	closeSidebar: () => void;
-	dragSidebar: (translateX: number | null) => void;
+	dragSidebar: (translate: number | null) => void;
 };
 
 export type TDragState = {
@@ -22,9 +22,16 @@ export type TDragRefs = {
 	prevXRef: RefObject<number | null>;
 };
 
+export type TDragRefsY = {
+	draggingRef: RefObject<TDragState | null>;
+	currentYRef: RefObject<number | null>;
+	prevYRef: RefObject<number | null>;
+};
+
 export type TSwipeBarOptions = {
 	transitionMs?: number;
 	sidebarWidthPx?: number;
+	sidebarHeightPx?: number;
 	isAbsolute?: boolean;
 	edgeActivationWidthPx?: number;
 	dragActivationDeltaPx?: number;
@@ -55,6 +62,7 @@ export const TRANSITION_MS = 300;
 export const EDGE_ACTIVATION_REGION_PX = 40;
 export const DRAG_ACTIVATION_DELTA_PX = 20;
 export const PANE_WIDTH_PX = 320;
+export const PANE_HEIGHT_PX = 320;
 export const SHOW_OVERLAY = true;
 export const CLOSE_SIDEBAR_ON_OVERLAY_CLICK = true;
 export const IS_ABSOLUTE = false;
@@ -97,6 +105,22 @@ export const rightSwipeBarAbsoluteStyle = {
 	bottom: 0,
 } satisfies CSSProperties;
 
+export const bottomSwipeBarStyle = {
+	height: 0,
+	left: 0,
+	right: 0,
+	flexShrink: 0,
+	overflowY: "hidden",
+	willChange: "transform",
+} satisfies CSSProperties;
+
+export const bottomSwipeBarAbsoluteStyle = {
+	position: "fixed",
+	bottom: 0,
+	left: 0,
+	right: 0,
+} satisfies CSSProperties;
+
 export const overlayStyle = {
 	position: "fixed",
 	top: 0,
@@ -123,6 +147,16 @@ export const toggleWrapperStyle = {
 	justifyContent: "center",
 } satisfies CSSProperties;
 
+export const toggleWrapperBottomStyle = {
+	position: "fixed",
+	bottom: 0,
+	left: "50%",
+	transform: "translateX(-50%)",
+	height: "1px",
+	display: "flex",
+	alignItems: "center",
+} satisfies CSSProperties;
+
 export const toggleIconWrapperStyle = {
 	position: "relative",
 	cursor: "pointer",
@@ -132,7 +166,11 @@ export const toggleIconWrapperStyle = {
 	justifyContent: "center",
 } satisfies CSSProperties;
 
-export type TSidebarSide = "left" | "right";
+export type TSidebarSide = "left" | "right" | "bottom";
+
+const assertNever = (side: never): never => {
+	throw new Error(`Unhandled sidebar side: ${side}`);
+};
 
 const getChildElement = (ref: RefObject<HTMLDivElement | null>): HTMLElement | null => {
 	return ref.current?.firstElementChild as HTMLElement | null;
@@ -159,24 +197,38 @@ export const applyOpenPaneStyles = ({
 		child.style.opacity = "0";
 	}
 
-	requestAnimationFrame(() => {
-		// Hide child content initially
+	let dimension: "height" | "width";
+	let sizePx: number | undefined;
 
+	if (side === "left" || side === "right") {
+		dimension = "width";
+		sizePx = options.sidebarWidthPx;
+	} else if (side === "bottom") {
+		dimension = "height";
+		sizePx = options.sidebarHeightPx;
+	} else {
+		assertNever(side);
+	}
+
+	requestAnimationFrame(() => {
 		if (!ref.current || !child) return;
-		ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
+		ref.current.style.transition = `transform ${options.transitionMs}ms ease, ${dimension} ${options.transitionMs}ms ease`;
 		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
-			// clearing transform opens to its natural position for left and right
 			ref.current.style.transform = "";
-			ref.current.style.width = `${options.sidebarWidthPx}px`;
+			ref.current.style[dimension] = `${sizePx}px`;
 
-			if (toggleRef.current && options.sidebarWidthPx) {
+			if (toggleRef.current && sizePx) {
 				toggleRef.current.style.opacity = "1";
-				toggleRef.current.style.transform = `translateY(-50%) translateX(${
-					side === "left" ? options.sidebarWidthPx : -options.sidebarWidthPx
-				}px)`;
+				if (side === "left") {
+					toggleRef.current.style.transform = `translateY(-50%) translateX(${sizePx}px)`;
+				} else if (side === "right") {
+					toggleRef.current.style.transform = `translateY(-50%) translateX(-${sizePx}px)`;
+				} else if (side === "bottom") {
+					toggleRef.current.style.transform = `translateX(-50%) translateY(-${sizePx}px)`;
+				}
 			}
 
 			setTimeout(() => {
@@ -207,19 +259,41 @@ export const applyClosePaneStyles = ({
 }: TApplyClosePaneStyles) => {
 	const child = getChildElement(ref);
 
+	let dimension: "height" | "width";
+	if (side === "left" || side === "right") {
+		dimension = "width";
+	} else if (side === "bottom") {
+		dimension = "height";
+	} else {
+		assertNever(side);
+	}
+
 	requestAnimationFrame(() => {
 		if (!ref.current || !child) return;
-		ref.current.style.transition = `transform ${options.transitionMs}ms ease, width ${options.transitionMs}ms ease`;
+		ref.current.style.transition = `transform ${options.transitionMs}ms ease, ${dimension} ${options.transitionMs}ms ease`;
 		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
-			ref.current.style.transform = side === "left" ? "translateX(-100%)" : "translateX(100%)";
-			ref.current.style.width = "0px";
+
+			if (side === "left") {
+				ref.current.style.transform = "translateX(-100%)";
+				ref.current.style.width = "0px";
+			} else if (side === "right") {
+				ref.current.style.transform = "translateX(100%)";
+				ref.current.style.width = "0px";
+			} else if (side === "bottom") {
+				ref.current.style.transform = "translateY(100%)";
+				ref.current.style.height = "0px";
+			}
 
 			if (toggleRef.current) {
 				toggleRef.current.style.opacity = "1";
-				toggleRef.current.style.transform = "translateY(-50%)";
+				if (side === "left" || side === "right") {
+					toggleRef.current.style.transform = "translateY(-50%)";
+				} else if (side === "bottom") {
+					toggleRef.current.style.transform = "translateX(-50%)";
+				}
 			}
 
 			child.style.opacity = "0";
@@ -265,6 +339,41 @@ export const applyDragPaneStyles = ({
 	});
 };
 
+type TApplyDragPaneStylesBottom = {
+	ref: RefObject<HTMLDivElement | null>;
+	toggleRef: RefObject<HTMLDivElement | null>;
+	options: TSwipeBarOptions;
+	translateY: number | null;
+};
+
+export const applyDragPaneStylesBottom = ({
+	ref,
+	toggleRef,
+	options,
+	translateY,
+}: TApplyDragPaneStylesBottom) => {
+	if (!ref.current || translateY === null) return;
+	ref.current.style.transition = "none";
+
+	requestAnimationFrame(() => {
+		const child = getChildElement(ref);
+
+		if (!ref.current || !child) return;
+		child.style.opacity = "0";
+
+		const desiredHeight = `${options.sidebarHeightPx}px`;
+		if (ref.current.style.height !== desiredHeight) {
+			ref.current.style.height = desiredHeight;
+		}
+		ref.current.style.transform = `translateY(${translateY}px)`;
+
+		if (toggleRef.current) {
+			toggleRef.current.style.opacity = "0";
+			toggleRef.current.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+		}
+	});
+};
+
 type THandleDragStart = {
 	refs: TDragRefs;
 	clientX: number;
@@ -285,6 +394,32 @@ export const handleDragStart = ({ refs, clientX, clientY, touchId, isMouse }: TH
 	refs.prevXRef.current = clientX;
 };
 
+type THandleDragStartY = {
+	refs: TDragRefsY;
+	clientX: number;
+	clientY: number;
+	touchId: number | null;
+	isMouse: boolean;
+};
+
+export const handleDragStartY = ({
+	refs,
+	clientX,
+	clientY,
+	touchId,
+	isMouse,
+}: THandleDragStartY) => {
+	refs.draggingRef.current = {
+		startX: clientX,
+		startY: clientY,
+		activeTouchId: touchId,
+		isMouse,
+		isActivated: false,
+	};
+	refs.currentYRef.current = clientY;
+	refs.prevYRef.current = clientY;
+};
+
 type THandleDragCancel = {
 	refs: TDragRefs;
 	dragSidebar: (translateX: number | null) => void;
@@ -295,6 +430,20 @@ export const handleDragCancel = ({ refs, dragSidebar, onDeactivate }: THandleDra
 	refs.draggingRef.current = null;
 	refs.currentXRef.current = null;
 	refs.prevXRef.current = null;
+	dragSidebar(null);
+	onDeactivate();
+};
+
+type THandleDragCancelY = {
+	refs: TDragRefsY;
+	dragSidebar: (translateY: number | null) => void;
+	onDeactivate: () => void;
+};
+
+export const handleDragCancelY = ({ refs, dragSidebar, onDeactivate }: THandleDragCancelY) => {
+	refs.draggingRef.current = null;
+	refs.currentYRef.current = null;
+	refs.prevYRef.current = null;
 	dragSidebar(null);
 	onDeactivate();
 };
@@ -331,9 +480,11 @@ export const hasTrackedTouchEnded = (
 };
 
 export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOptions) => {
-	const { globalOptions, setLeftSidebarOptions, setRightSidebarOptions } = useSwipeBarContext();
+	const { globalOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptions } =
+		useSwipeBarContext();
 	const {
 		sidebarWidthPx,
+		sidebarHeightPx,
 		transitionMs,
 		edgeActivationWidthPx,
 		dragActivationDeltaPx,
@@ -353,6 +504,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 	const mergedOptions = useMemo(
 		() => ({
 			sidebarWidthPx: sidebarWidthPx ?? globalOptions.sidebarWidthPx,
+			sidebarHeightPx: sidebarHeightPx ?? globalOptions.sidebarHeightPx,
 			transitionMs: transitionMs ?? globalOptions.transitionMs,
 			edgeActivationWidthPx: edgeActivationWidthPx ?? globalOptions.edgeActivationWidthPx,
 			dragActivationDeltaPx: dragActivationDeltaPx ?? globalOptions.dragActivationDeltaPx,
@@ -370,6 +522,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		}),
 		[
 			sidebarWidthPx,
+			sidebarHeightPx,
 			transitionMs,
 			edgeActivationWidthPx,
 			dragActivationDeltaPx,
@@ -391,10 +544,14 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 	useEffect(() => {
 		if (side === "left") {
 			setLeftSidebarOptions(mergedOptions);
-		} else {
+		} else if (side === "right") {
 			setRightSidebarOptions(mergedOptions);
+		} else if (side === "bottom") {
+			setBottomSidebarOptions(mergedOptions);
+		} else {
+			assertNever(side);
 		}
-	}, [side, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions]);
+	}, [side, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptions]);
 
 	return mergedOptions;
 };

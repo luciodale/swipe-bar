@@ -31,10 +31,18 @@ function App() {
   <div>Settings panel</div>
 </SwipeBarRight>`,
 		},
+		{
+			title: "Bottom Sheet",
+			code: `import { SwipeBarBottom } from "@luciodale/swipe-bar";
+
+<SwipeBarBottom sidebarHeightPx={280} isAbsolute className="bg-blue-500 ...">
+  <div>Bottom sheet content</div>
+</SwipeBarBottom>`,
+		},
 	];
 
 	return (
-		<div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white">
+		<div className="rounded-2xl border border-white/10 bg-slate-800/50 p-5 text-white">
 			<h2 className="text-xl font-semibold mb-4">Quick Start</h2>
 			<div className="space-y-3">
 				{snippets.map((snippet) => (
@@ -73,7 +81,8 @@ function App() {
 export const PropsConfiguration = () => {
 	const propsCode = `// Available props with defaults
 <SwipeBarProvider
-  sidebarWidthPx={320}
+  sidebarWidthPx={320}      // width for left/right bars
+  sidebarHeightPx={300}     // height for bottom bar
   transitionMs={300}
   edgeActivationWidthPx={40}
   dragActivationDeltaPx={20}
@@ -95,9 +104,19 @@ export const PropsConfiguration = () => {
 // Props can also be set on individual sidebars
 <SwipeBarLeft showOverlay={false} isAbsolute={true}>
   {/* content */}
-</SwipeBarLeft>`;
+</SwipeBarLeft>
+
+// Bottom bar with custom height
+<SwipeBarBottom sidebarHeightPx={280} isAbsolute>
+  {/* content */}
+</SwipeBarBottom>`;
 
 	const keyPoints = [
+		{
+			title: "SwipeBarBottom",
+			description:
+				"A bottom sheet component with swipe-up/down gestures. Uses sidebarHeightPx instead of sidebarWidthPx. Typically used with isAbsolute={true}.",
+		},
 		{
 			title: "isAbsolute",
 			description:
@@ -111,17 +130,17 @@ export const PropsConfiguration = () => {
 		{
 			title: "Single Child Only",
 			description:
-				"The sidebar only accepts a single child. If you need to render multiple children, you can wrap them in a single parent element.",
+				"All sidebars only accept a single child. If you need to render multiple children, wrap them in a single parent element.",
 		},
 		{
 			title: "Programmatic Control",
 			description:
-				"You can take closeSidebar or openSidebar from the provider and use them in event handlers from virtually anywhere.",
+				"Use closeSidebar('left'|'right'|'bottom') or openSidebar('left'|'right'|'bottom') from the provider context.",
 		},
 	];
 
 	return (
-		<div className="rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white">
+		<div className="rounded-2xl border border-white/10 bg-slate-800/50 p-5 text-white">
 			<h2 className="text-xl font-semibold mb-4">Props & Configuration</h2>
 
 			<div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden mb-4">

@@ -125,7 +125,7 @@ export function PropsCustomization({
 	};
 
 	return (
-		<div className="h-full rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-2xl text-white">
+		<div className="h-full rounded-2xl border border-white/10 bg-slate-800/50 p-5 text-white">
 			<h2 className="text-xl font-semibold mb-4">Customize Swipe Bar</h2>
 			<p className="text-white/70 text-sm mb-6">
 				Adjust the swipe bar behavior and appearance in real-time
