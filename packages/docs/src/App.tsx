@@ -21,24 +21,28 @@ export function App() {
 		<>
 			<div className="flex" style={{ height: "100dvh" }}>
 				<div className="relative flex h-full w-full overflow-hidden">
-					{/* Ambient gradient background - simplified for performance */}
-					<div className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-br from-slate-950 via-slate-900 to-slate-950">
-						<div className="absolute inset-0 bg-linear-to-tr from-emerald-950/40 via-transparent to-indigo-950/40" />
+					{/* Ambient gradient background */}
+					<div className="pointer-events-none absolute inset-0 -z-10">
+						<div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_10%,rgba(88,101,242,0.25),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(16,185,129,0.2),transparent_60%),linear-gradient(180deg,rgba(2,6,23,1),rgba(2,6,23,0.6))]" />
+						{/* soft blobs */}
+						<div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-emerald-400/20 blur-3xl" />
+						<div className="absolute top-1/3 -right-24 h-122 w-md rounded-full bg-indigo-500/20 blur-3xl" />
+						<div className="absolute -bottom-24 left-1/2 -translate-x-1/2 h-120 w-120 rounded-full bg-fuchsia-400/10 blur-3xl" />
 					</div>
 
 					{/* Left sidebar with glass content */}
 
 					<SwipeBarLeft
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
-						className={cn(
-							"bg-slate-900/95 shadow-xl text-white",
-							isLeftOpen && "border-r border-white/10",
-						)}
+						className={cn("bg-black/90 text-white", isLeftOpen && "border-r border-white/20")}
 					>
 						<div className={cn("flex h-full flex-col p-4 gap-4")}>
 							<div className="flex items-center gap-3 rounded-xl bg-white/5 p-3">
-								<div className="h-10 w-10 rounded-full bg-linear-to-br from-emerald-400 to-indigo-400" />
-								<div>
+								<div className="relative">
+									<div className="h-10 w-10 rounded-full bg-linear-to-br from-emerald-400 to-indigo-400" />
+									<div className="absolute -inset-0.5 rounded-full bg-linear-to-br from-emerald-400/30 to-indigo-400/30 blur-md" />
+								</div>
+								<div className="relative">
 									<div className="text-sm/5 text-white/80">Welcome back</div>
 									<div className="text-base font-semibold">Liquid Glass UI</div>
 								</div>
@@ -93,9 +97,18 @@ export function App() {
 							<div className="flex flex-col transition-width relative h-full w-full flex-1 overflow-auto">
 								{/* main content */}
 								<main className="flex h-full flex-col overflow-y-auto overscroll-contain">
-									{/* sticky header */}
-									<div className="sticky top-0 z-10 flex items-center justify-between gap-2 p-4 bg-slate-950/90">
-										<div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
+									{/* sticky glass header */}
+									<div
+										className="sticky top-0 z-10 flex items-center justify-between gap-2 p-4
+									backdrop-blur-xl"
+									>
+										<div
+											className="absolute bottom-0 left-0 right-0 h-[0.5px]"
+											style={{
+												background:
+													"linear-gradient(to right, rgba(255,255,255,0.85), rgba(203,213,224,0.5), rgba(160,174,192,0.55), rgba(226,232,240,0.5), rgba(255,255,255,0.8))",
+											}}
+										/>
 										<div className="flex items-center gap-3">
 											<img src="/logo.svg" alt="Touch Slide Logo" className="h-8 w-8" />
 											<div className="text-white/90 font-medium">SwipeBar</div>
@@ -125,7 +138,7 @@ export function App() {
 
 									<div className="text-center relative mx-auto grid w-full max-w-5xl flex-1 grid-cols-1 gap-6 p-6 md:grid-cols-2">
 										{/* hero card */}
-										<section className="col-span-1 md:col-span-2 rounded-2xl border border-white/10 bg-slate-800/50 p-6 text-white">
+										<section className="col-span-1 md:col-span-2 rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-2xl text-white shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
 											<img src="/logo.svg" alt="Touch Slide Logo" className="w-52 mx-auto" />
 											<div className="text-4xl font-bold mb-2 bg-linear-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">
 												SwipeBar
@@ -151,7 +164,6 @@ export function App() {
 													npm install @luciodale/swipe-bar
 												</SyntaxHighlighter>
 											</div>
-
 											<h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
 												A native swipe bar experience <br /> with zero dependencies
 											</h1>
@@ -207,10 +219,7 @@ export function App() {
 					{/* Right sidebar */}
 					<SwipeBarRight
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
-						className={cn(
-							"bg-slate-900/95 shadow-xl text-white",
-							isRightOpen && "border-l border-white/10",
-						)}
+						className={cn("bg-black/90 text-white", isRightOpen && "border-l border-white/20")}
 					>
 						<div className={cn("flex h-full flex-col p-4 gap-4")}>
 							<div className="rounded-xl border border-white/20 bg-white/5 p-4">
@@ -268,10 +277,7 @@ export function App() {
 						sidebarHeightPx={280}
 						isAbsolute
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
-						className={cn(
-							"bg-slate-900/95 shadow-xl text-white",
-							isBottomOpen && "border-t border-white/10",
-						)}
+						className={cn("bg-black/90 text-white", isBottomOpen && "border-t border-white/20")}
 					>
 						<div className="flex h-full flex-col p-4 gap-4">
 							<div className="flex items-center justify-between">

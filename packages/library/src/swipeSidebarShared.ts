@@ -45,6 +45,8 @@ export type TSwipeBarOptions = {
 	swipeBarZIndex?: number;
 	toggleZIndex?: number;
 	overlayZIndex?: number;
+	fadeContent?: boolean;
+	fadeContentTransitionMs?: number;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -80,7 +82,9 @@ export const DEFAULT_TOGGLE_Z_INDEX = 15;
 export const DEFAULT_OVERLAY_Z_INDEX = 20;
 export const TOGGLE_ICON_OPACITY = 0.6;
 export const TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
-export const SWIPBAR_CONTENT_OPACITY_TRANSITION_MS = 100;
+export const FADE_CONTENT_TRANSITION_MS = 100;
+export const FADE_CONTENT = true;
+export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
 	width: 0,
@@ -193,7 +197,7 @@ export const applyOpenPaneStyles = ({
 }: TApplyOpenPaneStyles) => {
 	const child = getChildElement(ref);
 	const delayMs = options.transitionMs ? options.transitionMs / 2 : 0;
-	if (child) {
+	if (child && options.fadeContent) {
 		child.style.opacity = "0";
 	}
 
@@ -203,22 +207,41 @@ export const applyOpenPaneStyles = ({
 	if (side === "left" || side === "right") {
 		dimension = "width";
 		sizePx = options.sidebarWidthPx;
+		// Fix child width so it doesn't squish during animation
+		if (child && sizePx) child.style.minWidth = `${sizePx}px`;
 	} else if (side === "bottom") {
 		dimension = "height";
 		sizePx = options.sidebarHeightPx;
+		// Fix child height so it doesn't squish during animation
+		if (child && sizePx) child.style.minHeight = `${sizePx}px`;
 	} else {
 		assertNever(side);
 	}
 
 	requestAnimationFrame(() => {
-		if (!ref.current || !child) return;
-		ref.current.style.transition = `transform ${options.transitionMs}ms ease, ${dimension} ${options.transitionMs}ms ease`;
-		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
+		if (!ref.current) return;
+		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = options.isAbsolute
+			? ""
+			: `, ${dimension} ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
+		if (child && options.fadeContent) {
+			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
+		}
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
-			ref.current.style.transform = "";
-			ref.current.style[dimension] = `${sizePx}px`;
+			// Use correct axis for transform based on side
+			ref.current.style.transform = side === "bottom" ? "translateY(0px)" : "translateX(0px)";
+			if (!options.isAbsolute) {
+				ref.current.style[dimension] = `${sizePx}px`;
+			} else if (ref.current.style[dimension] !== `${sizePx}px`) {
+				// Ensure dimension is set once for absolute mode without animating it
+				const prevTransition = ref.current.style.transition;
+				ref.current.style.transition = transformTransition; // exclude dimension
+				ref.current.style[dimension] = `${sizePx}px`;
+				ref.current.style.transition = prevTransition;
+			}
 
 			if (toggleRef.current && sizePx) {
 				toggleRef.current.style.opacity = "1";
@@ -231,9 +254,11 @@ export const applyOpenPaneStyles = ({
 				}
 			}
 
-			setTimeout(() => {
-				child.style.opacity = "1";
-			}, delayMs);
+			if (child && options.fadeContent) {
+				setTimeout(() => {
+					child.style.opacity = "1";
+				}, delayMs);
+			}
 
 			afterApply();
 		});
@@ -260,31 +285,48 @@ export const applyClosePaneStyles = ({
 	const child = getChildElement(ref);
 
 	let dimension: "height" | "width";
+
 	if (side === "left" || side === "right") {
 		dimension = "width";
+		// Ensure child keeps fixed width so it doesn't squish during animation
+		if (child && options.sidebarWidthPx) child.style.minWidth = `${options.sidebarWidthPx}px`;
 	} else if (side === "bottom") {
 		dimension = "height";
+		// Ensure child keeps fixed height so it doesn't squish during animation
+		if (child && options.sidebarHeightPx) child.style.minHeight = `${options.sidebarHeightPx}px`;
 	} else {
 		assertNever(side);
 	}
 
 	requestAnimationFrame(() => {
-		if (!ref.current || !child) return;
-		ref.current.style.transition = `transform ${options.transitionMs}ms ease, ${dimension} ${options.transitionMs}ms ease`;
-		child.style.transition = `opacity ${SWIPBAR_CONTENT_OPACITY_TRANSITION_MS}ms ease`;
+		if (!ref.current) return;
+		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = options.isAbsolute
+			? ""
+			: `, ${dimension} ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
+		if (child && options.fadeContent) {
+			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
+		}
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
 
 			if (side === "left") {
 				ref.current.style.transform = "translateX(-100%)";
-				ref.current.style.width = "0px";
+				if (!options.isAbsolute) {
+					ref.current.style.width = "0px";
+				}
 			} else if (side === "right") {
 				ref.current.style.transform = "translateX(100%)";
-				ref.current.style.width = "0px";
+				if (!options.isAbsolute) {
+					ref.current.style.width = "0px";
+				}
 			} else if (side === "bottom") {
 				ref.current.style.transform = "translateY(100%)";
-				ref.current.style.height = "0px";
+				if (!options.isAbsolute) {
+					ref.current.style.height = "0px";
+				}
 			}
 
 			if (toggleRef.current) {
@@ -296,7 +338,9 @@ export const applyClosePaneStyles = ({
 				}
 			}
 
-			child.style.opacity = "0";
+			if (child && options.fadeContent) {
+				child.style.opacity = "0";
+			}
 
 			afterApply();
 		});
@@ -322,13 +366,22 @@ export const applyDragPaneStyles = ({
 	requestAnimationFrame(() => {
 		const child = getChildElement(ref);
 
-		if (!ref.current || !child) return;
-		child.style.opacity = "0";
+		if (!ref.current) return;
+		if (child && options.fadeContent) {
+			child.style.opacity = "0";
+		}
 
-		const desiredWidth = `${options.sidebarWidthPx}px`;
-		// Apply width only if it changed to avoid unnecessary layout
-		if (ref.current.style.width !== desiredWidth) {
-			ref.current.style.width = desiredWidth;
+		// Ensure child keeps fixed width so it doesn't squish
+		if (child && options.sidebarWidthPx) {
+			child.style.minWidth = `${options.sidebarWidthPx}px`;
+		}
+
+		if (!options.isAbsolute) {
+			const desiredWidth = `${options.sidebarWidthPx}px`;
+			// Apply width only if it changed to avoid unnecessary layout
+			if (ref.current.style.width !== desiredWidth) {
+				ref.current.style.width = desiredWidth;
+			}
 		}
 		ref.current.style.transform = `translateX(${translateX}px)`;
 
@@ -358,12 +411,21 @@ export const applyDragPaneStylesBottom = ({
 	requestAnimationFrame(() => {
 		const child = getChildElement(ref);
 
-		if (!ref.current || !child) return;
-		child.style.opacity = "0";
+		if (!ref.current) return;
+		if (child && options.fadeContent) {
+			child.style.opacity = "0";
+		}
 
-		const desiredHeight = `${options.sidebarHeightPx}px`;
-		if (ref.current.style.height !== desiredHeight) {
-			ref.current.style.height = desiredHeight;
+		// Ensure child keeps fixed height so it doesn't squish
+		if (child && options.sidebarHeightPx) {
+			child.style.minHeight = `${options.sidebarHeightPx}px`;
+		}
+
+		if (!options.isAbsolute) {
+			const desiredHeight = `${options.sidebarHeightPx}px`;
+			if (ref.current.style.height !== desiredHeight) {
+				ref.current.style.height = desiredHeight;
+			}
 		}
 		ref.current.style.transform = `translateY(${translateY}px)`;
 
@@ -499,6 +561,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		swipeBarZIndex,
 		toggleZIndex,
 		overlayZIndex,
+		fadeContent,
+		fadeContentTransitionMs,
 	} = options;
 
 	const mergedOptions = useMemo(
@@ -519,6 +583,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			swipeBarZIndex: swipeBarZIndex ?? globalOptions.swipeBarZIndex,
 			toggleZIndex: toggleZIndex ?? globalOptions.toggleZIndex,
 			overlayZIndex: overlayZIndex ?? globalOptions.overlayZIndex,
+			fadeContent: fadeContent ?? globalOptions.fadeContent,
+			fadeContentTransitionMs: fadeContentTransitionMs ?? globalOptions.fadeContentTransitionMs,
 		}),
 		[
 			sidebarWidthPx,
@@ -538,6 +604,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			swipeBarZIndex,
 			toggleZIndex,
 			overlayZIndex,
+			fadeContent,
+			fadeContentTransitionMs,
 		],
 	) satisfies Required<TSwipeBarOptions>;
 

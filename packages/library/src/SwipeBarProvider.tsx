@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useCallback, useRef, useState } from "react";
+import { type ReactNode, createContext, useCallback, useEffect, useRef, useState } from "react";
 import {
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
@@ -9,6 +9,8 @@ import {
 	DEFAULT_TOGGLE_Z_INDEX,
 	DRAG_ACTIVATION_DELTA_PX,
 	EDGE_ACTIVATION_REGION_PX,
+	FADE_CONTENT,
+	FADE_CONTENT_TRANSITION_MS,
 	IS_ABSOLUTE,
 	MEDIA_QUERY_WIDTH,
 	PANE_HEIGHT_PX,
@@ -74,6 +76,8 @@ export const SwipeBarProvider = ({
 	swipeBarZIndex,
 	toggleZIndex,
 	overlayZIndex,
+	fadeContent,
+	fadeContentTransitionMs,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
@@ -105,7 +109,31 @@ export const SwipeBarProvider = ({
 		swipeBarZIndex: swipeBarZIndex ?? DEFAULT_SWIPEBAR_Z_INDEX,
 		toggleZIndex: toggleZIndex ?? DEFAULT_TOGGLE_Z_INDEX,
 		overlayZIndex: overlayZIndex ?? DEFAULT_OVERLAY_Z_INDEX,
+		fadeContent: fadeContent ?? FADE_CONTENT,
+		fadeContentTransitionMs: fadeContentTransitionMs ?? FADE_CONTENT_TRANSITION_MS,
 	});
+
+	// Ensure child content becomes visible when fading is disabled at runtime
+	useEffect(() => {
+		if (leftSidebarOptions.fadeContent === false) {
+			const child = leftSidebarRef.current?.firstElementChild as HTMLElement | null;
+			if (child) child.style.opacity = "1";
+		}
+	}, [leftSidebarOptions.fadeContent]);
+
+	useEffect(() => {
+		if (rightSidebarOptions.fadeContent === false) {
+			const child = rightSidebarRef.current?.firstElementChild as HTMLElement | null;
+			if (child) child.style.opacity = "1";
+		}
+	}, [rightSidebarOptions.fadeContent]);
+
+	useEffect(() => {
+		if (bottomSidebarOptions.fadeContent === false) {
+			const child = bottomSidebarRef.current?.firstElementChild as HTMLElement | null;
+			if (child) child.style.opacity = "1";
+		}
+	}, [bottomSidebarOptions.fadeContent]);
 
 	const updateGlobalOptions = useCallback((options: Partial<Required<TSwipeBarOptions>>) => {
 		setGlobalOptions((prev) => ({ ...prev, ...options }));

@@ -42,6 +42,8 @@ export function PropsCustomization({
 		edgeActivationWidthPx: globalOptions.edgeActivationWidthPx,
 		dragActivationDeltaPx: globalOptions.dragActivationDeltaPx,
 		showOverlay: globalOptions.showOverlay,
+		fadeContent: globalOptions.fadeContent,
+		fadeContentTransitionMs: globalOptions.fadeContentTransitionMs,
 		overlayBackgroundColor: globalOptions.overlayBackgroundColor,
 		overlayOpacity: getOpacityFromRgba(globalOptions.overlayBackgroundColor),
 		toggleIconSizePx: globalOptions.toggleIconSizePx,
@@ -444,6 +446,39 @@ export function PropsCustomization({
 								/>
 							</button>
 						</div>
+
+						{/* Fade Content */}
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-white/80">Fade Content</span>
+							<button
+								type="button"
+								onClick={() => handleBooleanChange("fadeContent", !formValues.fadeContent)}
+								aria-label="Toggle fade content"
+								className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+									formValues.fadeContent ? "bg-emerald-400" : "bg-white/20"
+								}`}
+							>
+								<span
+									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+										formValues.fadeContent ? "translate-x-6" : "translate-x-1"
+									}`}
+								/>
+							</button>
+						</div>
+
+						{/* Fade Content Transition */}
+						{formValues.fadeContent && (
+							<div className="flex items-center justify-between">
+								<span className="text-sm text-white/80">Fade Duration (ms)</span>
+								<input
+									type="number"
+									value={formValues.fadeContentTransitionMs}
+									onChange={(e) => handleNumberChange("fadeContentTransitionMs", e.target.value)}
+									onBlur={() => handleNumberBlur("fadeContentTransitionMs")}
+									className="w-20 rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+								/>
+							</div>
+						)}
 
 						{/* Show Toggle */}
 						<div className="flex items-center justify-between">

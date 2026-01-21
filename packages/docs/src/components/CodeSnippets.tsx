@@ -87,6 +87,8 @@ export const PropsConfiguration = () => {
   edgeActivationWidthPx={40}
   dragActivationDeltaPx={20}
   showOverlay={true}
+  fadeContent={true}
+  fadeContentTransitionMs={100}
   isAbsolute={false}
   overlayBackgroundColor="rgba(0, 0, 0, 0.5)"
   toggleIconColor="white"
@@ -102,7 +104,7 @@ export const PropsConfiguration = () => {
 </SwipeBarProvider>
 
 // Props can also be set on individual sidebars
-<SwipeBarLeft showOverlay={false} isAbsolute={true}>
+<SwipeBarLeft showOverlay={false} isAbsolute={true} fadeContent={false}>
   {/* content */}
 </SwipeBarLeft>
 
