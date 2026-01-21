@@ -83,7 +83,7 @@ export const DEFAULT_OVERLAY_Z_INDEX = 20;
 export const TOGGLE_ICON_OPACITY = 0.6;
 export const TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
 export const FADE_CONTENT_TRANSITION_MS = 100;
-export const FADE_CONTENT = true;
+export const FADE_CONTENT = false;
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
@@ -93,6 +93,14 @@ export const swipeBarStyle = {
 	flexShrink: 0,
 	overflowX: "hidden",
 	willChange: "transform",
+} satisfies CSSProperties;
+
+export const leftSwipeBarInitialTransform = {
+	transform: "translateX(-100%)",
+} satisfies CSSProperties;
+
+export const rightSwipeBarInitialTransform = {
+	transform: "translateX(100%)",
 } satisfies CSSProperties;
 
 export const leftSwipeBarAbsoluteStyle = {
@@ -116,6 +124,10 @@ export const bottomSwipeBarStyle = {
 	flexShrink: 0,
 	overflowY: "hidden",
 	willChange: "transform",
+} satisfies CSSProperties;
+
+export const bottomSwipeBarInitialTransform = {
+	transform: "translateY(100%)",
 } satisfies CSSProperties;
 
 export const bottomSwipeBarAbsoluteStyle = {

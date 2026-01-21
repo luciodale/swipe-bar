@@ -4,6 +4,7 @@ import {
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
 	type TSwipeSidebar,
 	rightSwipeBarAbsoluteStyle,
+	rightSwipeBarInitialTransform,
 	swipeBarStyle,
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
@@ -50,6 +51,7 @@ export function SwipeBarRight({
 				ref={rightSidebarRef}
 				style={{
 					...swipeBarStyle,
+					...rightSwipeBarInitialTransform,
 					...(options.isAbsolute || isSmallScreen ? rightSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,

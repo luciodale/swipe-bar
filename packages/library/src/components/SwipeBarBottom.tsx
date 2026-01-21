@@ -4,6 +4,7 @@ import {
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
 	type TSwipeSidebar,
 	bottomSwipeBarAbsoluteStyle,
+	bottomSwipeBarInitialTransform,
 	bottomSwipeBarStyle,
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
@@ -50,6 +51,7 @@ export function SwipeBarBottom({
 				ref={bottomSidebarRef}
 				style={{
 					...bottomSwipeBarStyle,
+					...bottomSwipeBarInitialTransform,
 					...(options.isAbsolute || isSmallScreen ? bottomSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,
