@@ -17,6 +17,8 @@ import {
 	PANE_WIDTH_PX,
 	SHOW_OVERLAY,
 	SHOW_TOGGLE,
+	SWIPE_TO_CLOSE,
+	SWIPE_TO_OPEN,
 	TRANSITION_MS,
 	type TSidebarSide,
 	type TSwipeBarOptions,
@@ -111,7 +113,22 @@ export const SwipeBarProvider = ({
 		overlayZIndex: overlayZIndex ?? DEFAULT_OVERLAY_Z_INDEX,
 		fadeContent: fadeContent ?? FADE_CONTENT,
 		fadeContentTransitionMs: fadeContentTransitionMs ?? FADE_CONTENT_TRANSITION_MS,
+		swipeToOpen: SWIPE_TO_OPEN,
+		swipeToClose: SWIPE_TO_CLOSE,
 	});
+
+	// Lock body scroll when any sidebar is open
+	useEffect(() => {
+		const isAnySidebarOpen = isLeftOpen || isRightOpen || isBottomOpen;
+		if (isAnySidebarOpen) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isLeftOpen, isRightOpen, isBottomOpen]);
 
 	// Ensure child content becomes visible when fading is disabled at runtime
 	useEffect(() => {

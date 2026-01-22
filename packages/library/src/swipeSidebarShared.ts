@@ -47,6 +47,8 @@ export type TSwipeBarOptions = {
 	overlayZIndex?: number;
 	fadeContent?: boolean;
 	fadeContentTransitionMs?: number;
+	swipeToOpen?: boolean;
+	swipeToClose?: boolean;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -84,6 +86,8 @@ export const TOGGLE_ICON_OPACITY = 0.6;
 export const TOGGLE_ICON_OPACITY_TRANSITION_MS = 200;
 export const FADE_CONTENT_TRANSITION_MS = 100;
 export const FADE_CONTENT = false;
+export const SWIPE_TO_OPEN = true;
+export const SWIPE_TO_CLOSE = true;
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
@@ -575,6 +579,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		overlayZIndex,
 		fadeContent,
 		fadeContentTransitionMs,
+		swipeToOpen,
+		swipeToClose,
 	} = options;
 
 	const mergedOptions = useMemo(
@@ -597,6 +603,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			overlayZIndex: overlayZIndex ?? globalOptions.overlayZIndex,
 			fadeContent: fadeContent ?? globalOptions.fadeContent,
 			fadeContentTransitionMs: fadeContentTransitionMs ?? globalOptions.fadeContentTransitionMs,
+			swipeToOpen: swipeToOpen ?? globalOptions.swipeToOpen,
+			swipeToClose: swipeToClose ?? globalOptions.swipeToClose,
 		}),
 		[
 			sidebarWidthPx,
@@ -618,6 +626,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			overlayZIndex,
 			fadeContent,
 			fadeContentTransitionMs,
+			swipeToOpen,
+			swipeToClose,
 		],
 	) satisfies Required<TSwipeBarOptions>;
 

@@ -54,6 +54,8 @@ export function PropsCustomization({
 		swipeBarZIndex: globalOptions.swipeBarZIndex,
 		toggleZIndex: globalOptions.toggleZIndex,
 		overlayZIndex: globalOptions.overlayZIndex,
+		swipeToOpen: globalOptions.swipeToOpen,
+		swipeToClose: globalOptions.swipeToClose,
 	});
 
 	const [useFullWidth, setUseFullWidth] = useState(false);
@@ -494,6 +496,44 @@ export function PropsCustomization({
 								<span
 									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
 										formValues.showToggle ? "translate-x-6" : "translate-x-1"
+									}`}
+								/>
+							</button>
+						</div>
+
+						{/* Swipe To Open */}
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-white/80">Swipe To Open</span>
+							<button
+								type="button"
+								onClick={() => handleBooleanChange("swipeToOpen", !formValues.swipeToOpen)}
+								aria-label="Toggle swipe to open"
+								className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+									formValues.swipeToOpen ? "bg-emerald-400" : "bg-white/20"
+								}`}
+							>
+								<span
+									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+										formValues.swipeToOpen ? "translate-x-6" : "translate-x-1"
+									}`}
+								/>
+							</button>
+						</div>
+
+						{/* Swipe To Close */}
+						<div className="flex items-center justify-between">
+							<span className="text-sm text-white/80">Swipe To Close</span>
+							<button
+								type="button"
+								onClick={() => handleBooleanChange("swipeToClose", !formValues.swipeToClose)}
+								aria-label="Toggle swipe to close"
+								className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+									formValues.swipeToClose ? "bg-emerald-400" : "bg-white/20"
+								}`}
+							>
+								<span
+									className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+										formValues.swipeToClose ? "translate-x-6" : "translate-x-1"
 									}`}
 								/>
 							</button>

@@ -187,11 +187,13 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
       if (e.changedTouches.length === 0) return;
 
       const firstTouch = e.changedTouches[0];
+      const isOpen = callbacks.getIsOpen();
+      const inEdgeRegion = firstTouch.clientX <= options.edgeActivationWidthPx;
 
-      if (
-        callbacks.getIsOpen() ||
-        firstTouch.clientX <= options.edgeActivationWidthPx
-      ) {
+      if (isOpen && !options.swipeToClose) return;
+      if (!isOpen && !options.swipeToOpen) return;
+
+      if (isOpen || inEdgeRegion) {
         handleDragStart({
           refs,
           clientX: firstTouch.clientX,
@@ -250,7 +252,13 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
       if (isEditableTarget(e.target)) return;
       if (e.button !== 0) return;
 
-      if (callbacks.getIsOpen() || e.clientX <= options.edgeActivationWidthPx) {
+      const isOpen = callbacks.getIsOpen();
+      const inEdgeRegion = e.clientX <= options.edgeActivationWidthPx;
+
+      if (isOpen && !options.swipeToClose) return;
+      if (!isOpen && !options.swipeToOpen) return;
+
+      if (isOpen || inEdgeRegion) {
         handleDragStart({
           refs,
           clientX: e.clientX,

@@ -180,11 +180,13 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 
 			const firstTouch = e.changedTouches[0];
 			const windowHeight = window.innerHeight;
+			const isOpen = callbacks.getIsOpen();
+			const inEdgeRegion = firstTouch.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (
-				callbacks.getIsOpen() ||
-				firstTouch.clientY >= windowHeight - options.edgeActivationWidthPx
-			) {
+			if (isOpen && !options.swipeToClose) return;
+			if (!isOpen && !options.swipeToOpen) return;
+
+			if (isOpen || inEdgeRegion) {
 				handleDragStartY({
 					refs,
 					clientX: firstTouch.clientX,
@@ -244,8 +246,13 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 			if (e.button !== 0) return;
 
 			const windowHeight = window.innerHeight;
+			const isOpen = callbacks.getIsOpen();
+			const inEdgeRegion = e.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (callbacks.getIsOpen() || e.clientY >= windowHeight - options.edgeActivationWidthPx) {
+			if (isOpen && !options.swipeToClose) return;
+			if (!isOpen && !options.swipeToOpen) return;
+
+			if (isOpen || inEdgeRegion) {
 				handleDragStartY({
 					refs,
 					clientX: e.clientX,
