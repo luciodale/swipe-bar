@@ -15,7 +15,7 @@ import { useSwipeBarContext } from "./useSwipeBarContext";
 
 type HandleBottomDragMoveProps = {
 	refs: TDragRefsY;
-	callbacks: TSidebarCallbacks;
+	callbacks: TSidebarCallbacks & { getBottomAnchorState: () => "closed" | "midAnchor" | "open" };
 	currentY: number;
 	preventDefault: () => void;
 	lockPane: () => void;
@@ -67,31 +67,76 @@ const handleBottomDragMove = ({
 	preventDefault();
 
 	const sidebarHeightPx = options.sidebarHeightPx;
+	const midAnchorPx = options.midAnchorPointPx;
+	// midAnchor only activates if enabled, swipeToOpen disabled, and midAnchorPointPx < sidebarHeightPx
+	const midAnchorActive =
+		options.midAnchorPoint && !options.swipeToOpen && midAnchorPx < sidebarHeightPx;
 
 	if (bottomOpen) {
-		// Swipe down to close: translateY goes from 0 (open) to sidebarHeightPx (closed)
-		const translateY = Math.max(
-			0,
-			Math.min(sidebarHeightPx, swipingDistanceFromInitialDrag - options.dragActivationDeltaPx),
-		);
-		callbacks.dragSidebar(translateY);
+		if (midAnchorActive) {
+			const anchorState = callbacks.getBottomAnchorState();
+
+			if (anchorState === "open") {
+				// Swipe down from open: translateY goes from 0 (open) to sidebarHeightPx (closed)
+				const translateY = Math.max(
+					0,
+					Math.min(sidebarHeightPx, swipingDistanceFromInitialDrag - options.dragActivationDeltaPx),
+				);
+				callbacks.dragSidebar(translateY);
+			} else if (anchorState === "midAnchor") {
+				// From mid-anchor, can swipe up to open or down to close
+				const baseTranslate = sidebarHeightPx - midAnchorPx;
+				const translateY = Math.max(
+					0,
+					Math.min(
+						sidebarHeightPx,
+						baseTranslate + swipingDistanceFromInitialDrag - options.dragActivationDeltaPx,
+					),
+				);
+				callbacks.dragSidebar(translateY);
+			}
+		} else {
+			// Standard 2-state: swipe down to close
+			const translateY = Math.max(
+				0,
+				Math.min(sidebarHeightPx, swipingDistanceFromInitialDrag - options.dragActivationDeltaPx),
+			);
+			callbacks.dragSidebar(translateY);
+		}
 	} else if (refs.draggingRef.current.startY >= windowHeight - options.edgeActivationWidthPx) {
-		// Swipe up to open: translateY goes from sidebarHeightPx (closed) to 0 (open)
-		const translateY = Math.max(
-			0,
-			Math.min(
-				sidebarHeightPx,
-				sidebarHeightPx + swipingDistanceFromInitialDrag + options.dragActivationDeltaPx,
-			),
-		);
-		callbacks.dragSidebar(translateY);
+		if (midAnchorActive) {
+			// Swipe up to mid-anchor: translateY goes from sidebarHeightPx (closed) to (sidebarHeightPx - midAnchorPx) (midAnchor)
+			const midAnchorTranslate = sidebarHeightPx - midAnchorPx;
+			const translateY = Math.max(
+				midAnchorTranslate,
+				Math.min(
+					sidebarHeightPx,
+					sidebarHeightPx + swipingDistanceFromInitialDrag + options.dragActivationDeltaPx,
+				),
+			);
+			callbacks.dragSidebar(translateY);
+		} else {
+			// Standard 2-state: swipe up to open fully
+			const translateY = Math.max(
+				0,
+				Math.min(
+					sidebarHeightPx,
+					sidebarHeightPx + swipingDistanceFromInitialDrag + options.dragActivationDeltaPx,
+				),
+			);
+			callbacks.dragSidebar(translateY);
+		}
 	}
 };
 
 type HandleBottomDragEndProps = {
 	refs: TDragRefsY;
 	bottomSidebarRef: React.RefObject<HTMLDivElement | null>;
-	callbacks: TSidebarCallbacks;
+	callbacks: TSidebarCallbacks & {
+		getBottomAnchorState: () => "closed" | "midAnchor" | "open";
+		openToMidAnchor: () => void;
+		openSidebarFully: () => void;
+	};
 	options: Required<TSwipeBarOptions>;
 };
 
@@ -117,18 +162,90 @@ const handleBottomDragEnd = ({ refs, callbacks, options }: HandleBottomDragEndPr
 
 	const swipedUp = currentY < prevY;
 	const swipedDown = currentY >= prevY;
-
 	const lessThanEdgeSwipeThreshold = startY >= windowHeight - options.edgeActivationWidthPx;
+	const midAnchorPx = options.midAnchorPointPx;
+	const sidebarHeightPx = options.sidebarHeightPx;
+	const midAnchorActive =
+		options.midAnchorPoint && !options.swipeToOpen && midAnchorPx < sidebarHeightPx;
 
 	if (bottomOpen) {
-		if (swipedDown) {
-			callbacks.closeSidebar();
+		if (midAnchorActive) {
+			const anchorState = callbacks.getBottomAnchorState();
+			const midThreshold = sidebarHeightPx - midAnchorPx;
+
+			if (anchorState === "open") {
+				// Current translateY: how much we've dragged down from open (0)
+				const currentTranslateY = Math.max(0, currentY - startY);
+
+				if (swipedDown) {
+					// Swipe down from open
+					if (currentTranslateY > midThreshold) {
+						// User dragged past midpoint, close directly
+						callbacks.closeSidebar();
+					} else {
+						// Go to mid-anchor
+						callbacks.openToMidAnchor();
+					}
+				} else {
+					// Final direction is up - check if position is above mid-threshold
+					if (currentTranslateY < midThreshold) {
+						// Position above midpoint, stay fully open
+						callbacks.openSidebarFully();
+					} else {
+						// Position at or below midpoint, go to mid-anchor
+						callbacks.openToMidAnchor();
+					}
+				}
+				callbacks.dragSidebar(null);
+			} else if (anchorState === "midAnchor") {
+				// Base translate for mid-anchor position
+				const baseTranslate = sidebarHeightPx - midAnchorPx;
+				// Current translateY relative to mid-anchor
+				const currentTranslateY = Math.max(
+					0,
+					Math.min(sidebarHeightPx, baseTranslate + (currentY - startY)),
+				);
+
+				if (swipedUp) {
+					// Final direction is up - check if we crossed above mid-threshold
+					if (currentTranslateY < midThreshold) {
+						// Position above midpoint, open fully
+						callbacks.openSidebarFully();
+					} else {
+						// Position still at or below midpoint, stay at mid-anchor
+						callbacks.openToMidAnchor();
+					}
+				} else {
+					// Final direction is down - check if past close threshold
+					// Close threshold: past mid-anchor position toward closed
+					const closeThreshold = (sidebarHeightPx + baseTranslate) / 2;
+					if (currentTranslateY > closeThreshold) {
+						// Position past close threshold, close fully
+						callbacks.closeSidebar();
+					} else {
+						// Position above close threshold, stay at mid-anchor
+						callbacks.openToMidAnchor();
+					}
+				}
+				callbacks.dragSidebar(null);
+			}
 		} else {
+			// Standard 2-state behavior
+			if (swipedDown) {
+				callbacks.closeSidebar();
+			} else {
+				callbacks.openSidebar();
+			}
+			callbacks.dragSidebar(null);
+		}
+	} else if (lessThanEdgeSwipeThreshold && swipedUp) {
+		if (midAnchorActive) {
+			// Open to mid-anchor
+			callbacks.openToMidAnchor();
+		} else {
+			// Standard: open fully
 			callbacks.openSidebar();
 		}
-		callbacks.dragSidebar(null);
-	} else if (lessThanEdgeSwipeThreshold && swipedUp) {
-		callbacks.openSidebar();
 		callbacks.dragSidebar(null);
 	} else {
 		callbacks.closeSidebar();
@@ -144,24 +261,35 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 		setLockedSidebar,
 		isBottomOpen,
 		openSidebar,
+		openSidebarFully,
 		closeSidebar,
 		dragSidebar,
 		bottomSidebarRef,
+		bottomAnchorState,
+		openSidebarToMidAnchor,
 	} = useSwipeBarContext();
 
 	const draggingRef = useRef<TDragState | null>(null);
 	const currentYRef = useRef<number | null>(null);
 	const prevYRef = useRef<number | null>(null);
+	const bottomAnchorStateRef = useRef(bottomAnchorState);
+
+	useEffect(() => {
+		bottomAnchorStateRef.current = bottomAnchorState;
+	}, [bottomAnchorState]);
 
 	useEffect(() => {
 		if (!isSmallScreen) return;
 		if (lockedSidebar === "left" || lockedSidebar === "right") return;
 
-		const callbacks: TSidebarCallbacks = {
+		const callbacks = {
 			getIsOpen: () => isBottomOpen,
 			openSidebar: () => openSidebar("bottom"),
+			openSidebarFully: () => openSidebarFully("bottom"),
 			closeSidebar: () => closeSidebar("bottom"),
-			dragSidebar: (translateY) => dragSidebar("bottom", translateY),
+			dragSidebar: (translateY: number | null) => dragSidebar("bottom", translateY),
+			getBottomAnchorState: () => bottomAnchorStateRef.current,
+			openToMidAnchor: () => openSidebarToMidAnchor("bottom"),
 		};
 
 		const refs = {
@@ -312,12 +440,13 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 		isSmallScreen,
 		isBottomOpen,
 		openSidebar,
+		openSidebarFully,
 		closeSidebar,
 		dragSidebar,
 		lockedSidebar,
 		setLockedSidebar,
 		bottomSidebarRef,
 		options,
+		openSidebarToMidAnchor,
 	]);
 }
-

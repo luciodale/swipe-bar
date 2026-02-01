@@ -4,7 +4,7 @@ import {
 	SwipeBarRight,
 	useSwipeBarContext,
 } from "@luciodale/swipe-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { PropsConfiguration, QuickStart } from "./components/CodeSnippets";
@@ -14,8 +14,24 @@ import { QuickSettings } from "./components/QuickSettings";
 import { cn } from "./utils";
 
 export function App() {
-	const { openSidebar, closeSidebar, isLeftOpen, isRightOpen, isBottomOpen } = useSwipeBarContext();
+	const {
+		openSidebar,
+		openSidebarToMidAnchor,
+		closeSidebar,
+		isLeftOpen,
+		isRightOpen,
+		isBottomOpen,
+	} = useSwipeBarContext();
 	const [useCustomToggle, setUseCustomToggle] = useState(true);
+	const [useMidAnchor, setUseMidAnchor] = useState(true);
+
+	// Check if on mobile (matches library default of 640px)
+	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
+	useEffect(() => {
+		const handleResize = () => setIsSmallScreen(window.innerWidth < 640);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
 
 	return (
 		<>
@@ -170,28 +186,116 @@ export function App() {
 											<p className="mt-2 text-white/80">
 												Responsive, swipeable side bars with a modern glassmorphism aesthetic.
 											</p>
-											<div className="mt-6 flex flex-wrap gap-6 justify-center font-extralight">
-												<button
-													onClick={() => openSidebar("left")}
-													type="button"
-													className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-lg"
-												>
-													Open left bar
-												</button>
-												<button
-													onClick={() => openSidebar("right")}
-													type="button"
-													className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-lg"
-												>
-													Open right bar
-												</button>
-												<button
-													onClick={() => openSidebar("bottom")}
-													type="button"
-													className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-lg"
-												>
-													Open bottom bar
-												</button>
+											<p className="mt-2 text-sm text-amber-300/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 inline-block">
+												📱 <strong>Swipe gestures are mobile-only</strong> (screen width &lt;
+												640px).
+												{!isSmallScreen && "Resize your browser to try swiping!"}
+											</p>
+											<div className="mt-10 flex flex-col items-center gap-8">
+												<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl mx-auto">
+													<button
+														onClick={() => openSidebar("left")}
+														type="button"
+														className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(52,211,153,0.1)] transition-all group cursor-pointer"
+													>
+														<div className="p-3 rounded-xl bg-white/5 group-hover:bg-emerald-400/10 transition-colors">
+															<svg
+																width="24"
+																height="24"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
+																className="text-emerald-400"
+															>
+																<title>Arrow Left</title>
+																<path d="M19 12H5M5 12L12 19M5 12L12 5" />
+															</svg>
+														</div>
+														<span className="font-medium text-sm">Left Bar</span>
+													</button>
+
+													<button
+														onClick={() =>
+															useMidAnchor && isSmallScreen
+																? openSidebarToMidAnchor("bottom")
+																: openSidebar("bottom")
+														}
+														type="button"
+														className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(129,140,248,0.1)] transition-all group cursor-pointer"
+													>
+														<div className="p-3 rounded-xl bg-white/5 group-hover:bg-indigo-400/10 transition-colors">
+															<svg
+																width="24"
+																height="24"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
+																className="text-indigo-400"
+															>
+																<title>Arrow Down</title>
+																<path d="M12 5v14M12 19l7-7M12 19l-7-7" />
+															</svg>
+														</div>
+														<span className="font-medium text-sm text-center">
+															Bottom Bar
+															{useMidAnchor && (
+																<span className="block text-[10px] text-white/50 mt-1 uppercase tracking-wider">
+																	Mid-Anchor
+																</span>
+															)}
+														</span>
+													</button>
+
+													<button
+														onClick={() => openSidebar("right")}
+														type="button"
+														className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-fuchsia-400/50 hover:shadow-[0_0_20px_rgba(232,121,249,0.1)] transition-all group cursor-pointer"
+													>
+														<div className="p-3 rounded-xl bg-white/5 group-hover:bg-fuchsia-400/10 transition-colors">
+															<svg
+																width="24"
+																height="24"
+																viewBox="0 0 24 24"
+																fill="none"
+																stroke="currentColor"
+																strokeWidth="2"
+																strokeLinecap="round"
+																strokeLinejoin="round"
+																className="text-fuchsia-400"
+															>
+																<title>Arrow Right</title>
+																<path d="M5 12h14M19 12l-7-7M19 12l-7 7" />
+															</svg>
+														</div>
+														<span className="font-medium text-sm">Right Bar</span>
+													</button>
+												</div>
+
+												<div className="flex flex-col items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 w-full max-w-sm">
+													<label className="relative inline-flex items-center cursor-pointer group">
+														<input
+															type="checkbox"
+															className="sr-only peer"
+															checked={useMidAnchor}
+															onChange={() => setUseMidAnchor(!useMidAnchor)}
+														/>
+														<div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500/50 transition-colors" />
+														<span className="ms-3 text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+															Mid-Anchor (Mobile)
+														</span>
+													</label>
+													{!isSmallScreen && (
+														<span className="text-[10px] uppercase tracking-widest text-white/30 text-center leading-relaxed">
+															Resize browser &lt; 640px <br /> to try swipe gestures
+														</span>
+													)}
+												</div>
 											</div>
 										</section>
 
@@ -274,8 +378,10 @@ export function App() {
 
 					{/* Bottom bar */}
 					<SwipeBarBottom
-						sidebarHeightPx={280}
+						sidebarHeightPx={Math.floor(window.innerHeight * 0.9)}
 						isAbsolute
+						midAnchorPoint={useMidAnchor}
+						swipeToOpen={!useMidAnchor}
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
 						className={cn("bg-black/90 text-white", isBottomOpen && "border-t border-white/20")}
 					>
@@ -328,7 +434,11 @@ export function App() {
 									<span className="text-xs text-white/80">Alerts</span>
 								</button>
 							</div>
-							<div className="mt-auto text-center text-xs text-white/50">Swipe down to close</div>
+							<div className="mt-auto text-center text-xs text-white/50">
+								{useMidAnchor
+									? "Swipe up from bottom edge to mid-anchor, swipe again to fully open"
+									: "Swipe down to close"}
+							</div>
 						</div>
 					</SwipeBarBottom>
 				</div>
