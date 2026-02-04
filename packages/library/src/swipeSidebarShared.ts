@@ -51,6 +51,7 @@ export type TSwipeBarOptions = {
 	swipeToClose?: boolean;
 	midAnchorPoint?: boolean;
 	midAnchorPointPx?: number;
+	disabled?: boolean;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -656,6 +657,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		swipeToClose,
 		midAnchorPoint,
 		midAnchorPointPx,
+		disabled,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -684,6 +686,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			midAnchorPoint: midAnchorPoint ?? globalOptions.midAnchorPoint,
 			midAnchorPointPx:
 				midAnchorPointPx ?? globalOptions.midAnchorPointPx ?? Math.floor(baseHeight / 3),
+			disabled: disabled ?? globalOptions.disabled,
 		};
 	}, [
 		sidebarWidthPx,
@@ -709,6 +712,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		swipeToClose,
 		midAnchorPoint,
 		midAnchorPointPx,
+		disabled,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

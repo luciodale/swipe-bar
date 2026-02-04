@@ -125,6 +125,7 @@ export const SwipeBarProvider = ({
 		swipeToClose: SWIPE_TO_CLOSE,
 		midAnchorPoint: MID_ANCHOR_POINT,
 		midAnchorPointPx: PANE_HEIGHT_PX / 3,
+		disabled: false,
 	});
 
 	// Lock body scroll when any sidebar is open
@@ -187,10 +188,13 @@ export const SwipeBarProvider = ({
 			};
 
 			if (side === "left") {
+				if (leftSidebarOptions.disabled) return;
 				apply(leftSidebarRef, leftSidebarOptions, leftToggleRef, setIsLeftOpen);
 			} else if (side === "right") {
+				if (rightSidebarOptions.disabled) return;
 				apply(rightSidebarRef, rightSidebarOptions, rightToggleRef, setIsRightOpen);
 			} else if (side === "bottom") {
+				if (bottomSidebarOptions.disabled) return;
 				const sidebarHeightPx = bottomSidebarOptions.sidebarHeightPx ?? 0;
 				const mediaQueryWidth = bottomSidebarOptions.mediaQueryWidth ?? 640;
 				const isSmallScreen = window.innerWidth < mediaQueryWidth;
@@ -229,6 +233,7 @@ export const SwipeBarProvider = ({
 	const openSidebarToMidAnchor = useCallback(
 		(side: TSidebarSide) => {
 			if (side !== "bottom") return;
+			if (bottomSidebarOptions.disabled) return;
 
 			applyMidAnchorPaneStyles({
 				ref: bottomSidebarRef,
@@ -247,6 +252,7 @@ export const SwipeBarProvider = ({
 	const openSidebarFully = useCallback(
 		(side: TSidebarSide) => {
 			if (side !== "bottom") return;
+			if (bottomSidebarOptions.disabled) return;
 
 			applyOpenPaneStyles({
 				side,
@@ -284,10 +290,13 @@ export const SwipeBarProvider = ({
 			};
 
 			if (side === "left") {
+				if (leftSidebarOptions.disabled) return;
 				apply(leftSidebarRef, leftSidebarOptions, leftToggleRef, setIsLeftOpen);
 			} else if (side === "right") {
+				if (rightSidebarOptions.disabled) return;
 				apply(rightSidebarRef, rightSidebarOptions, rightToggleRef, setIsRightOpen);
 			} else if (side === "bottom") {
+				if (bottomSidebarOptions.disabled) return;
 				apply(bottomSidebarRef, bottomSidebarOptions, bottomToggleRef, setIsBottomOpen);
 				setBottomAnchorState("closed");
 			} else {

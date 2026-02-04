@@ -56,6 +56,7 @@ export function PropsCustomization({
 		overlayZIndex: globalOptions.overlayZIndex,
 		swipeToOpen: globalOptions.swipeToOpen,
 		swipeToClose: globalOptions.swipeToClose,
+		disabled: globalOptions.disabled,
 	});
 
 	const [useFullWidth, setUseFullWidth] = useState(false);
@@ -159,6 +160,33 @@ export function PropsCustomization({
 					{useCustomToggle && (
 						<p className="mt-2 text-xs text-left text-white/60">
 							Toggle icon settings are disabled when using a custom toggle
+						</p>
+					)}
+				</div>
+
+				{/* Disabled */}
+				<div className="rounded-xl border border-white/10 bg-white/5 p-4">
+					<h3 className="text-sm font-medium text-white/90 mb-3">Behavior</h3>
+					<div className="flex items-center justify-between">
+						<span className="text-sm text-white/80">Disabled</span>
+						<button
+							type="button"
+							onClick={() => handleBooleanChange("disabled", !formValues.disabled)}
+							aria-label="Toggle disabled"
+							className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+								formValues.disabled ? "bg-red-500" : "bg-white/20"
+							}`}
+						>
+							<span
+								className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+									formValues.disabled ? "translate-x-6" : "translate-x-1"
+								}`}
+							/>
+						</button>
+					</div>
+					{formValues.disabled && (
+						<p className="mt-2 text-xs text-left text-white/60">
+							Disables all swipe gestures, toggle buttons, and programmatic control
 						</p>
 					)}
 				</div>

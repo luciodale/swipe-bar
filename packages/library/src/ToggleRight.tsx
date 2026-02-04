@@ -28,7 +28,12 @@ export function ToggleRight({ options, showToggle = true, ToggleComponent }: Tog
 			{(!isRightOpen || (isRightOpen && !options.showOverlay)) && (
 				<button
 					type="button"
-					onClick={() => (isRightOpen ? closeSidebar("right") : openSidebar("right"))}
+					onClick={() => {
+						if (!options.disabled) {
+							isRightOpen ? closeSidebar("right") : openSidebar("right");
+						}
+					}}
+					disabled={options.disabled}
 					style={{
 						marginRight: `${options.toggleIconEdgeDistancePx}px`,
 						// reverse because we are using the same icon for both left and right

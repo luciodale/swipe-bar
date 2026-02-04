@@ -27,7 +27,12 @@ export function ToggleLeft({ options, showToggle = true, ToggleComponent }: Togg
 			{(!isLeftOpen || (isLeftOpen && !options.showOverlay)) && (
 				<button
 					type="button"
-					onClick={() => (isLeftOpen ? closeSidebar("left") : openSidebar("left"))}
+					onClick={() => {
+						if (!options.disabled) {
+							isLeftOpen ? closeSidebar("left") : openSidebar("left");
+						}
+					}}
+					disabled={options.disabled}
 					style={{
 						marginLeft: `${options.toggleIconEdgeDistancePx}px`,
 						...(isLeftOpen ? { transform: "rotate(180deg)" } : {}),

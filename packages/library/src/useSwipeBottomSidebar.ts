@@ -281,6 +281,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 	useEffect(() => {
 		if (!isSmallScreen) return;
 		if (lockedSidebar === "left" || lockedSidebar === "right") return;
+		if (options.disabled) return;
 
 		const callbacks = {
 			getIsOpen: () => isBottomOpen,

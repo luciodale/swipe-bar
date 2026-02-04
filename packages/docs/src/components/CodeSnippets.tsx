@@ -79,7 +79,7 @@ function App() {
 };
 
 export const PropsConfiguration = () => {
-	const propsCode = `// Available props with defaults
+  const propsCode = `// Available props with defaults
 <SwipeBarProvider
   sidebarWidthPx={320}      // width for left/right bars
   sidebarHeightPx={300}     // height for bottom bar
@@ -99,6 +99,7 @@ export const PropsConfiguration = () => {
   swipeBarZIndex={30}
   toggleZIndex={15}
   overlayZIndex={20}
+  disabled={false}
 >
   {children}
 </SwipeBarProvider>
@@ -111,7 +112,12 @@ export const PropsConfiguration = () => {
 // Bottom bar with custom height
 <SwipeBarBottom sidebarHeightPx={280} isAbsolute>
   {/* content */}
-</SwipeBarBottom>`;
+</SwipeBarBottom>
+
+// Disable a sidebar completely (no swipe, no toggle, no programmatic control)
+<SwipeBarLeft disabled={true}>
+  {/* content */}
+</SwipeBarLeft>`;
 
 	const keyPoints = [
 		{
@@ -128,6 +134,11 @@ export const PropsConfiguration = () => {
 			title: "mediaQueryWidth",
 			description:
 				"Allows you to set a max width threshold for the swiping. You might not want it on desktop. Default is 640px.",
+		},
+		{
+			title: "disabled",
+			description:
+				"When set to true, completely disables the sidebar: swipe gestures, toggle button clicks, and programmatic open/close operations are all disabled.",
 		},
 		{
 			title: "Single Child Only",

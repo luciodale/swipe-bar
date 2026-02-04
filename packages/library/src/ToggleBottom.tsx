@@ -26,7 +26,12 @@ export function ToggleBottom({ options, showToggle = true, ToggleComponent }: To
 			{(!isBottomOpen || (isBottomOpen && !options.showOverlay)) && (
 				<button
 					type="button"
-					onClick={() => (isBottomOpen ? closeSidebar("bottom") : openSidebar("bottom"))}
+					onClick={() => {
+						if (!options.disabled) {
+							isBottomOpen ? closeSidebar("bottom") : openSidebar("bottom");
+						}
+					}}
+					disabled={options.disabled}
 					style={{
 						marginBottom: `${options.toggleIconEdgeDistancePx}px`,
 						// Rotate icon: -90deg points up when closed, 90deg points down when open
@@ -41,4 +46,5 @@ export function ToggleBottom({ options, showToggle = true, ToggleComponent }: To
 		</div>
 	);
 }
+
 

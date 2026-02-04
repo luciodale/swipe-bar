@@ -24,6 +24,9 @@ export function App() {
 	} = useSwipeBarContext();
 	const [useCustomToggle, setUseCustomToggle] = useState(true);
 	const [useMidAnchor, setUseMidAnchor] = useState(true);
+	const [isLeftDisabled, setIsLeftDisabled] = useState(false);
+	const [isRightDisabled, setIsRightDisabled] = useState(false);
+	const [isBottomDisabled, setIsBottomDisabled] = useState(false);
 
 	// Check if on mobile (matches library default of 640px)
 	const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
@@ -49,6 +52,7 @@ export function App() {
 					{/* Left sidebar with glass content */}
 
 					<SwipeBarLeft
+						disabled={isLeftDisabled}
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
 						className={cn("bg-black/90 text-white", isLeftOpen && "border-r border-white/20")}
 					>
@@ -290,6 +294,44 @@ export function App() {
 															Mid-Anchor (Mobile)
 														</span>
 													</label>
+													<div className="flex flex-col gap-2 w-full">
+														<label className="relative inline-flex items-center cursor-pointer group">
+															<input
+																type="checkbox"
+																className="sr-only peer"
+																checked={isLeftDisabled}
+																onChange={() => setIsLeftDisabled(!isLeftDisabled)}
+															/>
+															<div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500/50 transition-colors" />
+															<span className="ms-3 text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+																Disable Left
+															</span>
+														</label>
+														<label className="relative inline-flex items-center cursor-pointer group">
+															<input
+																type="checkbox"
+																className="sr-only peer"
+																checked={isRightDisabled}
+																onChange={() => setIsRightDisabled(!isRightDisabled)}
+															/>
+															<div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500/50 transition-colors" />
+															<span className="ms-3 text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+																Disable Right
+															</span>
+														</label>
+														<label className="relative inline-flex items-center cursor-pointer group">
+															<input
+																type="checkbox"
+																className="sr-only peer"
+																checked={isBottomDisabled}
+																onChange={() => setIsBottomDisabled(!isBottomDisabled)}
+															/>
+															<div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500/50 transition-colors" />
+															<span className="ms-3 text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+																Disable Bottom
+															</span>
+														</label>
+													</div>
 													{!isSmallScreen && (
 														<span className="text-[10px] uppercase tracking-widest text-white/30 text-center leading-relaxed">
 															Resize browser &lt; 640px <br /> to try swipe gestures
@@ -322,6 +364,7 @@ export function App() {
 
 					{/* Right sidebar */}
 					<SwipeBarRight
+						disabled={isRightDisabled}
 						ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
 						className={cn("bg-black/90 text-white", isRightOpen && "border-l border-white/20")}
 					>
@@ -378,6 +421,7 @@ export function App() {
 
 					{/* Bottom bar */}
 					<SwipeBarBottom
+						disabled={isBottomDisabled}
 						sidebarHeightPx={Math.floor(window.innerHeight * 0.9)}
 						isAbsolute
 						midAnchorPoint={useMidAnchor}

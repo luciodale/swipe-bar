@@ -178,6 +178,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 	useEffect(() => {
 		if (!isSmallScreen) return;
 		if (lockedSidebar === "left") return;
+		if (options.disabled) return;
 
 		const callbacks: TSidebarCallbacks = {
 			getIsOpen: () => isRightOpen,
