@@ -8,3 +8,4 @@ export { ToggleLeft } from "./ToggleLeft";
 export { ToggleRight } from "./ToggleRight";
 export { useMediaQuery } from "./useMediaQuery";
 export { useSwipeBarContext } from "./useSwipeBarContext";
+export type { TSidebarOpts } from "./swipeSidebarShared";

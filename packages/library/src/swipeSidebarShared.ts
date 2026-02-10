@@ -55,10 +55,13 @@ export type TSwipeBarOptions = {
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
+	id?: string;
 	className?: string;
 	ToggleComponent?: ReactElement;
 	children?: ReactElement;
 };
+
+export type TSidebarOpts = { id?: string };
 
 export type TToggle = {
 	side: TSidebarSide;
@@ -631,9 +634,13 @@ export const hasTrackedTouchEnded = (
 	return false;
 };
 
-export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOptions) => {
-	const { globalOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptions } =
-		useSwipeBarContext();
+export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOptions, id?: string) => {
+	const {
+		globalOptions,
+		setLeftSidebarOptions,
+		setRightSidebarOptions,
+		setBottomSidebarOptionsById,
+	} = useSwipeBarContext();
 	const {
 		sidebarWidthPx,
 		sidebarHeightPx,
@@ -721,11 +728,11 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		} else if (side === "right") {
 			setRightSidebarOptions(mergedOptions);
 		} else if (side === "bottom") {
-			setBottomSidebarOptions(mergedOptions);
+			setBottomSidebarOptionsById(id ?? "primary", mergedOptions);
 		} else {
 			assertNever(side);
 		}
-	}, [side, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptions]);
+	}, [side, id, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptionsById]);
 
 	return mergedOptions;
 };

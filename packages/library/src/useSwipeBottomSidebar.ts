@@ -131,16 +131,16 @@ const handleBottomDragMove = ({
 
 type HandleBottomDragEndProps = {
 	refs: TDragRefsY;
-	bottomSidebarRef: React.RefObject<HTMLDivElement | null>;
 	callbacks: TSidebarCallbacks & {
 		getBottomAnchorState: () => "closed" | "midAnchor" | "open";
 		openToMidAnchor: () => void;
 		openSidebarFully: () => void;
 	};
 	options: Required<TSwipeBarOptions>;
+	onDragEnd: () => void;
 };
 
-const handleBottomDragEnd = ({ refs, callbacks, options }: HandleBottomDragEndProps) => {
+const handleBottomDragEnd = ({ refs, callbacks, options, onDragEnd }: HandleBottomDragEndProps) => {
 	if (!refs.draggingRef.current) return;
 
 	if (!refs.draggingRef.current.isActivated) {
@@ -159,6 +159,9 @@ const handleBottomDragEnd = ({ refs, callbacks, options }: HandleBottomDragEndPr
 	refs.draggingRef.current = null;
 	refs.currentYRef.current = null;
 	refs.prevYRef.current = null;
+
+	// Clear the per-instance drag lock
+	onDragEnd();
 
 	const swipedUp = currentY < prevY;
 	const swipedDown = currentY >= prevY;
@@ -253,30 +256,33 @@ const handleBottomDragEnd = ({ refs, callbacks, options }: HandleBottomDragEndPr
 	}
 };
 
-export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
+export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: string) {
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
 
 	const {
 		lockedSidebar,
 		setLockedSidebar,
-		isBottomOpen,
+		bottomSidebars,
 		openSidebar,
 		openSidebarFully,
 		closeSidebar,
 		dragSidebar,
-		bottomSidebarRef,
-		bottomAnchorState,
 		openSidebarToMidAnchor,
+		activeBottomDragIdRef,
+		bottomFocusStackRef,
 	} = useSwipeBarContext();
+
+	const isOpen = bottomSidebars[id]?.isOpen ?? false;
+	const anchorState = bottomSidebars[id]?.anchorState ?? "closed";
 
 	const draggingRef = useRef<TDragState | null>(null);
 	const currentYRef = useRef<number | null>(null);
 	const prevYRef = useRef<number | null>(null);
-	const bottomAnchorStateRef = useRef(bottomAnchorState);
+	const anchorStateRef = useRef(anchorState);
 
 	useEffect(() => {
-		bottomAnchorStateRef.current = bottomAnchorState;
-	}, [bottomAnchorState]);
+		anchorStateRef.current = anchorState;
+	}, [anchorState]);
 
 	useEffect(() => {
 		if (!isSmallScreen) return;
@@ -284,13 +290,13 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 		if (options.disabled) return;
 
 		const callbacks = {
-			getIsOpen: () => isBottomOpen,
-			openSidebar: () => openSidebar("bottom"),
-			openSidebarFully: () => openSidebarFully("bottom"),
-			closeSidebar: () => closeSidebar("bottom"),
-			dragSidebar: (translateY: number | null) => dragSidebar("bottom", translateY),
-			getBottomAnchorState: () => bottomAnchorStateRef.current,
-			openToMidAnchor: () => openSidebarToMidAnchor("bottom"),
+			getIsOpen: () => isOpen,
+			openSidebar: () => openSidebar("bottom", { id }),
+			openSidebarFully: () => openSidebarFully("bottom", { id }),
+			closeSidebar: () => closeSidebar("bottom", { id }),
+			dragSidebar: (translateY: number | null) => dragSidebar("bottom", translateY, { id }),
+			getBottomAnchorState: () => anchorStateRef.current,
+			openToMidAnchor: () => openSidebarToMidAnchor("bottom", { id }),
 		};
 
 		const refs = {
@@ -299,23 +305,51 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 			prevYRef,
 		};
 
-		const lockPane = () => setLockedSidebar("bottom");
-		const unlockPane = () => setLockedSidebar(null);
+		const isLockedByAnotherBottom = () =>
+			activeBottomDragIdRef.current !== null && activeBottomDragIdRef.current !== id;
+
+		// Only the top-of-stack sidebar handles gestures.
+		// When closed (edge swipe to open): only if nothing else is on the stack above.
+		// When open: only if this sidebar is the topmost open one.
+		const isTopOfFocusStack = () => {
+			const stack = bottomFocusStackRef.current;
+			if (stack.length === 0) return true; // nothing on stack — edge swipe is fine
+			return stack[stack.length - 1] === id;
+		};
+
+		const lockPane = () => {
+			// Check per-instance drag lock (synchronous ref — no race conditions)
+			if (isLockedByAnotherBottom()) {
+				// Another bottom instance is being dragged — abort
+				draggingRef.current = null;
+				return;
+			}
+			activeBottomDragIdRef.current = id;
+			setLockedSidebar("bottom");
+		};
+
+		const clearDragLock = () => {
+			if (activeBottomDragIdRef.current === id) {
+				activeBottomDragIdRef.current = null;
+			}
+		};
 
 		function onTouchStart(e: TouchEvent) {
 			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (isLockedByAnotherBottom()) return;
+			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
 			if (e.changedTouches.length === 0) return;
 
 			const firstTouch = e.changedTouches[0];
 			const windowHeight = window.innerHeight;
-			const isOpen = callbacks.getIsOpen();
+			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = firstTouch.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (isOpen && !options.swipeToClose) return;
-			if (!isOpen && !options.swipeToOpen) return;
+			if (currentlyOpen && !options.swipeToClose) return;
+			if (!currentlyOpen && !options.swipeToOpen) return;
 
-			if (isOpen || inEdgeRegion) {
+			if (currentlyOpen || inEdgeRegion) {
 				handleDragStartY({
 					refs,
 					clientX: firstTouch.clientX,
@@ -328,6 +362,10 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 
 		function onTouchMove(e: TouchEvent) {
 			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (isLockedByAnotherBottom()) {
+				draggingRef.current = null;
+				return;
+			}
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
 
 			const trackedId = draggingRef.current.activeTouchId;
@@ -353,35 +391,38 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 
 			handleBottomDragEnd({
 				refs,
-				bottomSidebarRef,
 				callbacks,
 				options,
+				onDragEnd: clearDragLock,
 			});
 		}
 
 		function onTouchCancel() {
 			if (lockedSidebar === "left" || lockedSidebar === "right") return;
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
+			clearDragLock();
 			handleDragCancelY({
 				refs,
 				dragSidebar: callbacks.dragSidebar,
-				onDeactivate: unlockPane,
+				onDeactivate: () => {},
 			});
 		}
 
 		function onMouseDown(e: MouseEvent) {
 			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (isLockedByAnotherBottom()) return;
+			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
 			if (e.button !== 0) return;
 
 			const windowHeight = window.innerHeight;
-			const isOpen = callbacks.getIsOpen();
+			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = e.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (isOpen && !options.swipeToClose) return;
-			if (!isOpen && !options.swipeToOpen) return;
+			if (currentlyOpen && !options.swipeToClose) return;
+			if (!currentlyOpen && !options.swipeToOpen) return;
 
-			if (isOpen || inEdgeRegion) {
+			if (currentlyOpen || inEdgeRegion) {
 				handleDragStartY({
 					refs,
 					clientX: e.clientX,
@@ -394,6 +435,10 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 
 		function onMouseMove(e: MouseEvent) {
 			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (isLockedByAnotherBottom()) {
+				draggingRef.current = null;
+				return;
+			}
 			if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
 			handleBottomDragMove({
@@ -412,9 +457,9 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 
 			handleBottomDragEnd({
 				refs,
-				bottomSidebarRef,
 				callbacks,
 				options,
+				onDragEnd: clearDragLock,
 			});
 		}
 
@@ -438,16 +483,18 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>) {
 			window.removeEventListener("mouseup", onMouseUp);
 		};
 	}, [
+		id,
 		isSmallScreen,
-		isBottomOpen,
+		isOpen,
 		openSidebar,
 		openSidebarFully,
 		closeSidebar,
 		dragSidebar,
 		lockedSidebar,
 		setLockedSidebar,
-		bottomSidebarRef,
 		options,
 		openSidebarToMidAnchor,
+		activeBottomDragIdRef,
+		bottomFocusStackRef,
 	]);
 }

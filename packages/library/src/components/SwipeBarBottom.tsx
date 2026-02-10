@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
 import { ToggleBottom } from "../ToggleBottom";
 import {
@@ -14,6 +15,7 @@ import { useSwipeBottomSidebar } from "../useSwipeBottomSidebar";
 import { Overlay } from "./Overlay";
 
 export function SwipeBarBottom({
+	id = "primary",
 	className,
 	children,
 	ToggleComponent,
@@ -23,18 +25,33 @@ export function SwipeBarBottom({
 		throw new Error("Fragments is not allowed in SwipeBarBottom");
 	}
 
-	const { isBottomOpen, closeSidebar, bottomSidebarRef } = useSwipeBarContext();
+	const {
+		bottomSidebars,
+		closeSidebar,
+		registerBottomSidebar,
+		unregisterBottomSidebar,
+	} = useSwipeBarContext();
 
-	const options = useSetMergedOptions("bottom", currentOptions);
+	const sidebarRef = useRef<HTMLDivElement>(null);
+	const toggleRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		registerBottomSidebar(id, { sidebarRef, toggleRef });
+		return () => unregisterBottomSidebar(id);
+	}, [id, registerBottomSidebar, unregisterBottomSidebar]);
+
+	const options = useSetMergedOptions("bottom", currentOptions, id);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
-	useSwipeBottomSidebar(options);
+	useSwipeBottomSidebar(options, id);
+
+	const isOpen = bottomSidebars[id]?.isOpen ?? false;
 
 	return (
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isBottomOpen}
-					setCollapsed={() => closeSidebar("bottom")}
+					isCollapsed={!isOpen}
+					setCollapsed={() => closeSidebar("bottom", { id })}
 					transitionMs={options.transitionMs}
 					overlayBackgroundColor={options.overlayBackgroundColor}
 					overlayZIndex={options.overlayZIndex}
@@ -42,13 +59,15 @@ export function SwipeBarBottom({
 			)}
 
 			<ToggleBottom
+				id={id}
+				toggleRef={toggleRef}
 				options={options}
 				showToggle={options.showToggle}
 				ToggleComponent={ToggleComponent}
 			/>
 
 			<div
-				ref={bottomSidebarRef}
+				ref={sidebarRef}
 				style={{
 					...bottomSwipeBarStyle,
 					...bottomSwipeBarInitialTransform,
@@ -63,4 +82,3 @@ export function SwipeBarBottom({
 		</>
 	);
 }
-

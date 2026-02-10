@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, type RefObject, createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
@@ -21,6 +21,7 @@ import {
 	SWIPE_TO_CLOSE,
 	SWIPE_TO_OPEN,
 	TRANSITION_MS,
+	type TSidebarOpts,
 	type TSidebarSide,
 	type TSwipeBarOptions,
 	applyClosePaneStyles,
@@ -32,32 +33,52 @@ import {
 
 type TLockedSidebar = TSidebarSide | null;
 
+type TBottomSidebarState = {
+	isOpen: boolean;
+	anchorState: "closed" | "midAnchor" | "open";
+};
+
+type TBottomSidebarRefs = {
+	sidebarRef: RefObject<HTMLDivElement | null>;
+	toggleRef: RefObject<HTMLDivElement | null>;
+};
+
 type TSwipeSidebarContext = {
 	lockedSidebar: TLockedSidebar;
 	setLockedSidebar: (side: TLockedSidebar) => void;
 	leftSidebarRef: React.RefObject<HTMLDivElement | null>;
 	rightSidebarRef: React.RefObject<HTMLDivElement | null>;
-	bottomSidebarRef: React.RefObject<HTMLDivElement | null>;
 	isLeftOpen: boolean;
 	isRightOpen: boolean;
+	// Backwards-compat aliases for primary bottom sidebar
 	isBottomOpen: boolean;
 	bottomAnchorState: "closed" | "midAnchor" | "open";
-	openSidebar: (side: TSidebarSide) => void;
-	openSidebarFully: (side: TSidebarSide) => void;
-	openSidebarToMidAnchor: (side: TSidebarSide) => void;
-	closeSidebar: (side: TSidebarSide) => void;
-	dragSidebar: (side: TSidebarSide, translate: number | null) => void;
+	bottomSidebarRef: React.RefObject<HTMLDivElement | null>;
+	bottomToggleRef: React.RefObject<HTMLDivElement | null>;
+	bottomSidebarOptions: TSwipeBarOptions;
+	// Multi-instance bottom sidebar state
+	bottomSidebars: Record<string, TBottomSidebarState>;
+	bottomSidebarOptionsMap: Record<string, Required<TSwipeBarOptions>>;
+	registerBottomSidebar: (id: string, refs: TBottomSidebarRefs) => void;
+	unregisterBottomSidebar: (id: string) => void;
+	getBottomSidebarRefs: (id: string) => TBottomSidebarRefs | undefined;
+	activeBottomDragIdRef: React.RefObject<string | null>;
+	bottomFocusStackRef: React.RefObject<string[]>;
+	// Context functions with optional { id } for bottom
+	openSidebar: (side: TSidebarSide, opts?: TSidebarOpts) => void;
+	openSidebarFully: (side: TSidebarSide, opts?: TSidebarOpts) => void;
+	openSidebarToMidAnchor: (side: TSidebarSide, opts?: TSidebarOpts) => void;
+	closeSidebar: (side: TSidebarSide, opts?: TSidebarOpts) => void;
+	dragSidebar: (side: TSidebarSide, translate: number | null, opts?: TSidebarOpts) => void;
 	globalOptions: Required<TSwipeBarOptions>;
 	setGlobalOptions: (options: Partial<Required<TSwipeBarOptions>>) => void;
 	leftSidebarOptions: TSwipeBarOptions;
 	rightSidebarOptions: TSwipeBarOptions;
-	bottomSidebarOptions: TSwipeBarOptions;
 	setLeftSidebarOptions: (options: TSwipeBarOptions) => void;
 	setRightSidebarOptions: (options: TSwipeBarOptions) => void;
-	setBottomSidebarOptions: (options: TSwipeBarOptions) => void;
+	setBottomSidebarOptionsById: (id: string, options: Required<TSwipeBarOptions>) => void;
 	leftToggleRef: React.RefObject<HTMLDivElement | null>;
 	rightToggleRef: React.RefObject<HTMLDivElement | null>;
-	bottomToggleRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export const SwipeSidebarContext = createContext<TSwipeSidebarContext | null>(null);
@@ -65,6 +86,8 @@ export const SwipeSidebarContext = createContext<TSwipeSidebarContext | null>(nu
 const assertNever = (side: never): never => {
 	throw new Error(`Unhandled sidebar side: ${side}`);
 };
+
+const DEFAULT_BOTTOM_STATE: TBottomSidebarState = { isOpen: false, anchorState: "closed" };
 
 export const SwipeBarProvider = ({
 	children,
@@ -89,19 +112,34 @@ export const SwipeBarProvider = ({
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
 	const [isRightOpen, setIsRightOpen] = useState(false);
-	const [isBottomOpen, setIsBottomOpen] = useState(false);
 	const [leftSidebarOptions, setLeftSidebarOptions] = useState<TSwipeBarOptions>({});
 	const [rightSidebarOptions, setRightSidebarOptions] = useState<TSwipeBarOptions>({});
-	const [bottomSidebarOptions, setBottomSidebarOptions] = useState<TSwipeBarOptions>({});
 	const leftSidebarRef = useRef<HTMLDivElement>(null);
 	const rightSidebarRef = useRef<HTMLDivElement>(null);
-	const bottomSidebarRef = useRef<HTMLDivElement>(null);
 	const leftToggleRef = useRef<HTMLDivElement>(null);
 	const rightToggleRef = useRef<HTMLDivElement>(null);
-	const bottomToggleRef = useRef<HTMLDivElement>(null);
-	const [bottomAnchorState, setBottomAnchorState] = useState<"closed" | "midAnchor" | "open">(
-		"closed",
+
+	// --- Multi-instance bottom sidebar state ---
+	const [bottomSidebars, setBottomSidebars] = useState<Record<string, TBottomSidebarState>>({});
+	const [bottomSidebarOptionsMap, setBottomSidebarOptionsMap] = useState<Record<string, Required<TSwipeBarOptions>>>({});
+	const bottomSidebarRefsMap = useRef(new Map<string, TBottomSidebarRefs>());
+	const activeBottomDragIdRef = useRef<string | null>(null);
+	const bottomFocusStackRef = useRef<string[]>([]);
+
+	// Backwards-compat: derive primary bottom state
+	const isBottomOpen = bottomSidebars.primary?.isOpen ?? false;
+	const bottomAnchorState = bottomSidebars.primary?.anchorState ?? "closed";
+	const anyBottomOpen = useMemo(
+		() => Object.values(bottomSidebars).some((s) => s.isOpen),
+		[bottomSidebars],
 	);
+
+	// Backwards-compat: refs/options for primary
+	const primaryRefs = bottomSidebarRefsMap.current.get("primary");
+	const bottomSidebarRef = primaryRefs?.sidebarRef ?? { current: null };
+	const bottomToggleRef = primaryRefs?.toggleRef ?? { current: null };
+	const bottomSidebarOptions = bottomSidebarOptionsMap.primary ?? {};
+
 	const [globalOptions, setGlobalOptions] = useState<Required<TSwipeBarOptions>>({
 		sidebarWidthPx: sidebarWidthPx ?? PANE_WIDTH_PX,
 		sidebarHeightPx: PANE_HEIGHT_PX,
@@ -128,9 +166,62 @@ export const SwipeBarProvider = ({
 		disabled: false,
 	});
 
+	// --- Registration ---
+	const registerBottomSidebar = useCallback((id: string, refs: TBottomSidebarRefs) => {
+		bottomSidebarRefsMap.current.set(id, refs);
+		setBottomSidebars((prev) => {
+			if (prev[id]) return prev;
+			return { ...prev, [id]: { ...DEFAULT_BOTTOM_STATE } };
+		});
+	}, []);
+
+	const unregisterBottomSidebar = useCallback((id: string) => {
+		bottomSidebarRefsMap.current.delete(id);
+		setBottomSidebars((prev) => {
+			const next = { ...prev };
+			delete next[id];
+			return next;
+		});
+		setBottomSidebarOptionsMap((prev) => {
+			const next = { ...prev };
+			delete next[id];
+			return next;
+		});
+	}, []);
+
+	const getBottomSidebarRefs = useCallback((id: string) => {
+		return bottomSidebarRefsMap.current.get(id);
+	}, []);
+
+	const setBottomSidebarOptionsById = useCallback((id: string, options: Required<TSwipeBarOptions>) => {
+		setBottomSidebarOptionsMap((prev) => {
+			const existing = prev[id];
+			// Avoid unnecessary state update if options haven't changed
+			if (existing === options) return prev;
+			return { ...prev, [id]: options };
+		});
+	}, []);
+
+	// --- Helpers for bottom state updates ---
+	const setBottomSidebarOpen = useCallback((id: string, isOpen: boolean) => {
+		setBottomSidebars((prev) => {
+			const entry = prev[id] ?? DEFAULT_BOTTOM_STATE;
+			if (entry.isOpen === isOpen) return prev;
+			return { ...prev, [id]: { ...entry, isOpen } };
+		});
+	}, []);
+
+	const setBottomAnchorState = useCallback((id: string, anchorState: TBottomSidebarState["anchorState"]) => {
+		setBottomSidebars((prev) => {
+			const entry = prev[id] ?? DEFAULT_BOTTOM_STATE;
+			if (entry.anchorState === anchorState) return prev;
+			return { ...prev, [id]: { ...entry, anchorState } };
+		});
+	}, []);
+
 	// Lock body scroll when any sidebar is open
 	useEffect(() => {
-		const isAnySidebarOpen = isLeftOpen || isRightOpen || isBottomOpen;
+		const isAnySidebarOpen = isLeftOpen || isRightOpen || anyBottomOpen;
 		if (isAnySidebarOpen) {
 			document.body.style.overflow = "hidden";
 		} else {
@@ -139,7 +230,7 @@ export const SwipeBarProvider = ({
 		return () => {
 			document.body.style.overflow = "";
 		};
-	}, [isLeftOpen, isRightOpen, isBottomOpen]);
+	}, [isLeftOpen, isRightOpen, anyBottomOpen]);
 
 	// Ensure child content becomes visible when fading is disabled at runtime
 	useEffect(() => {
@@ -156,19 +247,49 @@ export const SwipeBarProvider = ({
 		}
 	}, [rightSidebarOptions.fadeContent]);
 
+	// FadeContent for all bottom sidebar instances
 	useEffect(() => {
-		if (bottomSidebarOptions.fadeContent === false) {
-			const child = bottomSidebarRef.current?.firstElementChild as HTMLElement | null;
-			if (child) child.style.opacity = "1";
+		for (const [id, opts] of Object.entries(bottomSidebarOptionsMap)) {
+			if (opts.fadeContent === false) {
+				const refs = bottomSidebarRefsMap.current.get(id);
+				const child = refs?.sidebarRef.current?.firstElementChild as HTMLElement | null;
+				if (child) child.style.opacity = "1";
+			}
 		}
-	}, [bottomSidebarOptions.fadeContent]);
+	}, [bottomSidebarOptionsMap]);
 
 	const updateGlobalOptions = useCallback((options: Partial<Required<TSwipeBarOptions>>) => {
 		setGlobalOptions((prev) => ({ ...prev, ...options }));
 	}, []);
 
+	// --- Helpers for bottom focus stack + cross-direction lock ---
+	const pushBottomFocus = useCallback((id: string) => {
+		const stack = bottomFocusStackRef.current;
+		// Remove if already present, then push to top
+		const idx = stack.indexOf(id);
+		if (idx !== -1) stack.splice(idx, 1);
+		stack.push(id);
+		setLockedSidebar("bottom");
+	}, []);
+
+	const popBottomFocus = useCallback((id: string) => {
+		const stack = bottomFocusStackRef.current;
+		const idx = stack.indexOf(id);
+		if (idx !== -1) stack.splice(idx, 1);
+		// Only clear cross-direction lock if no other bottom sidebar is still open
+		setBottomSidebars((prev) => {
+			const anyStillOpen = Object.entries(prev).some(
+				([entryId, s]) => entryId !== id && s.isOpen,
+			);
+			if (!anyStillOpen) {
+				setLockedSidebar(null);
+			}
+			return prev;
+		});
+	}, []);
+
 	const openSidebar = useCallback(
-		(side: TSidebarSide) => {
+		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			const apply = (
 				ref: React.RefObject<HTMLDivElement | null>,
 				options: TSwipeBarOptions,
@@ -194,83 +315,103 @@ export const SwipeBarProvider = ({
 				if (rightSidebarOptions.disabled) return;
 				apply(rightSidebarRef, rightSidebarOptions, rightToggleRef, setIsRightOpen);
 			} else if (side === "bottom") {
-				if (bottomSidebarOptions.disabled) return;
-				const sidebarHeightPx = bottomSidebarOptions.sidebarHeightPx ?? 0;
-				const mediaQueryWidth = bottomSidebarOptions.mediaQueryWidth ?? 640;
-				const isSmallScreen = window.innerWidth < mediaQueryWidth;
-				const midAnchorPx = isSmallScreen
-					? (bottomSidebarOptions.midAnchorPointPx ?? 0)
-					: sidebarHeightPx;
+				const id = opts?.id ?? "primary";
+				const bOpts = bottomSidebarOptionsMap[id];
+				const bRefs = bottomSidebarRefsMap.current.get(id);
+				if (!bOpts || !bRefs) return;
+				if (bOpts.disabled) return;
+
+				const sidebarHeightPx = bOpts.sidebarHeightPx ?? 0;
+				const mqWidth = bOpts.mediaQueryWidth ?? 640;
+				const isSmallScreen = window.innerWidth < mqWidth;
+				const midAnchorPx = isSmallScreen ? (bOpts.midAnchorPointPx ?? 0) : sidebarHeightPx;
 
 				const midAnchorActive =
 					isSmallScreen &&
-					bottomSidebarOptions.midAnchorPoint &&
-					!bottomSidebarOptions.swipeToOpen &&
+					bOpts.midAnchorPoint &&
+					!bOpts.swipeToOpen &&
 					midAnchorPx < sidebarHeightPx;
 
 				if (midAnchorActive) {
 					applyMidAnchorPaneStyles({
-						ref: bottomSidebarRef,
-						options: bottomSidebarOptions,
-						toggleRef: bottomToggleRef,
+						ref: bRefs.sidebarRef,
+						options: bOpts,
+						toggleRef: bRefs.toggleRef,
 						afterApply: () => {
-							setIsBottomOpen(true);
-							setBottomAnchorState("midAnchor");
-							setLockedSidebar(side);
+							setBottomSidebarOpen(id, true);
+							setBottomAnchorState(id, "midAnchor");
+							pushBottomFocus(id);
 						},
 					});
 				} else {
-					apply(bottomSidebarRef, bottomSidebarOptions, bottomToggleRef, setIsBottomOpen);
-					setBottomAnchorState("open");
+					applyOpenPaneStyles({
+						side,
+						ref: bRefs.sidebarRef,
+						options: bOpts,
+						toggleRef: bRefs.toggleRef,
+						afterApply: () => {
+							setBottomSidebarOpen(id, true);
+							setBottomAnchorState(id, "open");
+							pushBottomFocus(id);
+						},
+					});
 				}
 			} else {
 				assertNever(side);
 			}
 		},
-		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptions],
+		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptionsMap, setBottomSidebarOpen, setBottomAnchorState, pushBottomFocus],
 	);
 
 	const openSidebarToMidAnchor = useCallback(
-		(side: TSidebarSide) => {
+		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			if (side !== "bottom") return;
-			if (bottomSidebarOptions.disabled) return;
+			const id = opts?.id ?? "primary";
+			const bOpts = bottomSidebarOptionsMap[id];
+			const bRefs = bottomSidebarRefsMap.current.get(id);
+			if (!bOpts || !bRefs) return;
+			if (bOpts.disabled) return;
 
 			applyMidAnchorPaneStyles({
-				ref: bottomSidebarRef,
-				options: bottomSidebarOptions,
-				toggleRef: bottomToggleRef,
+				ref: bRefs.sidebarRef,
+				options: bOpts,
+				toggleRef: bRefs.toggleRef,
 				afterApply: () => {
-					setIsBottomOpen(true);
-					setBottomAnchorState("midAnchor");
-					setLockedSidebar(side);
+					setBottomSidebarOpen(id, true);
+					setBottomAnchorState(id, "midAnchor");
+					pushBottomFocus(id);
 				},
 			});
 		},
-		[bottomSidebarOptions],
+		[bottomSidebarOptionsMap, setBottomSidebarOpen, setBottomAnchorState, pushBottomFocus],
 	);
 
 	const openSidebarFully = useCallback(
-		(side: TSidebarSide) => {
+		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			if (side !== "bottom") return;
-			if (bottomSidebarOptions.disabled) return;
+			const id = opts?.id ?? "primary";
+			const bOpts = bottomSidebarOptionsMap[id];
+			const bRefs = bottomSidebarRefsMap.current.get(id);
+			if (!bOpts || !bRefs) return;
+			if (bOpts.disabled) return;
 
 			applyOpenPaneStyles({
 				side,
-				ref: bottomSidebarRef,
-				options: bottomSidebarOptions,
-				toggleRef: bottomToggleRef,
+				ref: bRefs.sidebarRef,
+				options: bOpts,
+				toggleRef: bRefs.toggleRef,
 				afterApply: () => {
-					setIsBottomOpen(true);
-					setBottomAnchorState("open");
-					setLockedSidebar(side);
+					setBottomSidebarOpen(id, true);
+					setBottomAnchorState(id, "open");
+					pushBottomFocus(id);
 				},
 			});
 		},
-		[bottomSidebarOptions],
+		[bottomSidebarOptionsMap, setBottomSidebarOpen, setBottomAnchorState, pushBottomFocus],
 	);
 
 	const closeSidebar = useCallback(
-		(side: TSidebarSide) => {
+		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			const apply = (
 				ref: React.RefObject<HTMLDivElement | null>,
 				options: TSwipeBarOptions,
@@ -296,18 +437,32 @@ export const SwipeBarProvider = ({
 				if (rightSidebarOptions.disabled) return;
 				apply(rightSidebarRef, rightSidebarOptions, rightToggleRef, setIsRightOpen);
 			} else if (side === "bottom") {
-				if (bottomSidebarOptions.disabled) return;
-				apply(bottomSidebarRef, bottomSidebarOptions, bottomToggleRef, setIsBottomOpen);
-				setBottomAnchorState("closed");
+				const id = opts?.id ?? "primary";
+				const bOpts = bottomSidebarOptionsMap[id];
+				const bRefs = bottomSidebarRefsMap.current.get(id);
+				if (!bOpts || !bRefs) return;
+				if (bOpts.disabled) return;
+
+				applyClosePaneStyles({
+					ref: bRefs.sidebarRef,
+					options: bOpts,
+					toggleRef: bRefs.toggleRef,
+					side,
+					afterApply: () => {
+						setBottomSidebarOpen(id, false);
+						setBottomAnchorState(id, "closed");
+						popBottomFocus(id);
+					},
+				});
 			} else {
 				assertNever(side);
 			}
 		},
-		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptions],
+		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptionsMap, setBottomSidebarOpen, setBottomAnchorState, popBottomFocus],
 	);
 
 	const dragSidebar = useCallback(
-		(side: TSidebarSide, translate: number | null) => {
+		(side: TSidebarSide, translate: number | null, opts?: TSidebarOpts) => {
 			if (side === "left") {
 				applyDragPaneStyles({
 					ref: leftSidebarRef,
@@ -323,17 +478,22 @@ export const SwipeBarProvider = ({
 					translateX: translate,
 				});
 			} else if (side === "bottom") {
+				const id = opts?.id ?? "primary";
+				const bOpts = bottomSidebarOptionsMap[id];
+				const bRefs = bottomSidebarRefsMap.current.get(id);
+				if (!bOpts || !bRefs) return;
+
 				applyDragPaneStylesBottom({
-					ref: bottomSidebarRef,
-					toggleRef: bottomToggleRef,
-					options: bottomSidebarOptions,
+					ref: bRefs.sidebarRef,
+					toggleRef: bRefs.toggleRef,
+					options: bOpts,
 					translateY: translate,
 				});
 			} else {
 				assertNever(side);
 			}
 		},
-		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptions],
+		[leftSidebarOptions, rightSidebarOptions, bottomSidebarOptionsMap],
 	);
 
 	return (
@@ -341,13 +501,25 @@ export const SwipeBarProvider = ({
 			value={{
 				lockedSidebar,
 				setLockedSidebar,
-				isLeftOpen,
-				isRightOpen,
-				isBottomOpen,
-				bottomAnchorState,
 				leftSidebarRef,
 				rightSidebarRef,
+				isLeftOpen,
+				isRightOpen,
+				// Backwards-compat aliases for primary bottom sidebar
+				isBottomOpen,
+				bottomAnchorState,
 				bottomSidebarRef,
+				bottomToggleRef,
+				bottomSidebarOptions,
+				// Multi-instance bottom sidebar
+				bottomSidebars,
+				bottomSidebarOptionsMap,
+				registerBottomSidebar,
+				unregisterBottomSidebar,
+				getBottomSidebarRefs,
+				activeBottomDragIdRef,
+				bottomFocusStackRef,
+				// Functions
 				openSidebar,
 				openSidebarFully,
 				openSidebarToMidAnchor,
@@ -357,13 +529,11 @@ export const SwipeBarProvider = ({
 				setGlobalOptions: updateGlobalOptions,
 				leftSidebarOptions,
 				rightSidebarOptions,
-				bottomSidebarOptions,
 				setLeftSidebarOptions,
 				setRightSidebarOptions,
-				setBottomSidebarOptions,
+				setBottomSidebarOptionsById,
 				leftToggleRef,
 				rightToggleRef,
-				bottomToggleRef,
 			}}
 		>
 			{children}
