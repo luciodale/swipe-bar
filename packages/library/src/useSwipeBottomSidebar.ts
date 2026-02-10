@@ -5,6 +5,7 @@ import {
 	type TSidebarCallbacks,
 	type TSwipeBarOptions,
 	findChangedTouch,
+	findScrollableAncestor,
 	handleDragCancelY,
 	handleDragStartY,
 	hasTrackedTouchEnded,
@@ -20,6 +21,8 @@ type HandleBottomDragMoveProps = {
 	preventDefault: () => void;
 	lockPane: () => void;
 	options: Required<TSwipeBarOptions>;
+	scrollableAncestor: HTMLElement | null;
+	initialScrollTop: number;
 };
 
 const handleBottomDragMove = ({
@@ -29,6 +32,8 @@ const handleBottomDragMove = ({
 	preventDefault,
 	lockPane,
 	options,
+	scrollableAncestor,
+	initialScrollTop,
 }: HandleBottomDragMoveProps) => {
 	if (!refs.draggingRef.current) return;
 
@@ -38,6 +43,29 @@ const handleBottomDragMove = ({
 		!refs.draggingRef.current.isActivated &&
 		Math.abs(swipingDistanceFromInitialDrag) >= options.dragActivationDeltaPx
 	) {
+		if (scrollableAncestor && callbacks.getIsOpen()) {
+			// If native scroll already moved the element, let scroll win
+			if (scrollableAncestor.scrollTop !== initialScrollTop) {
+				refs.draggingRef.current = null;
+				callbacks.dragSidebar(null);
+				return;
+			}
+
+			// At scroll boundaries scrollTop can't change, so also check direction
+			const { scrollTop, scrollHeight, clientHeight } = scrollableAncestor;
+			const canScrollUp = scrollTop > 1;
+			const canScrollDown = scrollTop + clientHeight < scrollHeight - 1;
+
+			if (
+				(swipingDistanceFromInitialDrag > 0 && canScrollUp) ||
+				(swipingDistanceFromInitialDrag < 0 && canScrollDown)
+			) {
+				refs.draggingRef.current = null;
+				callbacks.dragSidebar(null);
+				return;
+			}
+		}
+
 		refs.draggingRef.current.isActivated = true;
 		lockPane();
 	}
@@ -278,6 +306,9 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 	const draggingRef = useRef<TDragState | null>(null);
 	const currentYRef = useRef<number | null>(null);
 	const prevYRef = useRef<number | null>(null);
+	const scrollableAncestorRef = useRef<HTMLElement | null>(null);
+	const initialScrollTopRef = useRef(0);
+	const savedOverflowYRef = useRef<string | null>(null);
 	const anchorStateRef = useRef(anchorState);
 
 	useEffect(() => {
@@ -326,11 +357,23 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 			}
 			activeBottomDragIdRef.current = id;
 			setLockedSidebar("bottom");
+			// Disable scroll on the ancestor so the compositor can't scroll mid-gesture
+			const el = scrollableAncestorRef.current;
+			if (el) {
+				savedOverflowYRef.current = el.style.overflowY;
+				el.style.overflowY = "hidden";
+			}
 		};
 
 		const clearDragLock = () => {
 			if (activeBottomDragIdRef.current === id) {
 				activeBottomDragIdRef.current = null;
+			}
+			// Restore scroll on the ancestor
+			const el = scrollableAncestorRef.current;
+			if (el && savedOverflowYRef.current !== null) {
+				el.style.overflowY = savedOverflowYRef.current;
+				savedOverflowYRef.current = null;
 			}
 		};
 
@@ -350,6 +393,8 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
+				scrollableAncestorRef.current = findScrollableAncestor(e.target);
+				initialScrollTopRef.current = scrollableAncestorRef.current?.scrollTop ?? 0;
 				handleDragStartY({
 					refs,
 					clientX: firstTouch.clientX,
@@ -379,6 +424,8 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 				preventDefault: () => e.preventDefault(),
 				lockPane,
 				options,
+				scrollableAncestor: scrollableAncestorRef.current,
+				initialScrollTop: initialScrollTopRef.current,
 			});
 		}
 
@@ -423,6 +470,8 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
+				scrollableAncestorRef.current = findScrollableAncestor(e.target);
+				initialScrollTopRef.current = scrollableAncestorRef.current?.scrollTop ?? 0;
 				handleDragStartY({
 					refs,
 					clientX: e.clientX,
@@ -448,6 +497,8 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 				preventDefault: () => e.preventDefault(),
 				lockPane,
 				options,
+				scrollableAncestor: scrollableAncestorRef.current,
+				initialScrollTop: initialScrollTopRef.current,
 			});
 		}
 

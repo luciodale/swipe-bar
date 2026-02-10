@@ -609,6 +609,21 @@ export const isEditableTarget = (el: EventTarget | null): boolean => {
 	return !!editable;
 };
 
+export function findScrollableAncestor(target: EventTarget | null): HTMLElement | null {
+	let el = target instanceof HTMLElement ? target : null;
+	while (el) {
+		const style = getComputedStyle(el);
+		if (
+			(style.overflowY === "auto" || style.overflowY === "scroll") &&
+			el.scrollHeight > el.clientHeight
+		) {
+			return el;
+		}
+		el = el.parentElement;
+	}
+	return null;
+}
+
 export const findChangedTouch = (
 	changedTouches: TouchList,
 	trackedId: number | null,

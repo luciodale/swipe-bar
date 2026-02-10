@@ -576,7 +576,7 @@ export function App() {
               isSecondaryBottomOpen && "border-t border-amber-400/30",
             )}
           >
-            <div className="flex h-full flex-col p-4 gap-4">
+            <div className="flex h-full flex-col p-4 gap-4 overflow-y-auto overscroll-contain">
               <div className="flex items-center justify-between">
                 <div className="text-lg font-semibold text-amber-400">
                   Secondary Panel
@@ -593,6 +593,34 @@ export function App() {
                 This panel opens only programmatically. Once open, you can swipe
                 down to close it. The primary bottom bar's state is independent.
               </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
+                  <div className="text-sm text-amber-300/80">Notifications</div>
+                  <div className="mt-2 text-2xl font-bold text-amber-400">
+                    12
+                  </div>
+                </div>
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
+                  <div className="text-sm text-amber-300/80">Messages</div>
+                  <div className="mt-2 text-2xl font-bold text-amber-400">
+                    5
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
+                  <div className="text-sm text-amber-300/80">Notifications</div>
+                  <div className="mt-2 text-2xl font-bold text-amber-400">
+                    12
+                  </div>
+                </div>
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
+                  <div className="text-sm text-amber-300/80">Messages</div>
+                  <div className="mt-2 text-2xl font-bold text-amber-400">
+                    5
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-4">
                   <div className="text-sm text-amber-300/80">Notifications</div>
