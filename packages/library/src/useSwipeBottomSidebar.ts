@@ -286,7 +286,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 
 	useEffect(() => {
 		if (!isSmallScreen) return;
-		if (lockedSidebar === "left" || lockedSidebar === "right") return;
+		if (lockedSidebar && lockedSidebar !== "bottom") return;
 		if (options.disabled) return;
 
 		const callbacks = {
@@ -335,7 +335,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		};
 
 		function onTouchStart(e: TouchEvent) {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (isLockedByAnotherBottom()) return;
 			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
@@ -361,7 +361,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onTouchMove(e: TouchEvent) {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (isLockedByAnotherBottom()) {
 				draggingRef.current = null;
 				return;
@@ -383,7 +383,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onTouchEnd(e: TouchEvent) {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
 
 			const trackedId = draggingRef.current.activeTouchId;
@@ -398,7 +398,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onTouchCancel() {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
 			clearDragLock();
 			handleDragCancelY({
@@ -409,7 +409,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onMouseDown(e: MouseEvent) {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (isLockedByAnotherBottom()) return;
 			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
@@ -434,7 +434,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onMouseMove(e: MouseEvent) {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (isLockedByAnotherBottom()) {
 				draggingRef.current = null;
 				return;
@@ -452,7 +452,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 		}
 
 		function onMouseUp() {
-			if (lockedSidebar === "left" || lockedSidebar === "right") return;
+			if (lockedSidebar && lockedSidebar !== "bottom") return;
 			if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
 			handleBottomDragEnd({

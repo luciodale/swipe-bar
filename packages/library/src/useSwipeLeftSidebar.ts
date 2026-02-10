@@ -163,7 +163,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
 
 	useEffect(() => {
 		if (!isSmallScreen) return;
-		if (lockedSidebar === "right") return;
+		if (lockedSidebar && lockedSidebar !== "left") return;
 		if (options.disabled) return;
 
     const callbacks: TSidebarCallbacks = {
@@ -183,7 +183,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     const unlockPane = () => setLockedSidebar(null);
 
     function onTouchStart(e: TouchEvent) {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (isEditableTarget(e.target)) return;
       if (e.changedTouches.length === 0) return;
 
@@ -206,7 +206,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
 
       const trackedId = draggingRef.current.activeTouchId;
@@ -224,7 +224,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onTouchEnd(e: TouchEvent) {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
 
       const trackedId = draggingRef.current.activeTouchId;
@@ -239,7 +239,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onTouchCancel() {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (!draggingRef.current || draggingRef.current.isMouse) return;
       handleDragCancel({
         refs,
@@ -249,7 +249,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onMouseDown(e: MouseEvent) {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (isEditableTarget(e.target)) return;
       if (e.button !== 0) return;
 
@@ -271,7 +271,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onMouseMove(e: MouseEvent) {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
       handleLeftDragMove({
@@ -285,7 +285,7 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>) {
     }
 
     function onMouseUp() {
-      if (lockedSidebar === "right") return;
+      if (lockedSidebar && lockedSidebar !== "left") return;
       if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
       handleLeftDragEnd({
