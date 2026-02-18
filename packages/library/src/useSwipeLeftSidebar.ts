@@ -13,7 +13,7 @@ import {
 import { useMediaQuery } from "./useMediaQuery";
 import { useSwipeBarContext } from "./useSwipeBarContext";
 
-type HandleLeftDragMoveProps = {
+export type HandleLeftDragMoveProps = {
   refs: TDragRefs;
   callbacks: TSidebarCallbacks;
   currentX: number;
@@ -22,7 +22,7 @@ type HandleLeftDragMoveProps = {
   options: Required<TSwipeBarOptions>;
 };
 
-const handleLeftDragMove = ({
+export const handleLeftDragMove = ({
   refs,
   callbacks,
   currentX,
@@ -91,14 +91,14 @@ const handleLeftDragMove = ({
   }
 };
 
-type HandleLeftDragEndProps = {
+export type HandleLeftDragEndProps = {
   refs: TDragRefs;
   leftSidebarRef: React.RefObject<HTMLDivElement | null>;
   callbacks: TSidebarCallbacks;
   options: Required<TSwipeBarOptions>;
 };
 
-const handleLeftDragEnd = ({
+export const handleLeftDragEnd = ({
   refs,
   callbacks,
   options,

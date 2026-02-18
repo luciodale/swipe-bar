@@ -14,7 +14,7 @@ import {
 import { useMediaQuery } from "./useMediaQuery";
 import { useSwipeBarContext } from "./useSwipeBarContext";
 
-type HandleBottomDragMoveProps = {
+export type HandleBottomDragMoveProps = {
 	refs: TDragRefsY;
 	callbacks: TSidebarCallbacks & { getBottomAnchorState: () => "closed" | "midAnchor" | "open" };
 	currentY: number;
@@ -25,7 +25,7 @@ type HandleBottomDragMoveProps = {
 	initialScrollTop: number;
 };
 
-const handleBottomDragMove = ({
+export const handleBottomDragMove = ({
 	refs,
 	callbacks,
 	currentY,
@@ -157,7 +157,7 @@ const handleBottomDragMove = ({
 	}
 };
 
-type HandleBottomDragEndProps = {
+export type HandleBottomDragEndProps = {
 	refs: TDragRefsY;
 	callbacks: TSidebarCallbacks & {
 		getBottomAnchorState: () => "closed" | "midAnchor" | "open";
@@ -168,7 +168,12 @@ type HandleBottomDragEndProps = {
 	onDragEnd: () => void;
 };
 
-const handleBottomDragEnd = ({ refs, callbacks, options, onDragEnd }: HandleBottomDragEndProps) => {
+export const handleBottomDragEnd = ({
+	refs,
+	callbacks,
+	options,
+	onDragEnd,
+}: HandleBottomDragEndProps) => {
 	if (!refs.draggingRef.current) return;
 
 	if (!refs.draggingRef.current.isActivated) {
@@ -223,8 +228,8 @@ const handleBottomDragEnd = ({ refs, callbacks, options, onDragEnd }: HandleBott
 						// Position above midpoint, stay fully open
 						callbacks.openSidebarFully();
 					} else {
-						// Position at or below midpoint, go to mid-anchor
-						callbacks.openToMidAnchor();
+						// Position at or below midpoint, close
+						callbacks.closeSidebar();
 					}
 				}
 				callbacks.dragSidebar(null);
@@ -243,20 +248,12 @@ const handleBottomDragEnd = ({ refs, callbacks, options, onDragEnd }: HandleBott
 						// Position above midpoint, open fully
 						callbacks.openSidebarFully();
 					} else {
-						// Position still at or below midpoint, stay at mid-anchor
-						callbacks.openToMidAnchor();
+						// Position at or below midpoint, close
+						callbacks.closeSidebar();
 					}
 				} else {
-					// Final direction is down - check if past close threshold
-					// Close threshold: past mid-anchor position toward closed
-					const closeThreshold = (sidebarHeightPx + baseTranslate) / 2;
-					if (currentTranslateY > closeThreshold) {
-						// Position past close threshold, close fully
-						callbacks.closeSidebar();
-					} else {
-						// Position above close threshold, stay at mid-anchor
-						callbacks.openToMidAnchor();
-					}
+					// Swiped down from mid-anchor, close
+					callbacks.closeSidebar();
 				}
 				callbacks.dragSidebar(null);
 			}

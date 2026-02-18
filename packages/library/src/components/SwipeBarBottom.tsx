@@ -25,12 +25,8 @@ export function SwipeBarBottom({
 		throw new Error("Fragments is not allowed in SwipeBarBottom");
 	}
 
-	const {
-		bottomSidebars,
-		closeSidebar,
-		registerBottomSidebar,
-		unregisterBottomSidebar,
-	} = useSwipeBarContext();
+	const { bottomSidebars, closeSidebar, registerBottomSidebar, unregisterBottomSidebar } =
+		useSwipeBarContext();
 
 	const sidebarRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<HTMLDivElement>(null);
@@ -52,6 +48,7 @@ export function SwipeBarBottom({
 				<Overlay
 					isCollapsed={!isOpen}
 					setCollapsed={() => closeSidebar("bottom", { id })}
+					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
 					overlayBackgroundColor={options.overlayBackgroundColor}
 					overlayZIndex={options.overlayZIndex}

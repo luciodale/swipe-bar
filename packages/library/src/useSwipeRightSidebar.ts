@@ -13,7 +13,7 @@ import {
 import { useMediaQuery } from "./useMediaQuery";
 import { useSwipeBarContext } from "./useSwipeBarContext";
 
-type HandleRightDragMoveProps = {
+export type HandleRightDragMoveProps = {
 	refs: TDragRefs;
 	callbacks: TSidebarCallbacks;
 	currentX: number;
@@ -22,7 +22,7 @@ type HandleRightDragMoveProps = {
 	options: Required<TSwipeBarOptions>;
 };
 
-const handleRightDragMove = ({
+export const handleRightDragMove = ({
 	refs,
 	callbacks,
 	currentX,
@@ -108,14 +108,14 @@ const handleRightDragMove = ({
 	}
 };
 
-type HandleRightDragEndProps = {
+export type HandleRightDragEndProps = {
 	refs: TDragRefs;
 	rightSidebarRef: React.RefObject<HTMLDivElement | null>;
 	callbacks: TSidebarCallbacks;
 	options: Required<TSwipeBarOptions>;
 };
 
-const handleRightDragEnd = ({ refs, callbacks, options }: HandleRightDragEndProps) => {
+export const handleRightDragEnd = ({ refs, callbacks, options }: HandleRightDragEndProps) => {
 	if (!refs.draggingRef.current) return;
 
 	// If the drag never activated (threshold not met), clear state and do nothing.

@@ -1,5 +1,6 @@
 import { type ReactNode, type RefObject, createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
 	DEFAULT_SWIPEBAR_Z_INDEX,
@@ -108,6 +109,7 @@ export const SwipeBarProvider = ({
 	overlayZIndex,
 	fadeContent,
 	fadeContentTransitionMs,
+	closeSidebarOnOverlayClick,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
@@ -164,6 +166,7 @@ export const SwipeBarProvider = ({
 		midAnchorPoint: MID_ANCHOR_POINT,
 		midAnchorPointPx: PANE_HEIGHT_PX / 3,
 		disabled: false,
+		closeSidebarOnOverlayClick: closeSidebarOnOverlayClick ?? CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	});
 
 	// --- Registration ---
