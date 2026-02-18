@@ -248,8 +248,8 @@ export const handleBottomDragEnd = ({
 						// Position above midpoint, open fully
 						callbacks.openSidebarFully();
 					} else {
-						// Position at or below midpoint, close
-						callbacks.closeSidebar();
+						// User reversed direction upward, snap back to mid-anchor
+						callbacks.openToMidAnchor();
 					}
 				} else {
 					// Swiped down from mid-anchor, close

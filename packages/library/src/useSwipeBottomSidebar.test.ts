@@ -80,9 +80,9 @@ describe("handleBottomDragEnd", () => {
 			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
 		});
 
-		it("closes when swiped up but still below midThreshold", () => {
+		it("snaps to midAnchor when swiped up but still below midThreshold", () => {
 			// startY=500, currentY=501, prevY=502 → swipedUp (501 < 502)
-			// translateY = max(0, min(600, 400+(501-500))) = 401 >= 400 → close
+			// translateY = max(0, min(600, 400+(501-500))) = 401 >= 400 → midAnchor
 			const refs = makeDragRefsY({ startY: 500, currentY: 501, prevY: 502 });
 			const callbacks = makeBottomCallbacks();
 			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
@@ -91,8 +91,8 @@ describe("handleBottomDragEnd", () => {
 
 			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
 
-			expect(callbacks.closeSidebar).toHaveBeenCalled();
-			expect(callbacks.openToMidAnchor).not.toHaveBeenCalled();
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
 		});
 
 		it("closes immediately when swiped down (no threshold required)", () => {
@@ -107,6 +107,38 @@ describe("handleBottomDragEnd", () => {
 
 			expect(callbacks.closeSidebar).toHaveBeenCalled();
 			expect(callbacks.openToMidAnchor).not.toHaveBeenCalled();
+		});
+
+		it("closes when dragged below midAnchor and final direction is still down", () => {
+			// sidebarHeightPx=600, midAnchorPx=200 → midThreshold=400, baseTranslate=400
+			// startY=400, currentY=480, prevY=470 → swipedDown (480 >= 470)
+			// translateY = max(0, min(600, 400+(480-400))) = 480 >= 400 → close
+			const refs = makeDragRefsY({ startY: 400, currentY: 480, prevY: 470 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
+			const options = makeOptions();
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.closeSidebar).toHaveBeenCalled();
+			expect(callbacks.openToMidAnchor).not.toHaveBeenCalled();
+		});
+
+		it("snaps to midAnchor when dragged below midAnchor but reversed direction upward", () => {
+			// sidebarHeightPx=600, midAnchorPx=200 → midThreshold=400, baseTranslate=400
+			// startY=400, currentY=480, prevY=490 → swipedUp (480 < 490)
+			// translateY = max(0, min(600, 400+(480-400))) = 480 >= 400 → midAnchor (not close)
+			const refs = makeDragRefsY({ startY: 400, currentY: 480, prevY: 490 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
+			const options = makeOptions();
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
 		});
 
 		it("closes on tiny downward swipe from midAnchor", () => {
