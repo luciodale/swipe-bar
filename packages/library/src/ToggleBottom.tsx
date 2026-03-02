@@ -11,7 +11,13 @@ type ToggleProps = {
 	options: Required<TSwipeBarOptions>;
 };
 
-export function ToggleBottom({ id, toggleRef, options, showToggle = true, ToggleComponent }: ToggleProps) {
+export function ToggleBottom({
+	id,
+	toggleRef,
+	options,
+	showToggle = true,
+	ToggleComponent,
+}: ToggleProps) {
 	const { openSidebar, closeSidebar, bottomSidebars } = useSwipeBarContext();
 
 	const isOpen = bottomSidebars[id]?.isOpen ?? false;

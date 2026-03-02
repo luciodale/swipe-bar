@@ -79,7 +79,7 @@ function App() {
 };
 
 export const PropsConfiguration = () => {
-  const propsCode = `// Available props with defaults
+	const propsCode = `// Available props with defaults
 <SwipeBarProvider
   sidebarWidthPx={320}      // width for left/right bars
   sidebarHeightPx={300}     // height for bottom bar

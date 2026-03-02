@@ -9,6 +9,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { PropsConfiguration, QuickStart } from "./components/CodeSnippets";
 import { CustomToggle } from "./components/CustomToggle";
+import { MetaDocumentation } from "./components/MetaDocumentation";
 import { PropsCustomization } from "./components/PropsCustomization";
 import { QuickSettings } from "./components/QuickSettings";
 import { cn } from "./utils";
@@ -388,6 +389,10 @@ export function App() {
 
 										<div className="col-span-1 md:col-span-2">
 											<QuickSettings />
+										</div>
+
+										<div className="col-span-1 md:col-span-2">
+											<MetaDocumentation />
 										</div>
 									</div>
 								</main>

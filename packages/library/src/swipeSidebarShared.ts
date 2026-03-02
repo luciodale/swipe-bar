@@ -62,7 +62,19 @@ export type TSwipeSidebar = TSwipeBarOptions & {
 	children?: ReactElement;
 };
 
-export type TSidebarOpts = { id?: string };
+export type TBottomSidebarState = {
+	isOpen: boolean;
+	anchorState: "closed" | "midAnchor" | "open";
+	meta: unknown;
+};
+
+export type TSidebarMetaMap = {
+	left?: unknown;
+	right?: unknown;
+	bottom?: Record<string, unknown>;
+};
+
+export type TSidebarOpts = { id?: string; meta?: unknown; resetMeta?: boolean };
 
 export type TToggle = {
 	side: TSidebarSide;
@@ -752,7 +764,14 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		} else {
 			assertNever(side);
 		}
-	}, [side, id, mergedOptions, setLeftSidebarOptions, setRightSidebarOptions, setBottomSidebarOptionsById]);
+	}, [
+		side,
+		id,
+		mergedOptions,
+		setLeftSidebarOptions,
+		setRightSidebarOptions,
+		setBottomSidebarOptionsById,
+	]);
 
 	return mergedOptions;
 };
