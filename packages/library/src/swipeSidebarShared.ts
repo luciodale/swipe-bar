@@ -53,6 +53,7 @@ export type TSwipeBarOptions = {
 	midAnchorPointPx?: number;
 	disabled?: boolean;
 	closeSidebarOnOverlayClick?: boolean;
+	resetMetaOnClose?: boolean;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -694,6 +695,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		midAnchorPointPx,
 		disabled,
 		closeSidebarOnOverlayClick,
+		resetMetaOnClose,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -725,6 +727,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			disabled: disabled ?? globalOptions.disabled,
 			closeSidebarOnOverlayClick:
 				closeSidebarOnOverlayClick ?? globalOptions.closeSidebarOnOverlayClick,
+			resetMetaOnClose: resetMetaOnClose ?? globalOptions.resetMetaOnClose,
 		};
 	}, [
 		sidebarWidthPx,
@@ -752,6 +755,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		midAnchorPointPx,
 		disabled,
 		closeSidebarOnOverlayClick,
+		resetMetaOnClose,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

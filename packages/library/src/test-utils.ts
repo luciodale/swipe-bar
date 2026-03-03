@@ -90,6 +90,7 @@ export function makeOptions(overrides?: Partial<TSwipeBarOptions>): Required<TSw
 		midAnchorPointPx: 200,
 		disabled: false,
 		closeSidebarOnOverlayClick: true,
+		resetMetaOnClose: false,
 		...overrides,
 	};
 }

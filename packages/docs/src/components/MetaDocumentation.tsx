@@ -48,7 +48,12 @@ const resetMetaCode = `// Clear meta back to null
 closeSidebar("left", { resetMeta: true });
 
 // resetMeta takes precedence when both are provided
-openSidebar("right", { meta: { tab: 3 }, resetMeta: true }); // meta stays null`;
+openSidebar("right", { meta: { tab: 3 }, resetMeta: true }); // meta stays null
+
+// Auto-reset meta on every close (gesture, overlay, toggle, programmatic)
+<SwipeBarLeft resetMetaOnClose />
+// Explicit meta or resetMeta in closeSidebar opts still takes precedence
+closeSidebar("left", { meta: { screen: "profile" } }); // keeps this meta`;
 
 const keyBehaviours = [
 	{
@@ -72,6 +77,11 @@ const keyBehaviours = [
 	{
 		title: "resetMeta: true",
 		description: "Clears meta to null; takes precedence over meta if both are provided.",
+	},
+	{
+		title: "resetMetaOnClose",
+		description:
+			"Auto-clears meta to null on every close (gesture, overlay, toggle, programmatic). Explicit meta or resetMeta in closeSidebar opts takes precedence.",
 	},
 	{
 		title: "Drag gestures don't touch meta",

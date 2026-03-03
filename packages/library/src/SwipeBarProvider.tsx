@@ -122,6 +122,7 @@ export const SwipeBarProvider = ({
 	fadeContent,
 	fadeContentTransitionMs,
 	closeSidebarOnOverlayClick,
+	resetMetaOnClose,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 	const [isLeftOpen, setIsLeftOpen] = useState(false);
@@ -183,6 +184,7 @@ export const SwipeBarProvider = ({
 		midAnchorPointPx: PANE_HEIGHT_PX / 3,
 		disabled: false,
 		closeSidebarOnOverlayClick: closeSidebarOnOverlayClick ?? CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
+		resetMetaOnClose: resetMetaOnClose ?? false,
 	});
 
 	// --- Registration ---
@@ -524,11 +526,23 @@ export const SwipeBarProvider = ({
 
 			if (side === "left") {
 				if (leftSidebarOptions.disabled) return;
-				applyLeftRightMeta("left", opts);
+				const effectiveOpts =
+					leftSidebarOptions.resetMetaOnClose &&
+					opts?.meta === undefined &&
+					opts?.resetMeta === undefined
+						? { ...opts, resetMeta: true as const }
+						: opts;
+				applyLeftRightMeta("left", effectiveOpts);
 				apply(leftSidebarRef, leftSidebarOptions, leftToggleRef, setIsLeftOpen);
 			} else if (side === "right") {
 				if (rightSidebarOptions.disabled) return;
-				applyLeftRightMeta("right", opts);
+				const effectiveOpts =
+					rightSidebarOptions.resetMetaOnClose &&
+					opts?.meta === undefined &&
+					opts?.resetMeta === undefined
+						? { ...opts, resetMeta: true as const }
+						: opts;
+				applyLeftRightMeta("right", effectiveOpts);
 				apply(rightSidebarRef, rightSidebarOptions, rightToggleRef, setIsRightOpen);
 			} else if (side === "bottom") {
 				const id = opts?.id ?? "primary";
@@ -536,7 +550,11 @@ export const SwipeBarProvider = ({
 				const bRefs = bottomSidebarRefsMap.current.get(id);
 				if (!bOpts || !bRefs) return;
 				if (bOpts.disabled) return;
-				applyBottomMeta(id, opts);
+				const effectiveOpts =
+					bOpts.resetMetaOnClose && opts?.meta === undefined && opts?.resetMeta === undefined
+						? { ...opts, resetMeta: true as const }
+						: opts;
+				applyBottomMeta(id, effectiveOpts);
 
 				applyClosePaneStyles({
 					ref: bRefs.sidebarRef,

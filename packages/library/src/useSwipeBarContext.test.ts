@@ -281,6 +281,114 @@ describe("setMeta – runtime behaviour", () => {
 	});
 });
 
+// ─── resetMetaOnClose ─────────────────────────────────────────────────
+
+describe("resetMetaOnClose", () => {
+	it("left: meta resets on close when option set", () => {
+		const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+
+		// Set options with resetMetaOnClose
+		act(() => {
+			result.current.setLeftSidebarOptions(makeOptions({ resetMetaOnClose: true }));
+		});
+
+		// Open with meta
+		act(() => {
+			result.current.openSidebar("left", { meta: "keep" });
+		});
+		expect(result.current.leftMeta).toBe("keep");
+
+		// Close without explicit meta/resetMeta — should auto-reset
+		act(() => {
+			result.current.closeSidebar("left");
+		});
+		expect(result.current.leftMeta).toBe(null);
+	});
+
+	it("right: meta resets on close when option set", () => {
+		const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+
+		act(() => {
+			result.current.setRightSidebarOptions(makeOptions({ resetMetaOnClose: true }));
+		});
+
+		act(() => {
+			result.current.openSidebar("right", { meta: 42 });
+		});
+		expect(result.current.rightMeta).toBe(42);
+
+		act(() => {
+			result.current.closeSidebar("right");
+		});
+		expect(result.current.rightMeta).toBe(null);
+	});
+
+	it("bottom: meta resets on close when option set", () => {
+		const hookResult = renderHook(
+			() => {
+				const ctx = useSwipeBarContext<TRuntimeMeta>();
+				const sidebarRef = useRef<HTMLDivElement>(null);
+				const toggleRef = useRef<HTMLDivElement>(null);
+				return { ctx, sidebarRef, toggleRef };
+			},
+			{ wrapper },
+		);
+
+		const { ctx, sidebarRef, toggleRef } = hookResult.result.current;
+
+		act(() => {
+			ctx.registerBottomSidebar("sheet", { sidebarRef, toggleRef });
+			ctx.setBottomSidebarOptionsById("sheet", makeOptions({ resetMetaOnClose: true }));
+		});
+
+		act(() => {
+			hookResult.result.current.ctx.openSidebar("bottom", { id: "sheet", meta: "data" });
+		});
+		expect(hookResult.result.current.ctx.bottomSidebars.sheet.meta).toBe("data");
+
+		act(() => {
+			hookResult.result.current.ctx.closeSidebar("bottom", { id: "sheet" });
+		});
+		expect(hookResult.result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+	});
+
+	it("explicit meta in closeSidebar opts overrides resetMetaOnClose", () => {
+		const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+
+		act(() => {
+			result.current.setLeftSidebarOptions(makeOptions({ resetMetaOnClose: true }));
+		});
+
+		act(() => {
+			result.current.openSidebar("left", { meta: "initial" });
+		});
+
+		// Explicit meta should take precedence — no auto-reset
+		act(() => {
+			result.current.closeSidebar("left", { meta: "override" });
+		});
+		expect(result.current.leftMeta).toBe("override");
+	});
+
+	it("explicit resetMeta: false overrides resetMetaOnClose", () => {
+		const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+
+		act(() => {
+			result.current.setLeftSidebarOptions(makeOptions({ resetMetaOnClose: true }));
+		});
+
+		act(() => {
+			result.current.openSidebar("left", { meta: "keep-me" });
+		});
+
+		// Explicit resetMeta: false should prevent auto-reset
+		act(() => {
+			result.current.closeSidebar("left", { resetMeta: false });
+		});
+		expect(result.current.leftMeta).toBe("keep-me");
+	});
+});
+
 // ─── Type-level assertions ───────────────────────────────────────────
 
 describe("meta – type narrowing", () => {
