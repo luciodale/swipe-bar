@@ -1,20 +1,72 @@
 import { useContext } from "react";
 import { SwipeSidebarContext, type TSwipeSidebarContextInternal } from "./SwipeBarProvider";
-import type { TBottomSidebarState, TSidebarMetaMap } from "./swipeSidebarShared";
+import type { TBottomSidebarState, TSidebarMetaMap, TSidebarSide } from "./swipeSidebarShared";
 
 type TLeftRightOpts<TMap extends TSidebarMetaMap, S extends "left" | "right"> = S extends keyof TMap
 	? { meta?: TMap[S]; resetMeta?: boolean }
-	: { resetMeta?: boolean };
+	: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+		{ meta?: any; resetMeta?: boolean };
 
-type TSidebarFn<TMap extends TSidebarMetaMap> = {
-	(side: "left", opts?: TLeftRightOpts<TMap, "left">): void;
-	(side: "right", opts?: TLeftRightOpts<TMap, "right">): void;
-	<K extends string & keyof NonNullable<TMap["bottom"]>>(
-		side: "bottom",
-		opts: { id: K; meta?: NonNullable<TMap["bottom"]>[K]; resetMeta?: boolean },
-	): void;
-	(side: "bottom", opts?: { id?: string; resetMeta?: boolean }): void;
-};
+type TBottomSidebarOpts<TMap extends TSidebarMetaMap> = TMap["bottom"] extends Record<
+	string,
+	unknown
+>
+	?
+			| {
+					[K in string & keyof TMap["bottom"]]: {
+						id: K;
+						meta?: TMap["bottom"][K];
+						resetMeta?: boolean;
+					};
+			  }[string & keyof TMap["bottom"]]
+			| { id?: string; meta?: never; resetMeta?: boolean }
+	: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+		{ id?: string; meta?: any; resetMeta?: boolean };
+
+type TSidebarCallOpts<TMap extends TSidebarMetaMap, S extends TSidebarSide> = S extends "left"
+	? TLeftRightOpts<TMap, "left">
+	: S extends "right"
+		? TLeftRightOpts<TMap, "right">
+		: TBottomSidebarOpts<TMap>;
+
+type TSidebarFn<TMap extends TSidebarMetaMap> = <S extends TSidebarSide>(
+	side: S,
+	opts?: TSidebarCallOpts<TMap, S>,
+) => void;
+
+type TLeftRightSetMeta<
+	TMap extends TSidebarMetaMap,
+	S extends "left" | "right",
+> = S extends keyof TMap
+	? TMap[S] | null
+	: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+		any;
+
+type TBottomSetMetaOpts<TMap extends TSidebarMetaMap> = TMap["bottom"] extends Record<
+	string,
+	unknown
+>
+	?
+			| {
+					[K in string & keyof TMap["bottom"]]: {
+						id: K;
+						meta: TMap["bottom"][K] | null;
+					};
+			  }[string & keyof TMap["bottom"]]
+			| { id: string; meta: never }
+	: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+		{ id: string; meta: any };
+
+type TSetMetaCallArg<TMap extends TSidebarMetaMap, S extends TSidebarSide> = S extends "left"
+	? TLeftRightSetMeta<TMap, "left">
+	: S extends "right"
+		? TLeftRightSetMeta<TMap, "right">
+		: TBottomSetMetaOpts<TMap>;
+
+type TSetMetaFn<TMap extends TSidebarMetaMap> = <S extends TSidebarSide>(
+	side: S,
+	metaOrOpts: TSetMetaCallArg<TMap, S>,
+) => void;
 
 type TTypedBottomSidebars<TMap extends TSidebarMetaMap> = TMap["bottom"] extends Record<
 	string,
@@ -31,6 +83,7 @@ type TSwipeSidebarContext<TMap extends TSidebarMetaMap = object> = Omit<
 	| "closeSidebar"
 	| "openSidebarFully"
 	| "openSidebarToMidAnchor"
+	| "setMeta"
 	| "bottomSidebars"
 	| "leftMeta"
 	| "rightMeta"
@@ -39,9 +92,12 @@ type TSwipeSidebarContext<TMap extends TSidebarMetaMap = object> = Omit<
 	closeSidebar: TSidebarFn<TMap>;
 	openSidebarFully: TSidebarFn<TMap>;
 	openSidebarToMidAnchor: TSidebarFn<TMap>;
+	setMeta: TSetMetaFn<TMap>;
 	bottomSidebars: TTypedBottomSidebars<TMap>;
-	leftMeta: "left" extends keyof TMap ? TMap["left"] | null : null;
-	rightMeta: "right" extends keyof TMap ? TMap["right"] | null : null;
+	// biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+	leftMeta: "left" extends keyof TMap ? TMap["left"] | null : any;
+	// biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
+	rightMeta: "right" extends keyof TMap ? TMap["right"] | null : any;
 };
 
 export function useSwipeBarContext<TMap extends TSidebarMetaMap = object>() {

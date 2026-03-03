@@ -194,6 +194,93 @@ describe("meta – runtime behaviour", () => {
 	});
 });
 
+describe("setMeta – runtime behaviour", () => {
+	describe("left/right", () => {
+		it("setMeta('left', value) sets leftMeta", () => {
+			const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+			act(() => {
+				result.current.setMeta("left", { page: "profile" });
+			});
+			expect(result.current.leftMeta).toEqual({ page: "profile" });
+		});
+
+		it("setMeta('right', value) sets rightMeta", () => {
+			const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+			act(() => {
+				result.current.setMeta("right", 42);
+			});
+			expect(result.current.rightMeta).toBe(42);
+		});
+
+		it("setMeta('left', null) clears leftMeta", () => {
+			const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+			act(() => {
+				result.current.setMeta("left", "initial");
+			});
+			expect(result.current.leftMeta).toBe("initial");
+			act(() => {
+				result.current.setMeta("left", null);
+			});
+			expect(result.current.leftMeta).toBe(null);
+		});
+
+		it("setMeta('right', null) clears rightMeta", () => {
+			const { result } = renderHook(() => useSwipeBarContext<TRuntimeMeta>(), { wrapper });
+			act(() => {
+				result.current.setMeta("right", "initial");
+			});
+			expect(result.current.rightMeta).toBe("initial");
+			act(() => {
+				result.current.setMeta("right", null);
+			});
+			expect(result.current.rightMeta).toBe(null);
+		});
+	});
+
+	describe("bottom", () => {
+		function setupBottom() {
+			const hookResult = renderHook(
+				() => {
+					const ctx = useSwipeBarContext<TRuntimeMeta>();
+					const sidebarRef = useRef<HTMLDivElement>(null);
+					const toggleRef = useRef<HTMLDivElement>(null);
+					return { ctx, sidebarRef, toggleRef };
+				},
+				{ wrapper },
+			);
+
+			const { ctx, sidebarRef, toggleRef } = hookResult.result.current;
+
+			act(() => {
+				ctx.registerBottomSidebar("sheet", { sidebarRef, toggleRef });
+				ctx.setBottomSidebarOptionsById("sheet", makeOptions());
+			});
+
+			return hookResult;
+		}
+
+		it("setMeta('bottom', { id, meta }) sets bottom meta", () => {
+			const { result } = setupBottom();
+			act(() => {
+				result.current.ctx.setMeta("bottom", { id: "sheet", meta: { filter: "active" } });
+			});
+			expect(result.current.ctx.bottomSidebars.sheet.meta).toEqual({ filter: "active" });
+		});
+
+		it("setMeta('bottom', { id, meta: null }) clears bottom meta", () => {
+			const { result } = setupBottom();
+			act(() => {
+				result.current.ctx.setMeta("bottom", { id: "sheet", meta: "data" });
+			});
+			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("data");
+			act(() => {
+				result.current.ctx.setMeta("bottom", { id: "sheet", meta: null });
+			});
+			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+		});
+	});
+});
+
 // ─── Type-level assertions ───────────────────────────────────────────
 
 describe("meta – type narrowing", () => {
@@ -216,31 +303,21 @@ describe("meta – type narrowing", () => {
 	type TCtxDefault = ReturnType<typeof _callDefault>;
 
 	describe("unparameterized (default)", () => {
-		it("leftMeta is null (assignment check)", () => {
-			// tsc verifies: TCtxDefault["leftMeta"] is assignable to null and vice versa
-			const _toNull: null = null as TCtxDefault["leftMeta"];
-			const _fromNull: TCtxDefault["leftMeta"] = null;
-			expect(_toNull).toBe(null);
-			expect(_fromNull).toBe(null);
+		it("leftMeta is any", () => {
+			expectTypeOf<TCtxDefault["leftMeta"]>().toBeAny();
 		});
 
-		it("rightMeta is null (assignment check)", () => {
-			const _toNull: null = null as TCtxDefault["rightMeta"];
-			const _fromNull: TCtxDefault["rightMeta"] = null;
-			expect(_toNull).toBe(null);
-			expect(_fromNull).toBe(null);
+		it("rightMeta is any", () => {
+			expectTypeOf<TCtxDefault["rightMeta"]>().toBeAny();
 		});
 
-		it("openSidebar('left') opts does not accept meta", () => {
-			// @ts-expect-error — meta not allowed without generic
-			const _opts: Parameters<TCtxDefault["openSidebar"]>[1] = { meta: "x" };
+		it("openSidebar('left') opts accepts any meta without generic", () => {
+			const _opts: NonNullable<Parameters<TCtxDefault["openSidebar"]>[1]> = { meta: "x" };
 			expect(_opts).toBeTruthy();
 		});
 
 		it("bottomSidebars is Record<string, TBottomSidebarState>", () => {
-			expectTypeOf<TCtxDefault["bottomSidebars"]>().toExtend<
-				Record<string, TBottomSidebarState>
-			>();
+			expectTypeOf<TCtxDefault["bottomSidebars"]>().toExtend<Record<string, TBottomSidebarState>>();
 		});
 	});
 
@@ -268,7 +345,27 @@ describe("meta – type narrowing", () => {
 		});
 	});
 
-	describe("function overload opts", () => {
+	describe("setMeta", () => {
+		it("setMeta is a function", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeFunction();
+		});
+
+		it("left overload accepts { page: string } | null", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", { page: "profile" });
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", null);
+		});
+
+		it("right overload accepts number | null", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("right", 42);
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("right", null);
+		});
+
+		it("default context setMeta exists as a function", () => {
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeFunction();
+		});
+	});
+
+	describe("sidebar fn opts", () => {
 		it("openSidebar('left') opts accepts typed meta", () => {
 			type TLeftOpts = Parameters<TCtx["openSidebar"]>[1];
 			expectTypeOf<{ meta?: { page: string }; resetMeta?: boolean }>().toExtend<
@@ -278,9 +375,7 @@ describe("meta – type narrowing", () => {
 
 		it("closeSidebar('right') opts accepts typed meta", () => {
 			type TRightOpts = Parameters<TCtx["closeSidebar"]>[1];
-			expectTypeOf<{ meta?: number; resetMeta?: boolean }>().toExtend<
-				NonNullable<TRightOpts>
-			>();
+			expectTypeOf<{ meta?: number; resetMeta?: boolean }>().toExtend<NonNullable<TRightOpts>>();
 		});
 	});
 });

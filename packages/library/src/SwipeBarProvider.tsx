@@ -87,6 +87,7 @@ export type TSwipeSidebarContextInternal = {
 	rightToggleRef: React.RefObject<HTMLDivElement | null>;
 	leftMeta: unknown;
 	rightMeta: unknown;
+	setMeta: (side: TSidebarSide, metaOrOpts: unknown) => void;
 };
 
 export const SwipeSidebarContext = createContext<TSwipeSidebarContextInternal | null>(null);
@@ -310,6 +311,20 @@ export const SwipeBarProvider = ({
 				setBottomSidebarMeta(id, null);
 			} else if (opts?.meta !== undefined) {
 				setBottomSidebarMeta(id, opts.meta);
+			}
+		},
+		[setBottomSidebarMeta],
+	);
+
+	const setMeta = useCallback(
+		(side: TSidebarSide, metaOrOpts: unknown) => {
+			if (side === "left") {
+				setLeftMeta(metaOrOpts);
+			} else if (side === "right") {
+				setRightMeta(metaOrOpts);
+			} else {
+				const opts = metaOrOpts as { id: string; meta: unknown };
+				setBottomSidebarMeta(opts.id, opts.meta);
 			}
 		},
 		[setBottomSidebarMeta],
@@ -625,6 +640,7 @@ export const SwipeBarProvider = ({
 				rightToggleRef,
 				leftMeta,
 				rightMeta,
+				setMeta,
 			}}
 		>
 			{children}

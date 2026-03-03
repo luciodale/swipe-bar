@@ -23,6 +23,7 @@ const {
   closeSidebar,
   openSidebarFully,
   openSidebarToMidAnchor,
+  setMeta,         // standalone meta updates
   leftMeta,        // { screen: "settings" | "profile" } | null
   rightMeta,       // { tab: number } | null
   bottomSidebars,  // primary.meta: { filter: string } | null
@@ -33,6 +34,15 @@ openSidebar("left", { meta: { screen: "settings" } });
 closeSidebar("right", { meta: { tab: 2 } });
 openSidebarFully("bottom", { id: "primary", meta: { filter: "active" } });
 openSidebarToMidAnchor("bottom", { id: "secondary", meta: { step: 1 } });`;
+
+const setMetaCode = `// Update meta independently — no open/close triggered
+setMeta("left", { screen: "profile" });
+setMeta("right", { tab: 3 });
+setMeta("bottom", { id: "primary", meta: { filter: "active" } });
+
+// Clear meta to null
+setMeta("left", null);
+setMeta("bottom", { id: "primary", meta: null });`;
 
 const resetMetaCode = `// Clear meta back to null
 closeSidebar("left", { resetMeta: true });
@@ -49,6 +59,11 @@ const keyBehaviours = [
 		title: "Set on open/close",
 		description:
 			"Works on all 4 functions: openSidebar, closeSidebar, openSidebarFully, openSidebarToMidAnchor.",
+	},
+	{
+		title: "setMeta (standalone)",
+		description:
+			"Update meta without triggering open/close. Accepts the sidebar side and a value (or null to clear).",
 	},
 	{
 		title: "Preserved by default",
@@ -113,6 +128,20 @@ export function MetaDocumentation() {
 					codeTagProps={{ style: codeTagStyle }}
 				>
 					{resetMetaCode}
+				</SyntaxHighlighter>
+			</div>
+
+			<div className="rounded-lg border border-white/10 bg-black/20 overflow-hidden mb-4">
+				<div className="px-3 py-2 text-xs text-emerald-300/90 font-medium border-b border-white/10">
+					setMeta (standalone)
+				</div>
+				<SyntaxHighlighter
+					language="typescript"
+					style={vscDarkPlus}
+					customStyle={syntaxStyle}
+					codeTagProps={{ style: codeTagStyle }}
+				>
+					{setMetaCode}
 				</SyntaxHighlighter>
 			</div>
 
