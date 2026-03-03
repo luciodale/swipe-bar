@@ -360,8 +360,47 @@ describe("meta – type narrowing", () => {
 			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("right", null);
 		});
 
+		it("bottom overload accepts typed meta for known key", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("bottom", {
+				id: "sheet" as const,
+				meta: { action: "click" },
+			});
+		});
+
+		it("bottom overload accepts typed meta for picker key", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("bottom", {
+				id: "picker" as const,
+				meta: true,
+			});
+		});
+
+		it("bottom overload accepts null meta for known key", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("bottom", {
+				id: "sheet" as const,
+				meta: null,
+			});
+		});
+
 		it("default context setMeta exists as a function", () => {
 			expectTypeOf<TCtxDefault["setMeta"]>().toBeFunction();
+		});
+
+		it("default context setMeta accepts any left value", () => {
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("left", "anything");
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("left", 123);
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("left", null);
+		});
+
+		it("default context setMeta accepts any right value", () => {
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("right", { arbitrary: true });
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("right", null);
+		});
+
+		it("default context setMeta accepts any bottom meta", () => {
+			expectTypeOf<TCtxDefault["setMeta"]>().toBeCallableWith("bottom", {
+				id: "any-id",
+				meta: "whatever",
+			});
 		});
 	});
 
