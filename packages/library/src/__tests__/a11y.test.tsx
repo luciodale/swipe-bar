@@ -192,6 +192,78 @@ describe("Escape key closes sidebar", () => {
 			expect(sidebar).toHaveAttribute("aria-hidden", "true");
 		});
 	});
+
+	it("closes right sidebar on Escape", async () => {
+		renderWithProvider(
+			<SwipeBarRight>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarRight>,
+		);
+		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-right");
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		insideBtn.focus();
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		});
+	});
+
+	it("closes bottom sidebar on Escape", async () => {
+		renderWithProvider(
+			<SwipeBarBottom>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarBottom>,
+		);
+		const toggle = screen.getByRole("button", { name: /open bottom sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-bottom-primary");
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		insideBtn.focus();
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		});
+	});
+
+	it("does not close sidebar when focus is outside it", async () => {
+		renderWithProvider(
+			<>
+				<button type="button">Outside</button>
+				<SwipeBarLeft>
+					<div>
+						<button type="button">Inside</button>
+					</div>
+				</SwipeBarLeft>
+			</>,
+		);
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+
+		// Focus outside the sidebar
+		const outsideBtn = screen.getByRole("button", { name: "Outside" });
+		outsideBtn.focus();
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		// Should remain open since focus is outside
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+	});
 });
 
 describe("Focus management", () => {
@@ -238,5 +310,96 @@ describe("Focus management", () => {
 
 		const firstBtn = screen.getByRole("button", { name: "First" });
 		expect(document.activeElement).toBe(firstBtn);
+	});
+
+	it("traps focus within open sidebar (Shift+Tab wraps backwards)", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0}>
+				<div>
+					<button type="button">First</button>
+					<button type="button">Last</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		await waitFor(() => {
+			expect(document.activeElement).toBe(document.getElementById("swipebar-left"));
+		});
+
+		const firstBtn = screen.getByRole("button", { name: "First" });
+		firstBtn.focus();
+
+		// Shift+Tab from first should wrap to last
+		fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+
+		const lastBtn = screen.getByRole("button", { name: "Last" });
+		expect(document.activeElement).toBe(lastBtn);
+	});
+
+	it("returns focus to toggle button on close", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} showOverlay={false}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(document.activeElement).toBe(sidebar);
+		});
+
+		// Close via toggle
+		const closeToggle = screen.getByRole("button", { name: /close left sidebar/i });
+		await userEvent.click(closeToggle);
+
+		await waitFor(() => {
+			// Focus should return to the toggle button
+			const toggleBtn = screen.getByRole("button", { name: /open left sidebar/i });
+			expect(document.activeElement).toBe(toggleBtn);
+		});
+	});
+
+	it("focuses right sidebar container on open", async () => {
+		renderWithProvider(
+			<SwipeBarRight transitionMs={0}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarRight>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-right");
+		await waitFor(() => {
+			expect(document.activeElement).toBe(sidebar);
+		});
+	});
+
+	it("focuses bottom sidebar container on open", async () => {
+		renderWithProvider(
+			<SwipeBarBottom transitionMs={0}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarBottom>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open bottom sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-bottom-primary");
+		await waitFor(() => {
+			expect(document.activeElement).toBe(sidebar);
+		});
 	});
 });
