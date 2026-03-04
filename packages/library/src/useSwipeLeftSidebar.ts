@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import {
-	type TDragRefs,
-	type TDragState,
-	type TSidebarCallbacks,
-	type TSwipeBarOptions,
 	findChangedTouch,
 	handleDragCancel,
 	handleDragStart,
 	hasTrackedTouchEnded,
 	isEditableTarget,
+	type TDragRefs,
+	type TDragState,
+	type TSidebarCallbacks,
+	type TSwipeBarOptions,
 } from "./swipeSidebarShared";
 import { useMediaQuery } from "./useMediaQuery";
 import { useSwipeBarContext } from "./useSwipeBarContext";

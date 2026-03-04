@@ -1,14 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
-import { ToggleBottom } from "../ToggleBottom";
 import {
-	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
-	type TSwipeSidebar,
 	bottomSwipeBarAbsoluteStyle,
 	bottomSwipeBarInitialTransform,
 	bottomSwipeBarStyle,
+	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
+	type TSwipeSidebar,
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
+import { ToggleBottom } from "../ToggleBottom";
+import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
 import { useSwipeBarContext } from "../useSwipeBarContext";
 import { useSwipeBottomSidebar } from "../useSwipeBottomSidebar";
@@ -19,6 +20,7 @@ export function SwipeBarBottom({
 	className,
 	children,
 	ToggleComponent,
+	ariaLabel,
 	...currentOptions
 }: TSwipeSidebar) {
 	if (children?.type === Fragment) {
@@ -41,6 +43,15 @@ export function SwipeBarBottom({
 	useSwipeBottomSidebar(options, id);
 
 	const isOpen = bottomSidebars[id]?.isOpen ?? false;
+
+	const handleClose = useCallback(() => closeSidebar("bottom", { id }), [closeSidebar, id]);
+	useFocusTrap({
+		sidebarRef: sidebarRef,
+		triggerRef: toggleRef,
+		isOpen,
+		onClose: handleClose,
+		transitionMs: options.transitionMs,
+	});
 
 	return (
 		<>
@@ -65,6 +76,12 @@ export function SwipeBarBottom({
 
 			<div
 				ref={sidebarRef}
+				id={`swipebar-bottom-${id}`}
+				role="dialog"
+				aria-modal={isOpen}
+				aria-hidden={!isOpen}
+				aria-label={ariaLabel ?? "Bottom sidebar"}
+				inert={!isOpen}
 				style={{
 					...bottomSwipeBarStyle,
 					...bottomSwipeBarInitialTransform,

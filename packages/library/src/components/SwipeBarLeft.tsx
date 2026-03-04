@@ -1,13 +1,15 @@
+import { useCallback } from "react";
 import { Fragment } from "react/jsx-runtime";
-import { ToggleLeft } from "../ToggleLeft";
 import {
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
-	type TSwipeSidebar,
 	leftSwipeBarAbsoluteStyle,
 	leftSwipeBarInitialTransform,
 	swipeBarStyle,
+	type TSwipeSidebar,
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
+import { ToggleLeft } from "../ToggleLeft";
+import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
 import { useSwipeBarContext } from "../useSwipeBarContext";
 import { useSwipeLeftSidebar } from "../useSwipeLeftSidebar";
@@ -17,17 +19,27 @@ export function SwipeBarLeft({
 	className,
 	children,
 	ToggleComponent,
+	ariaLabel,
 	...currentOptions
 }: TSwipeSidebar) {
 	if (children?.type === Fragment) {
 		throw new Error("Fragments is not allowed in SwipeBarLeft");
 	}
 
-	const { isLeftOpen, closeSidebar, leftSidebarRef } = useSwipeBarContext();
+	const { isLeftOpen, closeSidebar, leftSidebarRef, leftToggleRef } = useSwipeBarContext();
 
 	const options = useSetMergedOptions("left", currentOptions);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
 	useSwipeLeftSidebar(options);
+
+	const handleClose = useCallback(() => closeSidebar("left"), [closeSidebar]);
+	useFocusTrap({
+		sidebarRef: leftSidebarRef,
+		triggerRef: leftToggleRef,
+		isOpen: isLeftOpen,
+		onClose: handleClose,
+		transitionMs: options.transitionMs,
+	});
 
 	return (
 		<>
@@ -50,6 +62,12 @@ export function SwipeBarLeft({
 
 			<div
 				ref={leftSidebarRef}
+				id="swipebar-left"
+				role="dialog"
+				aria-modal={isLeftOpen}
+				aria-hidden={!isLeftOpen}
+				aria-label={ariaLabel ?? "Left sidebar"}
+				inert={!isLeftOpen}
 				style={{
 					...swipeBarStyle,
 					...leftSwipeBarInitialTransform,

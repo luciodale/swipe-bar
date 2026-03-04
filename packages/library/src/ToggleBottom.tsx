@@ -36,6 +36,9 @@ export function ToggleBottom({
 			{(!isOpen || (isOpen && !options.showOverlay)) && (
 				<button
 					type="button"
+					aria-expanded={isOpen}
+					aria-controls={`swipebar-bottom-${id}`}
+					aria-label={isOpen ? "Close bottom sidebar" : "Open bottom sidebar"}
 					onClick={() => {
 						if (!options.disabled) {
 							isOpen ? closeSidebar("bottom", { id }) : openSidebar("bottom", { id });

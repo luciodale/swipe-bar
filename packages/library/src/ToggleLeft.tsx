@@ -27,6 +27,9 @@ export function ToggleLeft({ options, showToggle = true, ToggleComponent }: Togg
 			{(!isLeftOpen || (isLeftOpen && !options.showOverlay)) && (
 				<button
 					type="button"
+					aria-expanded={isLeftOpen}
+					aria-controls="swipebar-left"
+					aria-label={isLeftOpen ? "Close left sidebar" : "Open left sidebar"}
 					onClick={() => {
 						if (!options.disabled) {
 							isLeftOpen ? closeSidebar("left") : openSidebar("left");

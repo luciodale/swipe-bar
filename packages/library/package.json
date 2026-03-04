@@ -1,6 +1,6 @@
 {
 	"name": "@luciodale/swipe-bar",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"author": "Lucio D'Alessandro",
 	"repository": {
 		"type": "git",
@@ -20,7 +20,10 @@
 		"react-dom": ">=16 || >=17 || >= 18 || >=19"
 	},
 	"description": "Toggling and swiping sidebars like in a native app, built with React. Inspired by the native iOS swipe gestures.",
-	"files": ["dist", "README.md"],
+	"files": [
+		"dist",
+		"README.md"
+	],
 	"keywords": [
 		"react",
 		"sliding",

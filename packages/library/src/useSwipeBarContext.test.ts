@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { type ReactNode, createElement, useRef } from "react";
+import { createElement, type ReactNode, useRef } from "react";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { SwipeBarProvider } from "./SwipeBarProvider";
 import type { TBottomSidebarState } from "./swipeSidebarShared";
@@ -406,6 +406,7 @@ describe("meta – type narrowing", () => {
 	// Wrapper forces TS to resolve with the default type parameter (object),
 	// unlike ReturnType<typeof useSwipeBarContext> which uses the constraint.
 	function _callDefault() {
+		// biome-ignore lint/correctness/useHookAtTopLevel: type-level only, never called at runtime
 		return useSwipeBarContext();
 	}
 	type TCtxDefault = ReturnType<typeof _callDefault>;

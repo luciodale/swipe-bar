@@ -1,0 +1,242 @@
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SwipeBarBottom } from "../components/SwipeBarBottom";
+import { SwipeBarLeft } from "../components/SwipeBarLeft";
+import { SwipeBarRight } from "../components/SwipeBarRight";
+import { SwipeBarProvider } from "../SwipeBarProvider";
+import "@testing-library/jest-dom/vitest";
+
+// Stub requestAnimationFrame to run synchronously in tests
+beforeEach(() => {
+	vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+		cb(0);
+		return 0;
+	});
+});
+
+afterEach(() => {
+	cleanup();
+	vi.restoreAllMocks();
+});
+
+function renderWithProvider(ui: React.ReactElement) {
+	return render(
+		<SwipeBarProvider transitionMs={0} isAbsolute>
+			{ui}
+		</SwipeBarProvider>,
+	);
+}
+
+describe("Sidebar a11y attributes", () => {
+	it("has aria-hidden=true and inert when closed", () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).toHaveAttribute("inert");
+	});
+
+	it("has role=dialog and aria-modal", () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("role", "dialog");
+	});
+
+	it("removes aria-hidden and inert when open", async () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const toggleButton = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggleButton);
+
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
+		expect(sidebar).toHaveAttribute("aria-modal", "true");
+	});
+
+	it("right sidebar has correct a11y attrs when closed", () => {
+		renderWithProvider(
+			<SwipeBarRight>
+				<div>Content</div>
+			</SwipeBarRight>,
+		);
+		const sidebar = document.getElementById("swipebar-right");
+		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).toHaveAttribute("inert");
+		expect(sidebar).toHaveAttribute("role", "dialog");
+		expect(sidebar).toHaveAttribute("aria-label", "Right sidebar");
+	});
+
+	it("bottom sidebar has correct a11y attrs when closed", () => {
+		renderWithProvider(
+			<SwipeBarBottom>
+				<div>Content</div>
+			</SwipeBarBottom>,
+		);
+		const sidebar = document.getElementById("swipebar-bottom-primary");
+		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).toHaveAttribute("inert");
+		expect(sidebar).toHaveAttribute("role", "dialog");
+		expect(sidebar).toHaveAttribute("aria-label", "Bottom sidebar");
+	});
+
+	it("supports custom ariaLabel", () => {
+		renderWithProvider(
+			<SwipeBarLeft ariaLabel="Navigation menu">
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("aria-label", "Navigation menu");
+	});
+});
+
+describe("Toggle button a11y attributes", () => {
+	it("has aria-expanded=false when sidebar closed", () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		expect(toggle).toHaveAttribute("aria-expanded", "false");
+		expect(toggle).toHaveAttribute("aria-controls", "swipebar-left");
+	});
+
+	it("has aria-expanded=true when sidebar open", async () => {
+		// Disable overlay so toggle button stays visible when open
+		renderWithProvider(
+			<SwipeBarLeft showOverlay={false}>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		const openToggle = screen.getByRole("button", { name: /close left sidebar/i });
+		expect(openToggle).toHaveAttribute("aria-expanded", "true");
+	});
+
+	it("right toggle has correct aria attrs", () => {
+		renderWithProvider(
+			<SwipeBarRight>
+				<div>Content</div>
+			</SwipeBarRight>,
+		);
+		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
+		expect(toggle).toHaveAttribute("aria-expanded", "false");
+		expect(toggle).toHaveAttribute("aria-controls", "swipebar-right");
+	});
+
+	it("bottom toggle has correct aria attrs", () => {
+		renderWithProvider(
+			<SwipeBarBottom>
+				<div>Content</div>
+			</SwipeBarBottom>,
+		);
+		const toggle = screen.getByRole("button", { name: /open bottom sidebar/i });
+		expect(toggle).toHaveAttribute("aria-expanded", "false");
+		expect(toggle).toHaveAttribute("aria-controls", "swipebar-bottom-primary");
+	});
+});
+
+describe("Overlay a11y", () => {
+	it("has aria-hidden=true", () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+		// Overlay is the div with pointer-events: none style
+		const overlays = document.querySelectorAll("[aria-hidden='true']");
+		// sidebar + overlay both have aria-hidden when closed
+		const overlayDiv = Array.from(overlays).find(
+			(el) => el.id !== "swipebar-left" && el.getAttribute("role") !== "dialog",
+		);
+		expect(overlayDiv).toBeTruthy();
+	});
+});
+
+describe("Escape key closes sidebar", () => {
+	it("closes left sidebar on Escape", async () => {
+		renderWithProvider(
+			<SwipeBarLeft>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+
+		// Focus inside sidebar then press Escape
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		insideBtn.focus();
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		});
+	});
+});
+
+describe("Focus management", () => {
+	it("focuses the sidebar container on open", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0}>
+				<div>
+					<button type="button">Inside button</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(document.activeElement).toBe(sidebar);
+		});
+	});
+
+	it("traps focus within open sidebar (Tab wraps)", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0}>
+				<div>
+					<button type="button">First</button>
+					<button type="button">Last</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
+		await userEvent.click(toggle);
+
+		await waitFor(() => {
+			expect(document.activeElement).toBe(document.getElementById("swipebar-left"));
+		});
+
+		const lastBtn = screen.getByRole("button", { name: "Last" });
+		lastBtn.focus();
+
+		// Tab from last should wrap to first
+		fireEvent.keyDown(document, { key: "Tab" });
+
+		const firstBtn = screen.getByRole("button", { name: "First" });
+		expect(document.activeElement).toBe(firstBtn);
+	});
+});

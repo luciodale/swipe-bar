@@ -1,7 +1,7 @@
 import {
+	createContext,
 	type ReactNode,
 	type RefObject,
-	createContext,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -9,6 +9,11 @@ import {
 	useState,
 } from "react";
 import {
+	applyClosePaneStyles,
+	applyDragPaneStyles,
+	applyDragPaneStylesBottom,
+	applyMidAnchorPaneStyles,
+	applyOpenPaneStyles,
 	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
@@ -35,11 +40,6 @@ import {
 	type TSidebarOpts,
 	type TSidebarSide,
 	type TSwipeBarOptions,
-	applyClosePaneStyles,
-	applyDragPaneStyles,
-	applyDragPaneStylesBottom,
-	applyMidAnchorPaneStyles,
-	applyOpenPaneStyles,
 } from "./swipeSidebarShared";
 
 type TLockedSidebar = TSidebarSide | null;

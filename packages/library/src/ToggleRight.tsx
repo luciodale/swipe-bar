@@ -28,6 +28,9 @@ export function ToggleRight({ options, showToggle = true, ToggleComponent }: Tog
 			{(!isRightOpen || (isRightOpen && !options.showOverlay)) && (
 				<button
 					type="button"
+					aria-expanded={isRightOpen}
+					aria-controls="swipebar-right"
+					aria-label={isRightOpen ? "Close right sidebar" : "Open right sidebar"}
 					onClick={() => {
 						if (!options.disabled) {
 							isRightOpen ? closeSidebar("right") : openSidebar("right");

@@ -61,6 +61,7 @@ export type TSwipeSidebar = TSwipeBarOptions & {
 	className?: string;
 	ToggleComponent?: ReactElement;
 	children?: ReactElement;
+	ariaLabel?: string;
 };
 
 export type TBottomSidebarState = {

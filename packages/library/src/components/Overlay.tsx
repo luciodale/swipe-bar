@@ -19,6 +19,7 @@ export function Overlay({
 }: TOverlay) {
 	return (
 		<div
+			aria-hidden="true"
 			style={{
 				transitionDuration: `${transitionMs}ms`,
 				...overlayStyle,
