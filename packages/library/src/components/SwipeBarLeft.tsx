@@ -9,6 +9,7 @@ import {
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
 import { ToggleLeft } from "../ToggleLeft";
+import { useDefaultOpen } from "../useDefaultOpen";
 import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
 import { useSwipeBarContext } from "../useSwipeBarContext";
@@ -20,17 +21,35 @@ export function SwipeBarLeft({
 	children,
 	ToggleComponent,
 	ariaLabel,
+	defaultOpen,
 	...currentOptions
 }: TSwipeSidebar) {
 	if (children?.type === Fragment) {
 		throw new Error("Fragments is not allowed in SwipeBarLeft");
 	}
 
-	const { isLeftOpen, closeSidebar, leftSidebarRef, leftToggleRef } = useSwipeBarContext();
+	const {
+		isLeftOpen,
+		closeSidebar,
+		openSidebar,
+		leftSidebarRef,
+		leftToggleRef,
+		leftSidebarOptions: providerLeftOpts,
+	} = useSwipeBarContext();
 
 	const options = useSetMergedOptions("left", currentOptions);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
 	useSwipeLeftSidebar(options);
+
+	const handleDefaultOpen = useCallback(
+		() => openSidebar("left", { skipTransition: true }),
+		[openSidebar],
+	);
+	const { forceOverlayVisible } = useDefaultOpen({
+		defaultOpen,
+		optionsReady: !!providerLeftOpts.sidebarWidthPx,
+		onOpen: handleDefaultOpen,
+	});
 
 	const handleClose = useCallback(() => closeSidebar("left"), [closeSidebar]);
 	useFocusTrap({
@@ -45,7 +64,7 @@ export function SwipeBarLeft({
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isLeftOpen}
+					isCollapsed={!isLeftOpen && !forceOverlayVisible}
 					setCollapsed={() => closeSidebar("left")}
 					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
@@ -73,6 +92,9 @@ export function SwipeBarLeft({
 					...(options.isAbsolute || isSmallScreen ? leftSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,
+					...(defaultOpen
+						? { transform: "translateX(0px)", width: `${options.sidebarWidthPx}px` }
+						: {}),
 				}}
 				className={className}
 			>

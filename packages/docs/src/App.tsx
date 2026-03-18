@@ -15,14 +15,8 @@ import { QuickSettings } from "./components/QuickSettings";
 import { cn } from "./utils";
 
 export function App() {
-	const {
-		openSidebar,
-		openSidebarToMidAnchor,
-		closeSidebar,
-		isLeftOpen,
-		isRightOpen,
-		bottomSidebars,
-	} = useSwipeBarContext();
+	const { openSidebar, openSidebarToMidAnchor, closeSidebar, isLeftOpen, bottomSidebars } =
+		useSwipeBarContext();
 	const isBottomOpen = bottomSidebars.primary?.isOpen ?? false;
 	const isSecondaryBottomOpen = bottomSidebars.secondary?.isOpen ?? false;
 	const [useCustomToggle, setUseCustomToggle] = useState(true);
@@ -402,7 +396,7 @@ export function App() {
 				<SwipeBarRight
 					disabled={isRightDisabled}
 					ToggleComponent={useCustomToggle ? <CustomToggle /> : undefined}
-					className={cn("bg-black/90 text-white", isRightOpen && "border-l border-white/20")}
+					className={cn("bg-black/90 text-white border-l border-white/20")}
 				>
 					<div className={cn("flex h-full flex-col p-4 gap-4")}>
 						<div className="rounded-xl border border-white/20 bg-white/5 p-4">

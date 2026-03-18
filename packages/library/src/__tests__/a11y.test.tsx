@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -5,7 +6,6 @@ import { SwipeBarBottom } from "../components/SwipeBarBottom";
 import { SwipeBarLeft } from "../components/SwipeBarLeft";
 import { SwipeBarRight } from "../components/SwipeBarRight";
 import { SwipeBarProvider } from "../SwipeBarProvider";
-import "@testing-library/jest-dom/vitest";
 
 // Stub requestAnimationFrame to run synchronously in tests
 beforeEach(() => {
@@ -263,7 +263,7 @@ describe("Escape key closes sidebar", () => {
 });
 
 describe("Focus management", () => {
-	it("focuses the sidebar container on open", async () => {
+	it("focuses the first focusable child on open", async () => {
 		renderWithProvider(
 			<SwipeBarLeft transitionMs={0}>
 				<div>
@@ -275,9 +275,9 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const insideBtn = screen.getByRole("button", { name: "Inside button" });
 		await waitFor(() => {
-			expect(document.activeElement).toBe(sidebar);
+			expect(document.activeElement).toBe(insideBtn);
 		});
 	});
 
@@ -294,8 +294,9 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
+		const firstBtn = screen.getByRole("button", { name: "First" });
 		await waitFor(() => {
-			expect(document.activeElement).toBe(document.getElementById("swipebar-left"));
+			expect(document.activeElement).toBe(firstBtn);
 		});
 
 		const lastBtn = screen.getByRole("button", { name: "Last" });
@@ -304,7 +305,6 @@ describe("Focus management", () => {
 		// Tab from last should wrap to first
 		fireEvent.keyDown(document, { key: "Tab" });
 
-		const firstBtn = screen.getByRole("button", { name: "First" });
 		expect(document.activeElement).toBe(firstBtn);
 	});
 
@@ -321,12 +321,10 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
-		await waitFor(() => {
-			expect(document.activeElement).toBe(document.getElementById("swipebar-left"));
-		});
-
 		const firstBtn = screen.getByRole("button", { name: "First" });
-		firstBtn.focus();
+		await waitFor(() => {
+			expect(document.activeElement).toBe(firstBtn);
+		});
 
 		// Shift+Tab from first should wrap to last
 		fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
@@ -347,9 +345,9 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
 		await waitFor(() => {
-			expect(document.activeElement).toBe(sidebar);
+			expect(document.activeElement).toBe(insideBtn);
 		});
 
 		// Close via toggle
@@ -363,7 +361,7 @@ describe("Focus management", () => {
 		});
 	});
 
-	it("focuses right sidebar container on open", async () => {
+	it("focuses first focusable child in right sidebar on open", async () => {
 		renderWithProvider(
 			<SwipeBarRight transitionMs={0}>
 				<div>
@@ -375,13 +373,13 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-right");
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
 		await waitFor(() => {
-			expect(document.activeElement).toBe(sidebar);
+			expect(document.activeElement).toBe(insideBtn);
 		});
 	});
 
-	it("focuses bottom sidebar container on open", async () => {
+	it("focuses first focusable child in bottom sidebar on open", async () => {
 		renderWithProvider(
 			<SwipeBarBottom transitionMs={0}>
 				<div>
@@ -393,9 +391,210 @@ describe("Focus management", () => {
 		const toggle = screen.getByRole("button", { name: /open bottom sidebar/i });
 		await userEvent.click(toggle);
 
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(insideBtn);
+		});
+	});
+});
+
+describe("defaultOpen", () => {
+	it("left sidebar renders open immediately", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+			expect(sidebar).toHaveAttribute("aria-modal", "true");
+		});
+		expect(sidebar?.style.transform).toBe("translateX(0px)");
+	});
+
+	it("right sidebar renders open immediately", async () => {
+		renderWithProvider(
+			<SwipeBarRight transitionMs={0} defaultOpen>
+				<div>Content</div>
+			</SwipeBarRight>,
+		);
+
+		const sidebar = document.getElementById("swipebar-right");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+			expect(sidebar).toHaveAttribute("aria-modal", "true");
+		});
+		expect(sidebar?.style.transform).toBe("translateX(0px)");
+	});
+
+	it("bottom sidebar renders open immediately", async () => {
+		renderWithProvider(
+			<SwipeBarBottom transitionMs={0} defaultOpen>
+				<div>Content</div>
+			</SwipeBarBottom>,
+		);
+
 		const sidebar = document.getElementById("swipebar-bottom-primary");
 		await waitFor(() => {
-			expect(document.activeElement).toBe(sidebar);
+			expect(sidebar).not.toHaveAttribute("inert");
+			expect(sidebar).toHaveAttribute("aria-modal", "true");
 		});
+		expect(sidebar?.style.transform).toBe("translateY(0px)");
+	});
+
+	it("bottom sidebar opens fully even when midAnchorPoint is enabled", async () => {
+		renderWithProvider(
+			<SwipeBarBottom
+				transitionMs={0}
+				defaultOpen
+				midAnchorPoint
+				sidebarHeightPx={600}
+				midAnchorPointPx={200}
+			>
+				<div>Content</div>
+			</SwipeBarBottom>,
+		);
+
+		const sidebar = document.getElementById("swipebar-bottom-primary");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+		expect(sidebar?.style.transform).toBe("translateY(0px)");
+	});
+
+	it("left sidebar skips transition on defaultOpen", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={300} defaultOpen>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+		expect(sidebar?.style.transition).toBe("none");
+	});
+
+	it("left sidebar can still be closed after defaultOpen", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen showOverlay={false}>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+
+		const closeToggle = screen.getByRole("button", { name: /close left sidebar/i });
+		await userEvent.click(closeToggle);
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("inert");
+			expect(sidebar).toHaveAttribute("aria-modal", "false");
+		});
+	});
+
+	it("bottom sidebar can still be closed after defaultOpen", async () => {
+		renderWithProvider(
+			<SwipeBarBottom transitionMs={0} defaultOpen showOverlay={false}>
+				<div>Content</div>
+			</SwipeBarBottom>,
+		);
+
+		const sidebar = document.getElementById("swipebar-bottom-primary");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+
+		const closeToggle = screen.getByRole("button", { name: /close bottom sidebar/i });
+		await userEvent.click(closeToggle);
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("inert");
+			expect(sidebar).toHaveAttribute("aria-modal", "false");
+		});
+	});
+
+	it("sidebar without defaultOpen stays closed", () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0}>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("inert");
+		expect(sidebar?.style.transform).toBe("translateX(-100%)");
+	});
+
+	it("locks body scroll when defaultOpen", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		await waitFor(() => {
+			expect(document.body.style.overflow).toBe("hidden");
+		});
+	});
+
+	it("overlay is visible when defaultOpen", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen showOverlay>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+
+		const overlay = document.querySelector<HTMLElement>("[aria-hidden='true']");
+		expect(overlay).toBeInTheDocument();
+		expect(overlay?.style.pointerEvents).toBe("auto");
+	});
+
+	it("defaultOpen={false} behaves same as omitted", () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen={false}>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		expect(sidebar).toHaveAttribute("inert");
+		expect(sidebar?.style.transform).toBe("translateX(-100%)");
+	});
+
+	it("defaultOpen only fires once and does not re-open after close", async () => {
+		renderWithProvider(
+			<SwipeBarLeft transitionMs={0} defaultOpen showOverlay={false}>
+				<div>Content</div>
+			</SwipeBarLeft>,
+		);
+
+		const sidebar = document.getElementById("swipebar-left");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+
+		// Close
+		const closeToggle = screen.getByRole("button", { name: /close left sidebar/i });
+		await userEvent.click(closeToggle);
+
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("inert");
+		});
+
+		// Sidebar should stay closed — defaultOpen doesn't re-trigger
+		expect(sidebar).toHaveAttribute("inert");
+		expect(sidebar?.style.transform).toBe("translateX(-100%)");
 	});
 });

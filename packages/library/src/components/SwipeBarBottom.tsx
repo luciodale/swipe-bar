@@ -9,6 +9,7 @@ import {
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
 import { ToggleBottom } from "../ToggleBottom";
+import { useDefaultOpen } from "../useDefaultOpen";
 import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
 import { useSwipeBarContext } from "../useSwipeBarContext";
@@ -21,14 +22,21 @@ export function SwipeBarBottom({
 	children,
 	ToggleComponent,
 	ariaLabel,
+	defaultOpen,
 	...currentOptions
 }: TSwipeSidebar) {
 	if (children?.type === Fragment) {
 		throw new Error("Fragments is not allowed in SwipeBarBottom");
 	}
 
-	const { bottomSidebars, closeSidebar, registerBottomSidebar, unregisterBottomSidebar } =
-		useSwipeBarContext();
+	const {
+		bottomSidebars,
+		bottomSidebarOptionsMap,
+		closeSidebar,
+		openSidebarFully,
+		registerBottomSidebar,
+		unregisterBottomSidebar,
+	} = useSwipeBarContext();
 
 	const sidebarRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<HTMLDivElement>(null);
@@ -44,6 +52,16 @@ export function SwipeBarBottom({
 
 	const isOpen = bottomSidebars[id]?.isOpen ?? false;
 
+	const handleDefaultOpen = useCallback(
+		() => openSidebarFully("bottom", { id, skipTransition: true }),
+		[openSidebarFully, id],
+	);
+	const { forceOverlayVisible } = useDefaultOpen({
+		defaultOpen,
+		optionsReady: !!bottomSidebarOptionsMap[id],
+		onOpen: handleDefaultOpen,
+	});
+
 	const handleClose = useCallback(() => closeSidebar("bottom", { id }), [closeSidebar, id]);
 	useFocusTrap({
 		sidebarRef: sidebarRef,
@@ -57,7 +75,7 @@ export function SwipeBarBottom({
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isOpen}
+					isCollapsed={!isOpen && !forceOverlayVisible}
 					setCollapsed={() => closeSidebar("bottom", { id })}
 					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
@@ -87,6 +105,9 @@ export function SwipeBarBottom({
 					...(options.isAbsolute || isSmallScreen ? bottomSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,
+					...(defaultOpen
+						? { transform: "translateY(0px)", height: `${options.sidebarHeightPx}px` }
+						: {}),
 				}}
 				className={className}
 			>

@@ -62,6 +62,7 @@ export type TSwipeSidebar = TSwipeBarOptions & {
 	ToggleComponent?: ReactElement;
 	children?: ReactElement;
 	ariaLabel?: string;
+	defaultOpen?: boolean;
 };
 
 export type TBottomSidebarState = {
@@ -76,7 +77,12 @@ export type TSidebarMetaMap = {
 	bottom?: Record<string, unknown>;
 };
 
-export type TSidebarOpts = { id?: string; meta?: unknown; resetMeta?: boolean };
+export type TSidebarOpts = {
+	id?: string;
+	meta?: unknown;
+	resetMeta?: boolean;
+	skipTransition?: boolean;
+};
 
 export type TToggle = {
 	side: TSidebarSide;
@@ -226,6 +232,58 @@ type TApplyOpenPaneStyles = {
 	afterApply: () => void;
 };
 
+const getOpenPaneDimension = (
+	side: TSidebarSide,
+	options: TSwipeBarOptions,
+): { dimension: "width" | "height"; sizePx: number | undefined } => {
+	if (side === "left" || side === "right") {
+		return { dimension: "width", sizePx: options.sidebarWidthPx };
+	}
+	if (side === "bottom") {
+		return { dimension: "height", sizePx: options.sidebarHeightPx };
+	}
+	return assertNever(side);
+};
+
+const applyToggleOpenPosition = (
+	toggleRef: RefObject<HTMLDivElement | null>,
+	side: TSidebarSide,
+	sizePx: number | undefined,
+) => {
+	if (!toggleRef.current || !sizePx) return;
+	toggleRef.current.style.opacity = "1";
+	if (side === "left") {
+		toggleRef.current.style.transform = `translateY(-50%) translateX(${sizePx}px)`;
+	} else if (side === "right") {
+		toggleRef.current.style.transform = `translateY(-50%) translateX(-${sizePx}px)`;
+	} else if (side === "bottom") {
+		toggleRef.current.style.transform = `translateX(-50%) translateY(-${sizePx}px)`;
+	}
+};
+
+export const applyOpenPaneStylesImmediate = ({
+	ref,
+	side,
+	options,
+	toggleRef,
+	afterApply,
+}: TApplyOpenPaneStyles) => {
+	if (!ref.current) return;
+	const child = getChildElement(ref);
+	const { dimension, sizePx } = getOpenPaneDimension(side, options);
+
+	if (child && sizePx) {
+		child.style[side === "bottom" ? "minHeight" : "minWidth"] = `${sizePx}px`;
+	}
+
+	ref.current.style.transition = "none";
+	ref.current.style.transform = side === "bottom" ? "translateY(0px)" : "translateX(0px)";
+	ref.current.style[dimension] = `${sizePx}px`;
+	if (child) child.style.opacity = "1";
+	applyToggleOpenPosition(toggleRef, side, sizePx);
+	afterApply();
+};
+
 export const applyOpenPaneStyles = ({
 	ref,
 	side,
@@ -234,26 +292,15 @@ export const applyOpenPaneStyles = ({
 	afterApply,
 }: TApplyOpenPaneStyles) => {
 	const child = getChildElement(ref);
+	const { dimension, sizePx } = getOpenPaneDimension(side, options);
+
+	if (child && sizePx) {
+		child.style[side === "bottom" ? "minHeight" : "minWidth"] = `${sizePx}px`;
+	}
+
 	const delayMs = options.transitionMs ? options.transitionMs / 2 : 0;
 	if (child && options.fadeContent) {
 		child.style.opacity = "0";
-	}
-
-	let dimension: "height" | "width";
-	let sizePx: number | undefined;
-
-	if (side === "left" || side === "right") {
-		dimension = "width";
-		sizePx = options.sidebarWidthPx;
-		// Fix child width so it doesn't squish during animation
-		if (child && sizePx) child.style.minWidth = `${sizePx}px`;
-	} else if (side === "bottom") {
-		dimension = "height";
-		sizePx = options.sidebarHeightPx;
-		// Fix child height so it doesn't squish during animation
-		if (child && sizePx) child.style.minHeight = `${sizePx}px`;
-	} else {
-		assertNever(side);
 	}
 
 	requestAnimationFrame(() => {
@@ -269,28 +316,17 @@ export const applyOpenPaneStyles = ({
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
-			// Use correct axis for transform based on side
 			ref.current.style.transform = side === "bottom" ? "translateY(0px)" : "translateX(0px)";
 			if (!options.isAbsolute) {
 				ref.current.style[dimension] = `${sizePx}px`;
 			} else if (ref.current.style[dimension] !== `${sizePx}px`) {
-				// Ensure dimension is set once for absolute mode without animating it
 				const prevTransition = ref.current.style.transition;
-				ref.current.style.transition = transformTransition; // exclude dimension
+				ref.current.style.transition = transformTransition;
 				ref.current.style[dimension] = `${sizePx}px`;
 				ref.current.style.transition = prevTransition;
 			}
 
-			if (toggleRef.current && sizePx) {
-				toggleRef.current.style.opacity = "1";
-				if (side === "left") {
-					toggleRef.current.style.transform = `translateY(-50%) translateX(${sizePx}px)`;
-				} else if (side === "right") {
-					toggleRef.current.style.transform = `translateY(-50%) translateX(-${sizePx}px)`;
-				} else if (side === "bottom") {
-					toggleRef.current.style.transform = `translateX(-50%) translateY(-${sizePx}px)`;
-				}
-			}
+			applyToggleOpenPosition(toggleRef, side, sizePx);
 
 			if (child && options.fadeContent) {
 				setTimeout(() => {
@@ -392,6 +428,37 @@ type TApplyMidAnchorPaneStyles = {
 	afterApply: () => void;
 };
 
+const getMidAnchorValues = (options: TSwipeBarOptions) => {
+	const midAnchorPx = options.midAnchorPointPx ?? 0;
+	const sidebarHeightPx = options.sidebarHeightPx ?? 0;
+	return { midAnchorPx, sidebarHeightPx, translateY: sidebarHeightPx - midAnchorPx };
+};
+
+export const applyMidAnchorPaneStylesImmediate = ({
+	ref,
+	options,
+	toggleRef,
+	afterApply,
+}: TApplyMidAnchorPaneStyles) => {
+	if (!ref.current) return;
+	const child = getChildElement(ref);
+	const { midAnchorPx, sidebarHeightPx, translateY } = getMidAnchorValues(options);
+
+	if (child && options.midAnchorPointPx) {
+		child.style.minHeight = `${sidebarHeightPx}px`;
+	}
+
+	ref.current.style.transition = "none";
+	ref.current.style.transform = `translateY(${translateY}px)`;
+	ref.current.style.height = `${sidebarHeightPx}px`;
+	if (child) child.style.opacity = "1";
+	if (toggleRef.current) {
+		toggleRef.current.style.opacity = "1";
+		toggleRef.current.style.transform = `translateX(-50%) translateY(-${midAnchorPx}px)`;
+	}
+	afterApply();
+};
+
 export const applyMidAnchorPaneStyles = ({
 	ref,
 	options,
@@ -399,14 +466,15 @@ export const applyMidAnchorPaneStyles = ({
 	afterApply,
 }: TApplyMidAnchorPaneStyles) => {
 	const child = getChildElement(ref);
+	const { midAnchorPx, sidebarHeightPx, translateY } = getMidAnchorValues(options);
+
+	if (child && options.midAnchorPointPx) {
+		child.style.minHeight = `${sidebarHeightPx}px`;
+	}
+
 	const delayMs = options.transitionMs ? options.transitionMs / 2 : 0;
 	if (child && options.fadeContent) {
 		child.style.opacity = "0";
-	}
-
-	// Fix child height so it doesn't squish during animation
-	if (child && options.midAnchorPointPx) {
-		child.style.minHeight = `${options.sidebarHeightPx}px`;
 	}
 
 	requestAnimationFrame(() => {
@@ -422,10 +490,6 @@ export const applyMidAnchorPaneStyles = ({
 
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
-
-			const midAnchorPx = options.midAnchorPointPx ?? 0;
-			const sidebarHeightPx = options.sidebarHeightPx ?? 0;
-			const translateY = sidebarHeightPx - midAnchorPx;
 
 			ref.current.style.transform = `translateY(${translateY}px)`;
 			if (!options.isAbsolute) {

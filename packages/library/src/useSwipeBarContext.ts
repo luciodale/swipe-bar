@@ -3,9 +3,9 @@ import { SwipeSidebarContext, type TSwipeSidebarContextInternal } from "./SwipeB
 import type { TBottomSidebarState, TSidebarMetaMap, TSidebarSide } from "./swipeSidebarShared";
 
 type TLeftRightOpts<TMap extends TSidebarMetaMap, S extends "left" | "right"> = S extends keyof TMap
-	? { meta?: TMap[S]; resetMeta?: boolean }
+	? { meta?: TMap[S]; resetMeta?: boolean; skipTransition?: boolean }
 	: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
-		{ meta?: any; resetMeta?: boolean };
+		{ meta?: any; resetMeta?: boolean; skipTransition?: boolean };
 
 type TBottomSidebarOpts<TMap extends TSidebarMetaMap> =
 	TMap["bottom"] extends Record<string, unknown>
@@ -15,11 +15,12 @@ type TBottomSidebarOpts<TMap extends TSidebarMetaMap> =
 							id: K;
 							meta?: TMap["bottom"][K];
 							resetMeta?: boolean;
+							skipTransition?: boolean;
 						};
 				  }[string & keyof TMap["bottom"]]
-				| { id?: string; meta?: never; resetMeta?: boolean }
+				| { id?: string; meta?: never; resetMeta?: boolean; skipTransition?: boolean }
 		: // biome-ignore lint/suspicious/noExplicitAny: permissive when unparameterized
-			{ id?: string; meta?: any; resetMeta?: boolean };
+			{ id?: string; meta?: any; resetMeta?: boolean; skipTransition?: boolean };
 
 type TSidebarCallOpts<TMap extends TSidebarMetaMap, S extends TSidebarSide> = S extends "left"
 	? TLeftRightOpts<TMap, "left">

@@ -13,7 +13,9 @@ import {
 	applyDragPaneStyles,
 	applyDragPaneStylesBottom,
 	applyMidAnchorPaneStyles,
+	applyMidAnchorPaneStylesImmediate,
 	applyOpenPaneStyles,
+	applyOpenPaneStylesImmediate,
 	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
@@ -358,13 +360,18 @@ export const SwipeBarProvider = ({
 
 	const openSidebar = useCallback(
 		(side: TSidebarSide, opts?: TSidebarOpts) => {
+			const applyOpen = opts?.skipTransition ? applyOpenPaneStylesImmediate : applyOpenPaneStyles;
+			const applyMid = opts?.skipTransition
+				? applyMidAnchorPaneStylesImmediate
+				: applyMidAnchorPaneStyles;
+
 			const apply = (
 				ref: React.RefObject<HTMLDivElement | null>,
 				options: TSwipeBarOptions,
 				toggleRef: React.RefObject<HTMLDivElement | null>,
 				setOpen: (open: boolean) => void,
 			) => {
-				applyOpenPaneStyles({
+				applyOpen({
 					side,
 					ref,
 					options,
@@ -404,7 +411,7 @@ export const SwipeBarProvider = ({
 					midAnchorPx < sidebarHeightPx;
 
 				if (midAnchorActive) {
-					applyMidAnchorPaneStyles({
+					applyMid({
 						ref: bRefs.sidebarRef,
 						options: bOpts,
 						toggleRef: bRefs.toggleRef,
@@ -415,7 +422,7 @@ export const SwipeBarProvider = ({
 						},
 					});
 				} else {
-					applyOpenPaneStyles({
+					applyOpen({
 						side,
 						ref: bRefs.sidebarRef,
 						options: bOpts,
@@ -483,7 +490,8 @@ export const SwipeBarProvider = ({
 			if (bOpts.disabled) return;
 			applyBottomMeta(id, opts);
 
-			applyOpenPaneStyles({
+			const applyOpen = opts?.skipTransition ? applyOpenPaneStylesImmediate : applyOpenPaneStyles;
+			applyOpen({
 				side,
 				ref: bRefs.sidebarRef,
 				options: bOpts,

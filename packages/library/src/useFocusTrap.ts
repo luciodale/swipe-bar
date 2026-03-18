@@ -3,6 +3,9 @@ import { type RefObject, useEffect, useRef } from "react";
 const FOCUSABLE_SELECTOR =
 	'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// focusVisible is supported by browsers but not yet in TS's FocusOptions type
+const PROGRAMMATIC_FOCUS_OPTS = { preventScroll: true, focusVisible: false } as FocusOptions;
+
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
 	return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
 		(el) => !el.closest("[inert]"),
@@ -32,8 +35,14 @@ export function useFocusTrap({
 			previousFocusRef.current = document.activeElement as HTMLElement | null;
 			const timer = setTimeout(() => {
 				if (!sidebarRef.current) return;
-				sidebarRef.current.setAttribute("tabindex", "-1");
-				sidebarRef.current.focus();
+				const focusOpts = PROGRAMMATIC_FOCUS_OPTS;
+				const focusable = getFocusableElements(sidebarRef.current);
+				if (focusable.length > 0) {
+					focusable[0].focus(focusOpts);
+				} else {
+					sidebarRef.current.setAttribute("tabindex", "-1");
+					sidebarRef.current.focus(focusOpts);
+				}
 			}, transitionMs);
 			return () => clearTimeout(timer);
 		}
@@ -44,7 +53,7 @@ export function useFocusTrap({
 			// Find the button inside the trigger wrapper
 			const button = triggerRef.current?.querySelector("button") ?? el;
 			requestAnimationFrame(() => {
-				(button as HTMLElement).focus();
+				(button as HTMLElement).focus(PROGRAMMATIC_FOCUS_OPTS);
 			});
 			previousFocusRef.current = null;
 		}
