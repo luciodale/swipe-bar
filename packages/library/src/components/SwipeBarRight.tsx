@@ -65,7 +65,7 @@ export function SwipeBarRight({
 				id="swipebar-right"
 				role="dialog"
 				aria-modal={isRightOpen}
-					aria-label={ariaLabel ?? "Right sidebar"}
+				aria-label={ariaLabel ?? "Right sidebar"}
 				inert={!isRightOpen}
 				style={{
 					...swipeBarStyle,
