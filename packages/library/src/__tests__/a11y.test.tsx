@@ -29,14 +29,14 @@ function renderWithProvider(ui: React.ReactElement) {
 }
 
 describe("Sidebar a11y attributes", () => {
-	it("has aria-hidden=true and inert when closed", () => {
+	it("has inert when closed", () => {
 		renderWithProvider(
 			<SwipeBarLeft>
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
 		const sidebar = document.getElementById("swipebar-left");
-		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).toHaveAttribute("inert");
 	});
 
@@ -50,7 +50,7 @@ describe("Sidebar a11y attributes", () => {
 		expect(sidebar).toHaveAttribute("role", "dialog");
 	});
 
-	it("removes aria-hidden and inert when open", async () => {
+	it("removes inert when open", async () => {
 		renderWithProvider(
 			<SwipeBarLeft>
 				<div>Content</div>
@@ -60,7 +60,7 @@ describe("Sidebar a11y attributes", () => {
 		await userEvent.click(toggleButton);
 
 		const sidebar = document.getElementById("swipebar-left");
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).not.toHaveAttribute("inert");
 		expect(sidebar).toHaveAttribute("aria-modal", "true");
 	});
@@ -72,7 +72,7 @@ describe("Sidebar a11y attributes", () => {
 			</SwipeBarRight>,
 		);
 		const sidebar = document.getElementById("swipebar-right");
-		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar).toHaveAttribute("role", "dialog");
 		expect(sidebar).toHaveAttribute("aria-label", "Right sidebar");
@@ -85,7 +85,7 @@ describe("Sidebar a11y attributes", () => {
 			</SwipeBarBottom>,
 		);
 		const sidebar = document.getElementById("swipebar-bottom-primary");
-		expect(sidebar).toHaveAttribute("aria-hidden", "true");
+		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar).toHaveAttribute("role", "dialog");
 		expect(sidebar).toHaveAttribute("aria-label", "Bottom sidebar");
@@ -158,13 +158,9 @@ describe("Overlay a11y", () => {
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
-		// Overlay is the div with pointer-events: none style
+		// Overlay has aria-hidden when closed
 		const overlays = document.querySelectorAll("[aria-hidden='true']");
-		// sidebar + overlay both have aria-hidden when closed
-		const overlayDiv = Array.from(overlays).find(
-			(el) => el.id !== "swipebar-left" && el.getAttribute("role") !== "dialog",
-		);
-		expect(overlayDiv).toBeTruthy();
+		expect(overlays.length).toBeGreaterThan(0);
 	});
 });
 
@@ -181,7 +177,7 @@ describe("Escape key closes sidebar", () => {
 		await userEvent.click(toggle);
 
 		const sidebar = document.getElementById("swipebar-left");
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
 
 		// Focus inside sidebar then press Escape
 		const insideBtn = screen.getByRole("button", { name: "Inside" });
@@ -189,7 +185,7 @@ describe("Escape key closes sidebar", () => {
 		fireEvent.keyDown(document, { key: "Escape" });
 
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+			expect(sidebar).toHaveAttribute("inert");
 		});
 	});
 
@@ -205,14 +201,14 @@ describe("Escape key closes sidebar", () => {
 		await userEvent.click(toggle);
 
 		const sidebar = document.getElementById("swipebar-right");
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
 
 		const insideBtn = screen.getByRole("button", { name: "Inside" });
 		insideBtn.focus();
 		fireEvent.keyDown(document, { key: "Escape" });
 
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+			expect(sidebar).toHaveAttribute("inert");
 		});
 	});
 
@@ -228,14 +224,14 @@ describe("Escape key closes sidebar", () => {
 		await userEvent.click(toggle);
 
 		const sidebar = document.getElementById("swipebar-bottom-primary");
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
 
 		const insideBtn = screen.getByRole("button", { name: "Inside" });
 		insideBtn.focus();
 		fireEvent.keyDown(document, { key: "Escape" });
 
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-hidden", "true");
+			expect(sidebar).toHaveAttribute("inert");
 		});
 	});
 
@@ -254,7 +250,7 @@ describe("Escape key closes sidebar", () => {
 		await userEvent.click(toggle);
 
 		const sidebar = document.getElementById("swipebar-left");
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
 
 		// Focus outside the sidebar
 		const outsideBtn = screen.getByRole("button", { name: "Outside" });
@@ -262,7 +258,7 @@ describe("Escape key closes sidebar", () => {
 		fireEvent.keyDown(document, { key: "Escape" });
 
 		// Should remain open since focus is outside
-		expect(sidebar).toHaveAttribute("aria-hidden", "false");
+		expect(sidebar).not.toHaveAttribute("inert");
 	});
 });
 

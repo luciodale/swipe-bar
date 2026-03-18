@@ -79,8 +79,7 @@ export function SwipeBarBottom({
 				id={`swipebar-bottom-${id}`}
 				role="dialog"
 				aria-modal={isOpen}
-				aria-hidden={!isOpen}
-				aria-label={ariaLabel ?? "Bottom sidebar"}
+					aria-label={ariaLabel ?? "Bottom sidebar"}
 				inert={!isOpen}
 				style={{
 					...bottomSwipeBarStyle,
