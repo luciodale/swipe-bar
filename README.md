@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/luciodale/swipe-bar/main/packages/docs/public/logo.svg" alt="swipe-bar logo" width="120" height="120" />
+  <img src="https://raw.githubusercontent.com/luciodale/swipe-bar/main/packages/docs/public/logo-accent.svg" alt="swipe-bar logo" width="120" height="120" />
   <h1>swipe-bar</h1>
   <p>Native swipe sidebars and bottom sheets for React. Zero dependencies.</p>
 
