@@ -31,7 +31,7 @@
         "@astrojs/cloudflare": "^12.0.0",
         "@astrojs/react": "^4.0.0",
         "@astrojs/sitemap": "^3.7.1",
-        "@luciodale/docs-ui-kit": "0.3.1",
+        "@luciodale/docs-ui-kit": "^0.3.31",
         "@luciodale/swipe-bar": "workspace:*",
         "@tailwindcss/vite": "^4.1.18",
         "astro": "^5.0.0",
@@ -45,7 +45,7 @@
     },
     "packages/library": {
       "name": "@luciodale/swipe-bar",
-      "version": "1.3.5",
+      "version": "1.3.63",
       "peerDependencies": {
         "react": ">=16 || >=17 || >= 18 || >= 19",
         "react-dom": ">=16 || >=17 || >= 18 || >=19",
@@ -279,7 +279,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@luciodale/docs-ui-kit": ["@luciodale/docs-ui-kit@0.3.1", "", { "dependencies": { "shiki": "^4.0.2" }, "peerDependencies": { "astro": ">=5" } }, "sha512-xv3vgTJUbZ1ZYySPc1G+Kz1KuZR3IsXpDyG951sjS9zpCwZj99qpC1gUfCXCzNLRmp4o2tz790xwnO7wWfG/Wg=="],
+    "@luciodale/docs-ui-kit": ["@luciodale/docs-ui-kit@0.3.31", "", { "dependencies": { "shiki": "^4.0.2" }, "peerDependencies": { "astro": ">=5" } }, "sha512-yniUIcGioPkeruQ9zXNhA/3lUsCMLsR5rCD2L8n446PjiGsZzguFdsUH9nh/2KfrSrKSDtkO/DdlUeiUqLTBcA=="],
 
     "@luciodale/swipe-bar": ["@luciodale/swipe-bar@workspace:packages/library"],
 
