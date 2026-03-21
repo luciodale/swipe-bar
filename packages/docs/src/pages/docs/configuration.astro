@@ -1,0 +1,155 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Configuration"
+	description="All SwipeBarProvider and sidebar component props with defaults."
+>
+	<ContentSection label="Provider Props">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Every prop on <InlineCode>SwipeBarProvider</InlineCode> sets the
+			default for all sidebars. Individual sidebar components can override
+			any of these.
+		</p>
+		<CodeBlock
+			code={`<SwipeBarProvider
+  sidebarWidthPx={320}              // width for left/right bars
+  sidebarHeightPx={window.innerHeight} // height for bottom sheet
+  transitionMs={300}                // open/close animation duration
+  edgeActivationWidthPx={40}        // swipe-from-edge detection zone
+  dragActivationDeltaPx={20}        // minimum drag distance to activate
+  showOverlay={true}                // dim backdrop when open
+  overlayBackgroundColor="rgba(0, 0, 0, 0.5)"
+  closeSidebarOnOverlayClick={true} // tap overlay to close
+  fadeContent={false}               // fade main content when open
+  fadeContentTransitionMs={100}     // fade animation duration
+  isAbsolute={false}                // overlay vs. push layout
+  showToggle={true}                 // show built-in toggle button
+  toggleIconColor="white"
+  toggleIconSizePx={40}
+  toggleIconEdgeDistancePx={40}
+  mediaQueryWidth={640}             // swipe gestures below this width
+  swipeBarZIndex={30}
+  toggleZIndex={15}
+  overlayZIndex={20}
+  swipeToOpen={true}
+  swipeToClose={true}
+  disabled={false}                  // disables everything
+>
+  {children}
+</SwipeBarProvider>`}
+			language="tsx"
+			filename="provider-props.tsx"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Sidebar Component Props">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Each sidebar component accepts the same options as the provider (for
+			overriding) plus a few component-specific props:
+		</p>
+		<CodeBlock
+			code={`// All three sidebar components accept these additional props:
+<SwipeBarLeft
+  id="primary"                 // multi-instance identifier (all directions)
+  className="..."              // CSS class for the sidebar container
+  ToggleComponent={<MyBtn />}  // replace the default toggle button
+  ariaLabel="Navigation"       // accessible label
+  defaultOpen={false}          // open on mount
+  resetMetaOnClose={false}     // clear meta when sidebar closes
+  disabled={false}             // disable this specific sidebar
+
+  // Override any provider-level option:
+  sidebarWidthPx={400}
+  showOverlay={false}
+  isAbsolute={true}
+  fadeContent={true}
+>
+  <nav>Single child required</nav>
+</SwipeBarLeft>
+
+// Bottom sheet has additional props:
+<SwipeBarBottom
+  id="primary"                 // multi-instance identifier
+  sidebarHeightPx={500}        // sheet height
+  midAnchorPoint={true}        // enable mid-anchor stop
+  midAnchorPointPx={250}       // custom mid-anchor height (default: half)
+  isAbsolute={true}            // bottom sheets typically overlay
+>
+  <div>Sheet content</div>
+</SwipeBarBottom>`}
+			language="tsx"
+			filename="sidebar-props.tsx"
+		/>
+		<Callout type="info" title="Multi-instance support">
+			The <InlineCode>id</InlineCode> prop enables multi-instance support
+			for all three directions. Give each
+			<InlineCode>SwipeBarLeft</InlineCode>,
+			<InlineCode>SwipeBarRight</InlineCode>, or
+			<InlineCode>SwipeBarBottom</InlineCode> a unique
+			<InlineCode>id</InlineCode> and each instance gets independent
+			state. The default ID is <InlineCode>"primary"</InlineCode>.
+		</Callout>
+		<Callout type="tip" title="Z-index stacking for overlays">
+			When stacking multiple sidebars of the same direction, set higher
+			<InlineCode>swipeBarZIndex</InlineCode> and
+			<InlineCode>overlayZIndex</InlineCode> on sidebars that should
+			appear on top. The overlay z-index of the upper sidebar must be
+			above the bar z-index of the sidebar below it so the overlay
+			renders between them.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Key Concepts">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">isAbsolute</strong> controls whether
+			the sidebar pushes content or overlays on top. On mobile (below
+			<InlineCode>mediaQueryWidth</InlineCode>), sidebars automatically
+			switch to absolute positioning regardless of this prop.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">mediaQueryWidth</strong> sets the
+			breakpoint below which swipe gestures activate. Above this width,
+			sidebars respond only to toggle clicks and programmatic control.
+			Default is 640px.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">disabled</strong> completely shuts down
+			a sidebar: no swipe gestures, no toggle button, no programmatic
+			control. Set it on the provider to disable everything, or on
+			individual sidebars.
+		</p>
+		<Callout type="info" title="Single child">
+			All sidebar components accept exactly one child element. Wrap
+			multiple children in a parent <InlineCode>&lt;div&gt;</InlineCode>.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Runtime Updates">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The <InlineCode>useSwipeBarContext</InlineCode> hook exposes
+			<InlineCode>globalOptions</InlineCode> and
+			<InlineCode>setGlobalOptions</InlineCode> for changing provider-level
+			settings at runtime. Pass a partial options object and it merges with
+			the current values:
+		</p>
+		<CodeBlock
+			code={`const { setGlobalOptions } = useSwipeBarContext();
+
+// Update transition speed at runtime
+setGlobalOptions({ transitionMs: 500 });
+
+// Toggle overlay
+setGlobalOptions({ showOverlay: false });`}
+			language="tsx"
+			filename="runtime-updates.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

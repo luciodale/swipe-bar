@@ -1,0 +1,124 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import FeatureList from "@luciodale/docs-ui-kit/components/FeatureList.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Sidebar Meta"
+	description="Attach typed metadata to any sidebar and read it back from context."
+>
+	<ContentSection label="The Problem">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			You open a sidebar and need to pass data along with it: which screen
+			to show, which filter is active, which item was tapped. Without
+			metadata, you end up managing a parallel state object that drifts
+			out of sync with the sidebar's open/close state. swipe-bar solves
+			this by letting you attach typed metadata directly to sidebar
+			operations.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Defining Your Type Map">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Pass a generic to <InlineCode>useSwipeBarContext</InlineCode> and
+			every sidebar gets its own typed metadata. The generic maps each
+			direction to a shape:
+		</p>
+		<CodeBlock
+			code={`type MyMeta = {
+  left: {
+    primary: { screen: "settings" | "profile" };
+    secondary: { panel: string };
+  };
+  right: {
+    primary: { tab: number };
+  };
+  bottom: {
+    primary: { filter: string };
+    secondary: { step: number };
+  };
+};
+
+const {
+  openSidebar,
+  closeSidebar,
+  openSidebarFully,
+  openSidebarToMidAnchor,
+  setMeta,
+  leftSidebars,    // primary.meta: { screen: "settings" | "profile" } | null
+  rightSidebars,   // primary.meta: { tab: number } | null
+  bottomSidebars,  // primary.meta: { filter: string } | null
+} = useSwipeBarContext<MyMeta>();`}
+			language="tsx"
+			filename="typed-meta.tsx"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Setting Meta on Open/Close">
+		<CodeBlock
+			code={`// Pass meta when opening (all directions support id for multi-instance)
+openSidebar("left", { id: "primary", meta: { screen: "settings" } });
+openSidebar("left", { id: "secondary", meta: { panel: "nav" } });
+closeSidebar("right", { meta: { tab: 2 } });
+openSidebarFully("bottom", { id: "primary", meta: { filter: "active" } });
+openSidebarToMidAnchor("bottom", { id: "secondary", meta: { step: 1 } });`}
+			language="tsx"
+			filename="meta-on-action.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Standalone setMeta">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Update metadata without triggering an open or close. The sidebar
+			stays wherever it is:
+		</p>
+		<CodeBlock
+			code={`// Update meta independently (all directions accept id for multi-instance)
+setMeta("left", { id: "primary", meta: { screen: "profile" } });
+setMeta("right", { id: "primary", meta: { tab: 3 } });
+setMeta("bottom", { id: "primary", meta: { filter: "completed" } });
+
+// Clear meta to null
+setMeta("left", { id: "primary", meta: null });
+setMeta("bottom", { id: "primary", meta: null });`}
+			language="tsx"
+			filename="set-meta.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Resetting Meta">
+		<CodeBlock
+			code={`// Clear meta on close
+closeSidebar("left", { resetMeta: true });
+
+// resetMeta takes precedence when both are provided
+openSidebar("right", { meta: { tab: 3 }, resetMeta: true }); // meta stays null
+
+// Auto-reset on every close (gesture, overlay, toggle, programmatic)
+<SwipeBarLeft resetMetaOnClose>
+  <nav>...</nav>
+</SwipeBarLeft>
+
+// Explicit meta or resetMeta in closeSidebar opts still takes precedence
+closeSidebar("left", { meta: { screen: "profile" } }); // keeps this meta`}
+			language="tsx"
+			filename="reset-meta.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Behaviours">
+		<FeatureList features={[
+			{ highlight: "Generic on the hook", description: "strict per-sidebar typing; without the generic, meta is absent from the API", color: "accent" },
+			{ highlight: "Set on open/close", description: "works on all four functions: openSidebar, closeSidebar, openSidebarFully, openSidebarToMidAnchor", color: "blue" },
+			{ highlight: "Preserved by default", description: "calling without meta/resetMeta leaves existing meta untouched", color: "green" },
+			{ highlight: "resetMeta: true", description: "clears meta to null; takes precedence over meta if both are provided", color: "purple" },
+			{ highlight: "Drag gestures do not touch meta", description: "swipe and toggle interactions never modify meta. Only explicit API calls change it", color: "yellow" },
+			{ highlight: "Per-instance on all directions", description: "meta is per-instance via leftSidebars[id].meta, rightSidebars[id].meta, and bottomSidebars[id].meta; cleaned up on unregister", color: "accent" },
+		]} />
+	</ContentSection>
+</DocsPage>

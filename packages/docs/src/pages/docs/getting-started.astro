@@ -1,0 +1,199 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import FeatureList from "@luciodale/docs-ui-kit/components/FeatureList.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import PackageInfo from "@luciodale/docs-ui-kit/components/PackageInfo.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Getting Started"
+	description="Install and set up swipe-bar, a zero-dependency React library for native swipe sidebars and bottom sheets."
+>
+	<ContentSection label="What is swipe-bar?">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Mobile users expect swipe gestures. They swipe from the edge to
+			reveal a navigation drawer, pull up a bottom sheet, dismiss a panel
+			with a flick. Building this yourself means wrangling touch events,
+			drag thresholds, transition timing, focus traps, and cross-direction
+			locking. The result is always fragile and hard to maintain.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			swipe-bar handles all of that. Wrap your content in a provider, drop
+			in a sidebar component, and you get native-feeling swipe interactions
+			with zero configuration. Left sidebars, right sidebars, bottom
+			sheets, multi-instance panels. Everything works out of the box.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Rationale">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Most sidebar libraries solve the wrong problem. They give you a
+			styled drawer with an open/close API and call it done. The hard part
+			was never the open/close state. It's the gesture handling: detecting
+			edge swipes vs. scroll, managing drag physics, preventing two
+			sidebars from fighting each other, handling mid-anchor points on
+			bottom sheets, trapping focus for accessibility, and making it all
+			feel native rather than janky.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			swipe-bar sits in the space between a CSS drawer and a full design
+			system. It handles the interaction layer that's genuinely painful to
+			get right, and stays out of the way for styling and state management.
+			Your CSS. Your layout. Your logic. The library just makes the
+			gestures work.
+		</p>
+		<FeatureList features={[
+			{ highlight: "Zero dependencies", description: "just React. No animation libraries, no gesture systems, no CSS frameworks bundled in", color: "accent" },
+			{ highlight: "Native touch gestures", description: "edge-swipe detection, drag tracking with activation thresholds, velocity-based commit/cancel. Works on touch and mouse", color: "blue" },
+			{ highlight: "Cross-direction locking", description: "opening one sidebar locks the others. No accidental double-opens, no conflicting gestures", color: "green" },
+			{ highlight: "Bottom sheets with mid-anchor", description: "swipe up to a mid-point, swipe again to fully open. Like iOS Maps. Multi-instance support with independent state for all directions (left, right, bottom)", color: "purple" },
+			{ highlight: "Typed sidebar metadata", description: "attach a generic type map to the context hook. Each sidebar gets its own typed meta, validated at compile time", color: "yellow" },
+			{ highlight: "Full accessibility", description: "focus trap, Escape to close, aria attributes, keyboard navigation. All automatic", color: "accent" },
+		]} />
+	</ContentSection>
+
+	<ContentSection label="Installation">
+		<CodeBlock
+			code="npm install @luciodale/swipe-bar"
+			language="bash"
+			filename="terminal"
+		/>
+		<PackageInfo
+			packageName="@luciodale/swipe-bar"
+			githubRepo="luciodale/swipe-bar"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Quick Start">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Three steps: wrap your app in the provider, add a sidebar component,
+			done. The sidebar appears when the user swipes from the edge, or when
+			you open it programmatically.
+		</p>
+		<CodeBlock
+			code={`import { SwipeBarProvider, SwipeBarLeft } from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <SwipeBarLeft className="bg-gray-900 text-white">
+        <nav>
+          <a href="/dashboard">Dashboard</a>
+          <a href="/settings">Settings</a>
+        </nav>
+      </SwipeBarLeft>
+
+      <main>
+        <h1>Your app content</h1>
+      </main>
+    </SwipeBarProvider>
+  );
+}`}
+			language="tsx"
+			filename="App.tsx"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			That's the whole setup. The left sidebar responds to edge swipes on
+			mobile (below 640px by default) and shows a toggle button. On
+			desktop, the toggle button opens and closes the sidebar. Every prop
+			has a sensible default.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Adding More Sidebars">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Add right sidebars and bottom sheets the same way. All three
+			directions work inside the same provider with automatic
+			cross-direction locking:
+		</p>
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarLeft,
+  SwipeBarRight,
+  SwipeBarBottom,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <SwipeBarLeft className="bg-gray-900 text-white">
+        <nav>Navigation</nav>
+      </SwipeBarLeft>
+
+      <SwipeBarRight className="bg-gray-900 text-white">
+        <div>Settings panel</div>
+      </SwipeBarRight>
+
+      <SwipeBarBottom sidebarHeightPx={400} isAbsolute className="bg-gray-900 text-white">
+        <div>Bottom sheet content</div>
+      </SwipeBarBottom>
+
+      <main>
+        <h1>Your app content</h1>
+      </main>
+    </SwipeBarProvider>
+  );
+}`}
+			language="tsx"
+			filename="App.tsx"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Programmatic Control">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The <InlineCode>useSwipeBarContext</InlineCode> hook gives you full
+			control. Open, close, read state, and attach metadata:
+		</p>
+		<CodeBlock
+			code={`import { useSwipeBarContext } from "@luciodale/swipe-bar";
+
+function Header() {
+  const { openSidebar, closeSidebar, isLeftOpen } = useSwipeBarContext();
+
+  return (
+    <header>
+      <button onClick={() => openSidebar("left")}>
+        Menu
+      </button>
+      {isLeftOpen && <span>Sidebar is open</span>}
+    </header>
+  );
+}`}
+			language="tsx"
+			filename="Header.tsx"
+		/>
+		<Callout type="tip" title="Context scope">
+			<InlineCode>useSwipeBarContext</InlineCode> must be called inside a
+			<InlineCode>SwipeBarProvider</InlineCode>. It throws if no provider
+			is found.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Next Steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a href={href("/docs/configuration")} class="text-accent hover:underline">Configuration</a>
+				&#8212; all provider and sidebar props in detail
+			</li>
+			<li>
+				<a href={href("/docs/bottom-sheets")} class="text-accent hover:underline">Bottom Sheets</a>
+				&#8212; mid-anchor, multi-instance, programmatic-only panels
+			</li>
+			<li>
+				<a href={href("/docs/sidebar-meta")} class="text-accent hover:underline">Sidebar Meta</a>
+				&#8212; typed metadata for each sidebar
+			</li>
+			<li>
+				<a href={href("/docs/api")} class="text-accent hover:underline">API Reference</a>
+				&#8212; every component, hook, and type
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

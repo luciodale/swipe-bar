@@ -1,0 +1,75 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { BottomSheetDemo } from "../../components/demos/BottomSheet";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Bottom Sheet" description="Bottom sheet with mid-anchor point and swipe gestures.">
+	<ContentSection label="Bottom Sheet">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			A bottom sheet that slides up from the bottom edge. Enable
+			<InlineCode>midAnchorPoint</InlineCode> and the sheet stops halfway
+			on the first swipe, then opens fully on the second. Toggle
+			mid-anchor mode in the demo to see the difference.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<BottomSheetDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarBottom,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <Sheet />
+    </SwipeBarProvider>
+  );
+}
+
+function Sheet() {
+  const { openSidebar, openSidebarToMidAnchor, closeSidebar, bottomAnchorState } =
+    useSwipeBarContext();
+
+  return (
+    <>
+      <main>
+        <button onClick={() => openSidebarToMidAnchor("bottom")}>
+          Open to Mid
+        </button>
+        <button onClick={() => openSidebar("bottom")}>
+          Open Full
+        </button>
+        <p>Anchor state: {bottomAnchorState}</p>
+      </main>
+
+      <SwipeBarBottom
+        sidebarHeightPx={450}
+        isAbsolute
+        midAnchorPoint
+        className="bg-gray-900 text-white"
+      >
+        <div>
+          <button onClick={() => closeSidebar("bottom")}>Close</button>
+          <p>Sheet content</p>
+        </div>
+      </SwipeBarBottom>
+    </>
+  );
+}`}
+			language="tsx"
+			filename="BottomSheetExample.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

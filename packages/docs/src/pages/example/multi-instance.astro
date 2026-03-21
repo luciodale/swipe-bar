@@ -1,0 +1,85 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { MultiInstanceDemo } from "../../components/demos/MultiInstance";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Multi-Instance" description="Multiple independent bottom sheets with z-index stacking.">
+	<ContentSection label="Multi-Instance Bottom Sheets">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			Give each <InlineCode>SwipeBarBottom</InlineCode> an
+			<InlineCode>id</InlineCode> and they operate independently. The
+			secondary sheet opens only programmatically (no swipe, no toggle)
+			and stacks above the primary using higher z-index values.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<MultiInstanceDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarBottom,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <Panels />
+    </SwipeBarProvider>
+  );
+}
+
+function Panels() {
+  const { openSidebar, closeSidebar, bottomSidebars } = useSwipeBarContext();
+
+  return (
+    <>
+      <main>
+        <button onClick={() => openSidebar("bottom")}>Primary</button>
+        <button onClick={() => openSidebar("bottom", { id: "secondary" })}>
+          Secondary
+        </button>
+      </main>
+
+      {/* Primary: default behavior */}
+      <SwipeBarBottom sidebarHeightPx={400} isAbsolute>
+        <div>
+          <button onClick={() => openSidebar("bottom", { id: "secondary" })}>
+            Open Secondary
+          </button>
+        </div>
+      </SwipeBarBottom>
+
+      {/* Secondary: programmatic only, stacks on top */}
+      <SwipeBarBottom
+        id="secondary"
+        sidebarHeightPx={300}
+        isAbsolute
+        swipeToOpen={false}
+        showToggle={false}
+        swipeBarZIndex={35}
+        overlayZIndex={25}
+      >
+        <div>
+          <button onClick={() => closeSidebar("bottom", { id: "secondary" })}>
+            Close
+          </button>
+        </div>
+      </SwipeBarBottom>
+    </>
+  );
+}`}
+			language="tsx"
+			filename="MultiInstanceExample.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

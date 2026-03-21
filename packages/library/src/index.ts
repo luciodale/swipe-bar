@@ -5,6 +5,7 @@ export { SwipeBarRight } from "./components/SwipeBarRight";
 export { SwipeBarProvider } from "./SwipeBarProvider";
 export type {
 	TBottomSidebarState,
+	TLeftRightSidebarState,
 	TSidebarMetaMap,
 	TSidebarOpts,
 } from "./swipeSidebarShared";

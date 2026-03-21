@@ -1,22 +1,32 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { ToggleIcon } from "./components/ToggleIcon";
 import { type TSwipeBarOptions, toggleWrapperStyle } from "./swipeSidebarShared";
 import { useSwipeBarContext } from "./useSwipeBarContext";
 
 type ToggleProps = {
+	id: string;
+	toggleRef: RefObject<HTMLDivElement | null>;
 	showToggle?: boolean;
 	ToggleComponent?: ReactNode;
 	options: Required<TSwipeBarOptions>;
 };
 
-export function ToggleLeft({ options, showToggle = true, ToggleComponent }: ToggleProps) {
-	const { openSidebar, leftToggleRef, isLeftOpen, closeSidebar } = useSwipeBarContext();
+export function ToggleLeft({
+	id,
+	toggleRef,
+	options,
+	showToggle = true,
+	ToggleComponent,
+}: ToggleProps) {
+	const { openSidebar, closeSidebar, leftSidebars } = useSwipeBarContext();
+
+	const isOpen = leftSidebars[id]?.isOpen ?? false;
 
 	if (!showToggle) return null;
 
 	return (
 		<div
-			ref={leftToggleRef}
+			ref={toggleRef}
 			style={{
 				...toggleWrapperStyle,
 				transition: `transform ${options.transitionMs}ms ease, opacity ${options.transitionMs}ms ease`,
@@ -24,21 +34,21 @@ export function ToggleLeft({ options, showToggle = true, ToggleComponent }: Togg
 				zIndex: options.toggleZIndex,
 			}}
 		>
-			{(!isLeftOpen || (isLeftOpen && !options.showOverlay)) && (
+			{(!isOpen || (isOpen && !options.showOverlay)) && (
 				<button
 					type="button"
-					aria-expanded={isLeftOpen}
-					aria-controls="swipebar-left"
-					aria-label={isLeftOpen ? "Close left sidebar" : "Open left sidebar"}
+					aria-expanded={isOpen}
+					aria-controls={`swipebar-left-${id}`}
+					aria-label={isOpen ? "Close left sidebar" : "Open left sidebar"}
 					onClick={() => {
 						if (!options.disabled) {
-							isLeftOpen ? closeSidebar("left") : openSidebar("left");
+							isOpen ? closeSidebar("left", { id }) : openSidebar("left", { id });
 						}
 					}}
 					disabled={options.disabled}
 					style={{
 						marginLeft: `${options.toggleIconEdgeDistancePx}px`,
-						...(isLeftOpen ? { transform: "rotate(180deg)" } : {}),
+						...(isOpen ? { transform: "rotate(180deg)" } : {}),
 					}}
 				>
 					{ToggleComponent ?? (

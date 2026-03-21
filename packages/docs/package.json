@@ -1,32 +1,26 @@
 {
 	"name": "swipe-bar-docs",
-	"version": "0.0.27",
-	"description": "Documentation and demo site for swipe-bar.",
+	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "vite",
-		"build": "tsc && vite build",
-		"preview": "vite preview",
-		"test:e2e": "playwright test",
-		"test:e2e:ui": "playwright test --ui",
-		"test:e2e:headed": "playwright test --headed",
-		"test:e2e:ci": "playwright test --reporter=list"
+		"dev": "astro dev",
+		"build": "astro build && bunx pagefind --site dist --output-subdir _pagefind",
+		"preview": "wrangler dev",
+		"deploy": "astro build && bunx pagefind --site dist --output-subdir _pagefind && wrangler deploy"
 	},
-	"author": "Lucio D'Alessandro",
-	"license": "MIT",
 	"dependencies": {
+		"@astrojs/cloudflare": "^12.0.0",
+		"@astrojs/react": "^4.0.0",
+		"@astrojs/sitemap": "^3.7.1",
+		"@luciodale/docs-ui-kit": "0.3.1",
 		"@luciodale/swipe-bar": "workspace:*",
-		"@tailwindcss/vite": "^4.1.16",
-		"clsx": "^2.1.1",
-		"react-syntax-highlighter": "^16.1.0",
-		"tailwind-merge": "^3.3.1",
-		"tailwindcss": "^4.1.16"
+		"@tailwindcss/vite": "^4.1.18",
+		"astro": "^5.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0",
+		"tailwindcss": "^4.1.18"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.53.1",
-		"@types/node": "^24.0.0",
-		"@types/react-syntax-highlighter": "^15.5.13",
-		"@vitejs/plugin-react": "^4.3.1",
-		"vite": "^5.3.1"
+		"wrangler": "^4.0.0"
 	}
 }

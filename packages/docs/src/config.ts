@@ -41,6 +41,7 @@ export const siteConfig: SiteConfig = {
 				{ href: "/example/left-right-sidebar", label: "Left & Right Sidebar" },
 				{ href: "/example/bottom-sheet", label: "Bottom Sheet" },
 				{ href: "/example/multi-instance", label: "Multi-Instance" },
+				{ href: "/example/multi-instance-left-right", label: "Multi-Instance Left & Right" },
 				{ href: "/example/custom-toggle", label: "Custom Toggle" },
 				{ href: "/example/props-playground", label: "Props Playground" },
 			],

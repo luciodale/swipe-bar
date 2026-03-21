@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
 import {
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
@@ -17,6 +17,7 @@ import { useSwipeRightSidebar } from "../useSwipeRightSidebar";
 import { Overlay } from "./Overlay";
 
 export function SwipeBarRight({
+	id = "primary",
 	className,
 	children,
 	ToggleComponent,
@@ -29,33 +30,43 @@ export function SwipeBarRight({
 	}
 
 	const {
-		isRightOpen,
+		rightSidebars,
+		rightSidebarOptionsMap,
 		closeSidebar,
 		openSidebar,
-		rightSidebarRef,
-		rightToggleRef,
-		rightSidebarOptions: providerRightOpts,
+		registerRightSidebar,
+		unregisterRightSidebar,
 	} = useSwipeBarContext();
 
-	const options = useSetMergedOptions("right", currentOptions);
+	const sidebarRef = useRef<HTMLDivElement>(null);
+	const toggleRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		registerRightSidebar(id, { sidebarRef, toggleRef });
+		return () => unregisterRightSidebar(id);
+	}, [id, registerRightSidebar, unregisterRightSidebar]);
+
+	const options = useSetMergedOptions("right", currentOptions, id);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
-	useSwipeRightSidebar(options);
+	useSwipeRightSidebar(options, id);
+
+	const isOpen = rightSidebars[id]?.isOpen ?? false;
 
 	const handleDefaultOpen = useCallback(
-		() => openSidebar("right", { skipTransition: true }),
-		[openSidebar],
+		() => openSidebar("right", { id, skipTransition: true }),
+		[openSidebar, id],
 	);
 	const { forceOverlayVisible } = useDefaultOpen({
 		defaultOpen,
-		optionsReady: !!providerRightOpts.sidebarWidthPx,
+		optionsReady: !!rightSidebarOptionsMap[id],
 		onOpen: handleDefaultOpen,
 	});
 
-	const handleClose = useCallback(() => closeSidebar("right"), [closeSidebar]);
+	const handleClose = useCallback(() => closeSidebar("right", { id }), [closeSidebar, id]);
 	useFocusTrap({
-		sidebarRef: rightSidebarRef,
-		triggerRef: rightToggleRef,
-		isOpen: isRightOpen,
+		sidebarRef,
+		triggerRef: toggleRef,
+		isOpen,
 		onClose: handleClose,
 		transitionMs: options.transitionMs,
 	});
@@ -64,8 +75,8 @@ export function SwipeBarRight({
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isRightOpen && !forceOverlayVisible}
-					setCollapsed={() => closeSidebar("right")}
+					isCollapsed={!isOpen && !forceOverlayVisible}
+					setCollapsed={() => closeSidebar("right", { id })}
 					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
 					overlayBackgroundColor={options.overlayBackgroundColor}
@@ -74,18 +85,20 @@ export function SwipeBarRight({
 			)}
 
 			<ToggleRight
+				id={id}
+				toggleRef={toggleRef}
 				options={options}
 				showToggle={options.showToggle}
 				ToggleComponent={ToggleComponent}
 			/>
 
 			<div
-				ref={rightSidebarRef}
-				id="swipebar-right"
+				ref={sidebarRef}
+				id={`swipebar-right-${id}`}
 				role="dialog"
-				aria-modal={isRightOpen}
+				aria-modal={isOpen}
 				aria-label={ariaLabel ?? "Right sidebar"}
-				inert={!isRightOpen}
+				inert={!isOpen}
 				style={{
 					...swipeBarStyle,
 					...rightSwipeBarInitialTransform,
