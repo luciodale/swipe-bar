@@ -1,0 +1,146 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="Bottom Sheets"
+	description="Mid-anchor points, multi-instance panels, and programmatic-only bottom sheets."
+>
+	<Callout type="info" title="Multi-instance works for all directions">
+		The <InlineCode>id</InlineCode> pattern described in the Multiple
+		Instances section below works the same way for
+		<InlineCode>SwipeBarLeft</InlineCode> and
+		<InlineCode>SwipeBarRight</InlineCode>. This page focuses on
+		bottom specific features like mid-anchor and height configuration.
+	</Callout>
+
+	<ContentSection label="Basic Bottom Sheet">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			A bottom sheet is a <InlineCode>SwipeBarBottom</InlineCode> that
+			slides up from the bottom edge. Unlike left/right sidebars, bottom
+			sheets use <InlineCode>sidebarHeightPx</InlineCode> instead of width,
+			and almost always use <InlineCode>isAbsolute</InlineCode> to overlay
+			on top of content:
+		</p>
+		<CodeBlock
+			code={`<SwipeBarBottom
+  sidebarHeightPx={400}
+  isAbsolute
+  className="bg-gray-900 text-white"
+>
+  <div>
+    <h2>Quick Actions</h2>
+    <p>Sheet content here</p>
+  </div>
+</SwipeBarBottom>`}
+			language="tsx"
+			filename="BasicSheet.tsx"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Mid-Anchor Point">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Enable <InlineCode>midAnchorPoint</InlineCode> and the sheet stops
+			halfway on the first swipe. Swipe again to fully open. Like the
+			Maps app on iOS. The mid-anchor height defaults to half of
+			<InlineCode>sidebarHeightPx</InlineCode>, or set it explicitly with
+			<InlineCode>midAnchorPointPx</InlineCode>.
+		</p>
+		<CodeBlock
+			code={`<SwipeBarBottom
+  sidebarHeightPx={600}
+  midAnchorPoint
+  isAbsolute
+  className="bg-gray-900 text-white"
+>
+  <div>Swipe up to mid-point, again for full</div>
+</SwipeBarBottom>
+
+// Programmatic control:
+const { openSidebarToMidAnchor, openSidebarFully } = useSwipeBarContext();
+
+// Open to mid-anchor
+openSidebarToMidAnchor("bottom");
+
+// Skip mid-anchor, go straight to full
+openSidebarFully("bottom");`}
+			language="tsx"
+			filename="MidAnchor.tsx"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			The <InlineCode>bottomAnchorState</InlineCode> from context tells
+			you exactly where the sheet is: <InlineCode>"closed"</InlineCode>,
+			<InlineCode>"midAnchor"</InlineCode>, or
+			<InlineCode>"open"</InlineCode>.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Multiple Instances">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Need more than one bottom sheet? Give each an
+			<InlineCode>id</InlineCode>. Every instance has independent state.
+			The default ID is <InlineCode>"primary"</InlineCode>. This same
+			pattern applies to <InlineCode>SwipeBarLeft</InlineCode> and
+			<InlineCode>SwipeBarRight</InlineCode> as well. See the
+			<a href={href("/example/multi-instance")} class="text-accent hover:underline">multi-instance example</a>
+			for a live demo.
+		</p>
+		<CodeBlock
+			code={`// Primary bottom sheet (default id)
+<SwipeBarBottom sidebarHeightPx={500} isAbsolute>
+  <div>Primary panel</div>
+</SwipeBarBottom>
+
+// Secondary bottom sheet — programmatic only
+<SwipeBarBottom
+  id="secondary"
+  sidebarHeightPx={350}
+  isAbsolute
+  swipeToOpen={false}
+  showToggle={false}
+  swipeBarZIndex={35}
+  overlayZIndex={25}
+>
+  <div>Secondary panel (stacks on top)</div>
+</SwipeBarBottom>`}
+			language="tsx"
+			filename="MultiInstance.tsx"
+		/>
+		<CodeBlock
+			code={`const { openSidebar, closeSidebar, bottomSidebars } = useSwipeBarContext();
+
+// Open specific instance
+openSidebar("bottom", { id: "secondary" });
+
+// Read state per instance
+const isPrimaryOpen = bottomSidebars.primary?.isOpen ?? false;
+const isSecondaryOpen = bottomSidebars.secondary?.isOpen ?? false;`}
+			language="tsx"
+			filename="multi-instance-control.ts"
+		/>
+		<Callout type="tip" title="Z-index stacking">
+			When stacking multiple sidebars of the same direction, set higher
+			<InlineCode>swipeBarZIndex</InlineCode> and
+			<InlineCode>overlayZIndex</InlineCode> on sidebars that should
+			appear on top. The secondary sheet above uses z-index 35/25 vs.
+			the default 30/20. This applies to left and right sidebars too.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Programmatic-Only Sheets">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Set <InlineCode>swipeToOpen={false}</InlineCode> and
+			<InlineCode>showToggle={false}</InlineCode> to create a sheet that
+			opens only via <InlineCode>openSidebar</InlineCode>. Once open, the
+			user can still swipe down to close it (unless you also disable
+			<InlineCode>swipeToClose</InlineCode>).
+		</p>
+	</ContentSection>
+</DocsPage>

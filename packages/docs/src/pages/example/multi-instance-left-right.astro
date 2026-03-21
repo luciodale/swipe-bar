@@ -1,0 +1,81 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { MultiInstanceLeftRightDemo } from "../../components/demos/MultiInstanceLeftRight";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Multi-Instance Left & Right" description="Multiple independent left sidebars with z-index stacking.">
+	<ContentSection label="Multi-Instance Left Sidebars">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			Give each <InlineCode>SwipeBarLeft</InlineCode> an
+			<InlineCode>id</InlineCode> and they operate independently. The
+			settings sidebar opens only programmatically (no swipe, no toggle)
+			and stacks above the navigation drawer using higher z-index values.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<MultiInstanceLeftRightDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarLeft,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider swipeBarZIndex={60} overlayZIndex={55}>
+      <Content />
+    </SwipeBarProvider>
+  );
+}
+
+function Content() {
+  const { openSidebar, closeSidebar, leftSidebars } = useSwipeBarContext();
+
+  return (
+    <>
+      <main>
+        <button onClick={() => openSidebar("left")}>Open Nav</button>
+        <button onClick={() => openSidebar("left", { id: "settings" })}>
+          Open Settings
+        </button>
+      </main>
+
+      {/* Primary: default swipe-to-open behavior */}
+      <SwipeBarLeft isAbsolute>
+        <nav>Navigation content</nav>
+      </SwipeBarLeft>
+
+      {/* Secondary: programmatic only, stacks on top */}
+      <SwipeBarLeft
+        id="settings"
+        swipeToOpen={false}
+        showToggle={false}
+        swipeBarZIndex={70}
+        overlayZIndex={65}
+        isAbsolute
+      >
+        <div>
+          <button onClick={() => closeSidebar("left", { id: "settings" })}>
+            Close
+          </button>
+          Settings content
+        </div>
+      </SwipeBarLeft>
+    </>
+  );
+}`}
+			language="tsx"
+			filename="MultiInstanceLeftRightExample.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

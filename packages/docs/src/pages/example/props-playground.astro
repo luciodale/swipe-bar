@@ -1,0 +1,68 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { PropsPlaygroundDemo } from "../../components/demos/PropsPlayground";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Props Playground" description="Adjust swipe-bar props in real-time and see changes instantly.">
+	<ContentSection label="Props Playground">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			Tweak provider-level options at runtime using
+			<InlineCode>setGlobalOptions</InlineCode> from the context hook.
+			Changes apply immediately to all sidebars. Open the sidebar and
+			adjust values to see instant feedback.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<PropsPlaygroundDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="How It Works">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The <InlineCode>useSwipeBarContext</InlineCode> hook exposes
+			<InlineCode>globalOptions</InlineCode> (the current values) and
+			<InlineCode>setGlobalOptions</InlineCode> (merge a partial update).
+			This makes it straightforward to build settings panels:
+		</p>
+		<CodeBlock
+			code={`import { useSwipeBarContext } from "@luciodale/swipe-bar";
+
+function SettingsPanel() {
+  const { globalOptions, setGlobalOptions } = useSwipeBarContext();
+
+  return (
+    <div>
+      <label>
+        Transition (ms)
+        <input
+          type="number"
+          value={globalOptions.transitionMs}
+          onChange={(e) =>
+            setGlobalOptions({ transitionMs: parseInt(e.target.value, 10) })
+          }
+        />
+      </label>
+
+      <label>
+        <input
+          type="checkbox"
+          checked={globalOptions.showOverlay}
+          onChange={(e) =>
+            setGlobalOptions({ showOverlay: e.target.checked })
+          }
+        />
+        Show Overlay
+      </label>
+    </div>
+  );
+}`}
+			language="tsx"
+			filename="SettingsPanel.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

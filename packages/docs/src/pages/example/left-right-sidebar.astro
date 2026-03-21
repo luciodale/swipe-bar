@@ -1,0 +1,76 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { LeftRightSidebarDemo } from "../../components/demos/LeftRightSidebar";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Left & Right Sidebar" description="Basic left and right sidebars with swipe gestures and programmatic control.">
+	<ContentSection label="Left & Right Sidebar">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			The simplest use case. A left navigation drawer and a right settings
+			panel. Both respond to edge swipes on mobile and toggle buttons on
+			desktop. Cross-direction locking prevents both from opening at once.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<LeftRightSidebarDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Wrap your layout in <InlineCode>SwipeBarProvider</InlineCode>, drop
+			in <InlineCode>SwipeBarLeft</InlineCode> and
+			<InlineCode>SwipeBarRight</InlineCode>, and use the context hook
+			for programmatic control:
+		</p>
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarLeft,
+  SwipeBarRight,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <Layout />
+    </SwipeBarProvider>
+  );
+}
+
+function Layout() {
+  const { openSidebar, closeSidebar, isLeftOpen, isRightOpen } =
+    useSwipeBarContext();
+
+  return (
+    <>
+      <SwipeBarLeft className="bg-gray-900 text-white">
+        <nav>
+          <button onClick={() => closeSidebar("left")}>Close</button>
+        </nav>
+      </SwipeBarLeft>
+
+      <main>
+        <button onClick={() => openSidebar("left")}>Menu</button>
+        <button onClick={() => openSidebar("right")}>Settings</button>
+      </main>
+
+      <SwipeBarRight className="bg-gray-900 text-white">
+        <div>
+          <button onClick={() => closeSidebar("right")}>Close</button>
+        </div>
+      </SwipeBarRight>
+    </>
+  );
+}`}
+			language="tsx"
+			filename="LeftRightExample.tsx"
+		/>
+	</ContentSection>
+</DocsPage>

@@ -159,17 +159,21 @@ export const handleRightDragEnd = ({ refs, callbacks, options }: HandleRightDrag
 	}
 };
 
-export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
+export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>, id: string) {
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
+
 	const {
 		lockedSidebar,
 		setLockedSidebar,
-		isRightOpen,
+		rightSidebars,
 		openSidebar,
 		closeSidebar,
 		dragSidebar,
-		rightSidebarRef,
+		activeRightDragIdRef,
+		rightFocusStackRef,
 	} = useSwipeBarContext();
+
+	const isOpen = rightSidebars[id]?.isOpen ?? false;
 
 	const draggingRef = useRef<TDragState | null>(null);
 	const currentXRef = useRef<number | null>(null);
@@ -181,10 +185,10 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 		if (options.disabled) return;
 
 		const callbacks: TSidebarCallbacks = {
-			getIsOpen: () => isRightOpen,
-			openSidebar: () => openSidebar("right"),
-			closeSidebar: () => closeSidebar("right"),
-			dragSidebar: (translateX) => dragSidebar("right", translateX),
+			getIsOpen: () => isOpen,
+			openSidebar: () => openSidebar("right", { id }),
+			closeSidebar: () => closeSidebar("right", { id }),
+			dragSidebar: (translateX) => dragSidebar("right", translateX, { id }),
 		};
 
 		const refs: TDragRefs = {
@@ -193,23 +197,51 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 			prevXRef,
 		};
 
-		const lockPane = () => setLockedSidebar("right");
-		const unlockPane = () => setLockedSidebar(null);
+		const isLockedByAnotherRight = () =>
+			activeRightDragIdRef.current !== null && activeRightDragIdRef.current !== id;
+
+		const isTopOfFocusStack = () => {
+			const stack = rightFocusStackRef.current;
+			if (stack.length === 0) return true;
+			return stack[stack.length - 1] === id;
+		};
+
+		const lockPane = () => {
+			if (isLockedByAnotherRight()) {
+				draggingRef.current = null;
+				return;
+			}
+			activeRightDragIdRef.current = id;
+			setLockedSidebar("right");
+		};
+
+		const clearDragLock = () => {
+			if (activeRightDragIdRef.current === id) {
+				activeRightDragIdRef.current = null;
+			}
+		};
+
+		const unlockPane = () => {
+			clearDragLock();
+			setLockedSidebar(null);
+		};
 
 		function onTouchStart(e: TouchEvent) {
 			if (lockedSidebar && lockedSidebar !== "right") return;
+			if (isLockedByAnotherRight()) return;
+			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
 			if (e.changedTouches.length === 0) return;
 
 			const firstTouch = e.changedTouches[0];
 			const viewportWidth = window.innerWidth;
-			const isOpen = callbacks.getIsOpen();
+			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = firstTouch.clientX >= viewportWidth - options.edgeActivationWidthPx;
 
-			if (isOpen && !options.swipeToClose) return;
-			if (!isOpen && !options.swipeToOpen) return;
+			if (currentlyOpen && !options.swipeToClose) return;
+			if (!currentlyOpen && !options.swipeToOpen) return;
 
-			if (isOpen || inEdgeRegion) {
+			if (currentlyOpen || inEdgeRegion) {
 				handleDragStart({
 					refs,
 					clientX: firstTouch.clientX,
@@ -222,6 +254,10 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 
 		function onTouchMove(e: TouchEvent) {
 			if (lockedSidebar && lockedSidebar !== "right") return;
+			if (isLockedByAnotherRight()) {
+				draggingRef.current = null;
+				return;
+			}
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
 
 			const trackedId = draggingRef.current.activeTouchId;
@@ -245,9 +281,10 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 			const trackedId = draggingRef.current.activeTouchId;
 			if (!hasTrackedTouchEnded(e.changedTouches, trackedId)) return;
 
+			clearDragLock();
 			handleRightDragEnd({
 				refs,
-				rightSidebarRef,
+				rightSidebarRef: { current: null },
 				callbacks,
 				options,
 			});
@@ -256,6 +293,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 		function onTouchCancel() {
 			if (lockedSidebar && lockedSidebar !== "right") return;
 			if (!draggingRef.current || draggingRef.current.isMouse) return;
+			clearDragLock();
 			handleDragCancel({
 				refs,
 				dragSidebar: callbacks.dragSidebar,
@@ -265,17 +303,19 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 
 		function onMouseDown(e: MouseEvent) {
 			if (lockedSidebar && lockedSidebar !== "right") return;
+			if (isLockedByAnotherRight()) return;
+			if (!isTopOfFocusStack()) return;
 			if (isEditableTarget(e.target)) return;
 			if (e.button !== 0) return;
 
 			const viewportWidth = window.innerWidth;
-			const isOpen = callbacks.getIsOpen();
+			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = e.clientX >= viewportWidth - options.edgeActivationWidthPx;
 
-			if (isOpen && !options.swipeToClose) return;
-			if (!isOpen && !options.swipeToOpen) return;
+			if (currentlyOpen && !options.swipeToClose) return;
+			if (!currentlyOpen && !options.swipeToOpen) return;
 
-			if (isOpen || inEdgeRegion) {
+			if (currentlyOpen || inEdgeRegion) {
 				handleDragStart({
 					refs,
 					clientX: e.clientX,
@@ -288,6 +328,10 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 
 		function onMouseMove(e: MouseEvent) {
 			if (lockedSidebar && lockedSidebar !== "right") return;
+			if (isLockedByAnotherRight()) {
+				draggingRef.current = null;
+				return;
+			}
 			if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
 			handleRightDragMove({
@@ -304,9 +348,10 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 			if (lockedSidebar && lockedSidebar !== "right") return;
 			if (!draggingRef.current || !draggingRef.current.isMouse) return;
 
+			clearDragLock();
 			handleRightDragEnd({
 				refs,
-				rightSidebarRef,
+				rightSidebarRef: { current: null },
 				callbacks,
 				options,
 			});
@@ -332,14 +377,16 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>) {
 			window.removeEventListener("mouseup", onMouseUp);
 		};
 	}, [
+		id,
 		isSmallScreen,
-		isRightOpen,
+		isOpen,
 		openSidebar,
 		closeSidebar,
 		dragSidebar,
 		lockedSidebar,
 		setLockedSidebar,
-		rightSidebarRef,
 		options,
+		activeRightDragIdRef,
+		rightFocusStackRef,
 	]);
 }

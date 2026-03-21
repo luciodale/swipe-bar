@@ -1,103 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-label="Touch Slide Logo" role="img">
-  <defs>
-    <linearGradient id="leftGrad" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#00d9ff" stop-opacity="0.85" />
-      <stop offset="1" stop-color="#0066ff" stop-opacity="0.7" />
-    </linearGradient>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- The edge boundary -->
+  <path d="M12 14L12 50" stroke="white" stroke-width="3" stroke-linecap="round" />
 
-    <linearGradient id="centerGrad" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#0066ff" />
-      <stop offset="1" stop-color="#cc00ff" />
-    </linearGradient>
+  <!-- The swipe gesture arc from edge outward -->
+  <path d="M12 32C26 18 42 22 52 32" stroke="white" stroke-width="3" stroke-linecap="round" />
 
-    <linearGradient id="rightGrad" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#ff0099" stop-opacity="0.85" />
-      <stop offset="1" stop-color="#ff0055" stop-opacity="0.7" />
-    </linearGradient>
+  <!-- Touch point on the edge -->
+  <circle cx="12" cy="32" r="3.5" fill="white" />
 
-    <linearGradient id="shine" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35" />
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0.05" />
-    </linearGradient>
-
-    <linearGradient id="silverBorder" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85" />
-      <stop offset="0.25" stop-color="#cbd5e0" stop-opacity="0.5" />
-      <stop offset="0.5" stop-color="#a0aec0" stop-opacity="0.55" />
-      <stop offset="0.75" stop-color="#e2e8f0" stop-opacity="0.5" />
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0.8" />
-    </linearGradient>
-
-    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-opacity="0.15" />
-    </filter>
-  </defs>
-
-  <g filter="url(#shadow)">
-    <rect
-      x="12"
-      y="30"
-      width="36"
-      height="70"
-      rx="9"
-      fill="url(#leftGrad)"
-    />
-    <rect x="12" y="30" width="36" height="70" rx="9" fill="url(#shine)" />
-  </g>
-
-  <g filter="url(#shadow)">
-    <rect
-      x="80"
-      y="30"
-      width="36"
-      height="70"
-      rx="9"
-      fill="url(#rightGrad)"
-    />
-    <rect x="80" y="30" width="36" height="70" rx="9" fill="url(#shine)" />
-  </g>
-
-  <g filter="url(#shadow)">
-    <rect
-      x="24"
-      y="18"
-      width="80"
-      height="90"
-      rx="11"
-      fill="url(#centerGrad)"
-    />
-    <rect x="24" y="18" width="80" height="90" rx="11" fill="url(#shine)" />
-
-    <rect
-      x="24"
-      y="18"
-      width="80"
-      height="90"
-      rx="11"
-      fill="none"
-      stroke="url(#silverBorder)"
-      stroke-width="0.8"
-    />
-  </g>
-
-  <rect
-    x="40"
-    y="28"
-    width="48"
-    height="8"
-    rx="4"
-    fill="#ffffff"
-    opacity="0.4"
-  />
-
-  <rect
-    x="36"
-    y="46"
-    width="56"
-    height="46"
-    rx="6"
-    fill="#000000"
-    opacity="0.06"
-  />
+  <!-- The revealed position -->
+  <circle cx="52" cy="32" r="5" fill="white" />
 </svg>
-

@@ -35,7 +35,7 @@ describe("Sidebar a11y attributes", () => {
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).toHaveAttribute("inert");
 	});
@@ -46,7 +46,7 @@ describe("Sidebar a11y attributes", () => {
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).toHaveAttribute("role", "dialog");
 	});
 
@@ -59,7 +59,7 @@ describe("Sidebar a11y attributes", () => {
 		const toggleButton = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggleButton);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).not.toHaveAttribute("inert");
 		expect(sidebar).toHaveAttribute("aria-modal", "true");
@@ -71,7 +71,7 @@ describe("Sidebar a11y attributes", () => {
 				<div>Content</div>
 			</SwipeBarRight>,
 		);
-		const sidebar = document.getElementById("swipebar-right");
+		const sidebar = document.getElementById("swipebar-right-primary");
 		expect(sidebar).not.toHaveAttribute("aria-hidden");
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar).toHaveAttribute("role", "dialog");
@@ -97,7 +97,7 @@ describe("Sidebar a11y attributes", () => {
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).toHaveAttribute("aria-label", "Navigation menu");
 	});
 });
@@ -111,7 +111,7 @@ describe("Toggle button a11y attributes", () => {
 		);
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		expect(toggle).toHaveAttribute("aria-expanded", "false");
-		expect(toggle).toHaveAttribute("aria-controls", "swipebar-left");
+		expect(toggle).toHaveAttribute("aria-controls", "swipebar-left-primary");
 	});
 
 	it("has aria-expanded=true when sidebar open", async () => {
@@ -136,7 +136,7 @@ describe("Toggle button a11y attributes", () => {
 		);
 		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
 		expect(toggle).toHaveAttribute("aria-expanded", "false");
-		expect(toggle).toHaveAttribute("aria-controls", "swipebar-right");
+		expect(toggle).toHaveAttribute("aria-controls", "swipebar-right-primary");
 	});
 
 	it("bottom toggle has correct aria attrs", () => {
@@ -176,7 +176,7 @@ describe("Escape key closes sidebar", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).not.toHaveAttribute("inert");
 
 		// Focus inside sidebar then press Escape
@@ -200,7 +200,7 @@ describe("Escape key closes sidebar", () => {
 		const toggle = screen.getByRole("button", { name: /open right sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-right");
+		const sidebar = document.getElementById("swipebar-right-primary");
 		expect(sidebar).not.toHaveAttribute("inert");
 
 		const insideBtn = screen.getByRole("button", { name: "Inside" });
@@ -249,7 +249,7 @@ describe("Escape key closes sidebar", () => {
 		const toggle = screen.getByRole("button", { name: /open left sidebar/i });
 		await userEvent.click(toggle);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).not.toHaveAttribute("inert");
 
 		// Focus outside the sidebar
@@ -406,7 +406,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 			expect(sidebar).toHaveAttribute("aria-modal", "true");
@@ -421,7 +421,7 @@ describe("defaultOpen", () => {
 			</SwipeBarRight>,
 		);
 
-		const sidebar = document.getElementById("swipebar-right");
+		const sidebar = document.getElementById("swipebar-right-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 			expect(sidebar).toHaveAttribute("aria-modal", "true");
@@ -471,7 +471,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 		});
@@ -485,7 +485,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 		});
@@ -527,7 +527,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar?.style.transform).toBe("translateX(-100%)");
 	});
@@ -551,7 +551,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 		});
@@ -568,7 +568,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar?.style.transform).toBe("translateX(-100%)");
 	});
@@ -580,7 +580,7 @@ describe("defaultOpen", () => {
 			</SwipeBarLeft>,
 		);
 
-		const sidebar = document.getElementById("swipebar-left");
+		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
 			expect(sidebar).not.toHaveAttribute("inert");
 		});

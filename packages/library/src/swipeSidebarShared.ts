@@ -65,6 +65,11 @@ export type TSwipeSidebar = TSwipeBarOptions & {
 	defaultOpen?: boolean;
 };
 
+export type TLeftRightSidebarState = {
+	isOpen: boolean;
+	meta: unknown;
+};
+
 export type TBottomSidebarState = {
 	isOpen: boolean;
 	anchorState: "closed" | "midAnchor" | "open";
@@ -731,8 +736,8 @@ export const hasTrackedTouchEnded = (
 export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOptions, id?: string) => {
 	const {
 		globalOptions,
-		setLeftSidebarOptions,
-		setRightSidebarOptions,
+		setLeftSidebarOptionsById,
+		setRightSidebarOptionsById,
 		setBottomSidebarOptionsById,
 	} = useSwipeBarContext();
 	const {
@@ -825,9 +830,9 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 
 	useEffect(() => {
 		if (side === "left") {
-			setLeftSidebarOptions(mergedOptions);
+			setLeftSidebarOptionsById(id ?? "primary", mergedOptions);
 		} else if (side === "right") {
-			setRightSidebarOptions(mergedOptions);
+			setRightSidebarOptionsById(id ?? "primary", mergedOptions);
 		} else if (side === "bottom") {
 			setBottomSidebarOptionsById(id ?? "primary", mergedOptions);
 		} else {
@@ -837,8 +842,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		side,
 		id,
 		mergedOptions,
-		setLeftSidebarOptions,
-		setRightSidebarOptions,
+		setLeftSidebarOptionsById,
+		setRightSidebarOptionsById,
 		setBottomSidebarOptionsById,
 	]);
 

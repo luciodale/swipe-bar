@@ -1,0 +1,153 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="API Reference"
+	description="Every exported component, hook, and type from @luciodale/swipe-bar."
+>
+	<ContentSection label="Components">
+		<CodeBlock
+			code={`// Provider — wraps your app, provides context
+import { SwipeBarProvider } from "@luciodale/swipe-bar";
+
+// Sidebars — place inside the provider
+import { SwipeBarLeft } from "@luciodale/swipe-bar";
+import { SwipeBarRight } from "@luciodale/swipe-bar";
+import { SwipeBarBottom } from "@luciodale/swipe-bar";
+
+// Overlay — optional, auto-rendered by sidebars when showOverlay is true
+import { Overlay } from "@luciodale/swipe-bar";
+
+// Toggle buttons — standalone toggle components for custom layouts
+import { ToggleLeft } from "@luciodale/swipe-bar";
+import { ToggleRight } from "@luciodale/swipe-bar";
+import { ToggleBottom } from "@luciodale/swipe-bar";`}
+			language="tsx"
+			filename="imports.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Hooks">
+		<CodeBlock
+			code={`import { useSwipeBarContext } from "@luciodale/swipe-bar";
+import { useMediaQuery } from "@luciodale/swipe-bar";
+
+// useSwipeBarContext<TMap>() — returns the full sidebar context
+const {
+  // State
+  isLeftOpen,                // boolean
+  isRightOpen,               // boolean
+  isBottomOpen,              // boolean (primary instance)
+  bottomAnchorState,         // "closed" | "midAnchor" | "open"
+  leftSidebars,              // Record<string, TLeftRightSidebarState>
+  rightSidebars,             // Record<string, TLeftRightSidebarState>
+  bottomSidebars,            // Record<string, TBottomSidebarState>
+
+  // Actions
+  openSidebar,               // (side, opts?) => void
+  closeSidebar,              // (side, opts?) => void
+  openSidebarFully,          // (side, opts?) => void — skip mid-anchor, go full
+  openSidebarToMidAnchor,    // (side, opts?) => void — bottom only
+
+  // Meta
+  leftMeta,                  // TMap["left"] | null
+  rightMeta,                 // TMap["right"] | null
+  setMeta,                   // (side, metaOrOpts) => void
+
+  // Options
+  globalOptions,             // Required<TSwipeBarOptions>
+  setGlobalOptions,          // (partial) => void
+} = useSwipeBarContext();
+
+// useMediaQuery(width) — true when viewport < width
+const isMobile = useMediaQuery(640);`}
+			language="tsx"
+			filename="hooks.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Types">
+		<CodeBlock
+			code={`import type {
+  TSwipeBarOptions,        // all configurable options
+  TBottomSidebarState,     // { isOpen, anchorState, meta }
+  TLeftRightSidebarState,  // { isOpen, meta }
+  TSidebarMetaMap,         // { left?, right?, bottom?: Record<string, unknown> }
+  TSidebarOpts,            // { id?, meta?, resetMeta?, skipTransition? }
+} from "@luciodale/swipe-bar";`}
+			language="tsx"
+			filename="types.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="TSwipeBarOptions">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			The full options type. Every field is optional. These flow through
+			the provider and can be overridden on each sidebar component:
+		</p>
+		<CodeBlock
+			code={`type TSwipeBarOptions = {
+  transitionMs?: number;              // default: 300
+  sidebarWidthPx?: number;            // default: 320
+  sidebarHeightPx?: number;           // default: window.innerHeight
+  isAbsolute?: boolean;               // default: false
+  edgeActivationWidthPx?: number;     // default: 40
+  dragActivationDeltaPx?: number;     // default: 20
+  showOverlay?: boolean;              // default: true
+  overlayBackgroundColor?: string;    // default: "rgba(0, 0, 0, 0.5)"
+  closeSidebarOnOverlayClick?: boolean; // default: true
+  toggleIconSizePx?: number;          // default: 40
+  toggleIconColor?: string;           // default: "white"
+  toggleIconEdgeDistancePx?: number;  // default: 40
+  showToggle?: boolean;               // default: true
+  mediaQueryWidth?: number;           // default: 640
+  swipeBarZIndex?: number;            // default: 30
+  toggleZIndex?: number;              // default: 15
+  overlayZIndex?: number;             // default: 20
+  fadeContent?: boolean;              // default: false
+  fadeContentTransitionMs?: number;   // default: 100
+  swipeToOpen?: boolean;              // default: true
+  swipeToClose?: boolean;             // default: true
+  midAnchorPoint?: boolean;           // default: false
+  midAnchorPointPx?: number;          // default: half of sidebarHeightPx
+  disabled?: boolean;                 // default: false
+  resetMetaOnClose?: boolean;         // default: false
+};`}
+			language="tsx"
+			filename="TSwipeBarOptions.ts"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Context Actions">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			All action functions accept a <InlineCode>side</InlineCode> parameter
+			(<InlineCode>"left" | "right" | "bottom"</InlineCode>) and an
+			optional <InlineCode>opts</InlineCode> object:
+		</p>
+		<CodeBlock
+			code={`type TSidebarOpts = {
+  id?: string;            // sidebar instance ID for any direction (default: "primary")
+  meta?: unknown;         // metadata to attach (typed when using generic)
+  resetMeta?: boolean;    // clear meta to null
+  skipTransition?: boolean; // instant open/close, no animation
+};
+
+// Examples:
+openSidebar("left");
+openSidebar("left", { id: "secondary" });
+openSidebar("right", { id: "settings" });
+openSidebar("bottom", { id: "secondary" });
+closeSidebar("left", { resetMeta: true });
+openSidebarToMidAnchor("bottom", { meta: { filter: "active" } });
+openSidebarFully("bottom"); // skips mid-anchor, goes straight to full`}
+			language="tsx"
+			filename="actions.ts"
+		/>
+	</ContentSection>
+</DocsPage>
