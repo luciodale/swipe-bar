@@ -4,7 +4,7 @@ export const siteConfig: SiteConfig = {
 	title: "swipe-bar",
 	description:
 		"A zero-dependency React library for native swipe sidebars and bottom sheets. Touch gestures, programmatic control, typed metadata, and full accessibility out of the box.",
-	siteUrl: "https://koolcodez.com",
+	siteUrl: "https://koolcodez.com/projects/swipe-bar",
 	logoSrc: "/logo.svg",
 	logoAlt: "swipe-bar logo",
 	ogImage: "/og-image.png",

@@ -16,18 +16,9 @@ export const prerender = true;
 	description="Install and set up swipe-bar, a zero-dependency React library for native swipe sidebars and bottom sheets."
 >
 	<ContentSection label="What is swipe-bar?">
-		<p class="text-white/60 mb-4 leading-relaxed">
-			Mobile users expect swipe gestures. They swipe from the edge to
-			reveal a navigation drawer, pull up a bottom sheet, dismiss a panel
-			with a flick. Building this yourself means wrangling touch events,
-			drag thresholds, transition timing, focus traps, and cross-direction
-			locking. The result is always fragile and hard to maintain.
-		</p>
 		<p class="text-white/60 leading-relaxed">
-			swipe-bar handles all of that. Wrap your content in a provider, drop
-			in a sidebar component, and you get native-feeling swipe interactions
-			with zero configuration. Left sidebars, right sidebars, bottom
-			sheets, multi-instance panels. Everything works out of the box.
+			Swipe sidebars and bottom sheets that feel native. Zero dependencies,
+			just React. You handle the styling, the library handles the gestures.
 		</p>
 	</ContentSection>
 
@@ -72,107 +63,72 @@ export const prerender = true;
 
 	<ContentSection label="Quick Start">
 		<p class="text-white/60 mb-4 leading-relaxed">
-			Three steps: wrap your app in the provider, add a sidebar component,
-			done. The sidebar appears when the user swipes from the edge, or when
-			you open it programmatically.
+			Let's get a sidebar opening and closing in under a minute.
+		</p>
+
+		<p class="text-white/60 mb-2 leading-relaxed">
+			First, wrap your app in the provider. This is the context that
+			coordinates all sidebars:
 		</p>
 		<CodeBlock
-			code={`import { SwipeBarProvider, SwipeBarLeft } from "@luciodale/swipe-bar";
+			code={`import { SwipeBarProvider } from "@luciodale/swipe-bar";
 
 function App() {
   return (
     <SwipeBarProvider>
-      <SwipeBarLeft className="bg-gray-900 text-white">
+      <Page />
+    </SwipeBarProvider>
+  );
+}`}
+			language="tsx"
+			filename="App.tsx"
+		/>
+
+		<p class="text-white/60 mt-6 mb-2 leading-relaxed">
+			Now add a left sidebar and a button to open it. The
+			<InlineCode>useSwipeBarContext</InlineCode> hook gives you
+			everything you need:
+		</p>
+		<CodeBlock
+			code={`import { SwipeBarLeft, useSwipeBarContext } from "@luciodale/swipe-bar";
+
+function Page() {
+  const { openSidebar, closeSidebar, isLeftOpen } = useSwipeBarContext();
+
+  return (
+    <>
+      <SwipeBarLeft className="bg-gray-900 text-white p-6">
         <nav>
+          <h2>Menu</h2>
           <a href="/dashboard">Dashboard</a>
           <a href="/settings">Settings</a>
+          <button onClick={() => closeSidebar("left")}>Close</button>
         </nav>
       </SwipeBarLeft>
 
       <main>
-        <h1>Your app content</h1>
+        <button onClick={() => openSidebar("left")}>
+          {isLeftOpen ? "Sidebar open" : "Open sidebar"}
+        </button>
       </main>
-    </SwipeBarProvider>
+    </>
   );
 }`}
 			language="tsx"
-			filename="App.tsx"
+			filename="Page.tsx"
 		/>
+
 		<p class="text-white/60 mt-4 leading-relaxed">
-			That's the whole setup. The left sidebar responds to edge swipes on
-			mobile (below 640px by default) and shows a toggle button. On
-			desktop, the toggle button opens and closes the sidebar. Every prop
-			has a sensible default.
+			That's it. On mobile (below 640px), swiping from the left edge also
+			opens the sidebar. On desktop, the toggle button and your custom
+			button both work. Try adding a
+			<InlineCode>SwipeBarRight</InlineCode> or a
+			<InlineCode>SwipeBarBottom</InlineCode> the same way.
 		</p>
-	</ContentSection>
-
-	<ContentSection label="Adding More Sidebars">
-		<p class="text-white/60 mb-4 leading-relaxed">
-			Add right sidebars and bottom sheets the same way. All three
-			directions work inside the same provider with automatic
-			cross-direction locking:
-		</p>
-		<CodeBlock
-			code={`import {
-  SwipeBarProvider,
-  SwipeBarLeft,
-  SwipeBarRight,
-  SwipeBarBottom,
-} from "@luciodale/swipe-bar";
-
-function App() {
-  return (
-    <SwipeBarProvider>
-      <SwipeBarLeft className="bg-gray-900 text-white">
-        <nav>Navigation</nav>
-      </SwipeBarLeft>
-
-      <SwipeBarRight className="bg-gray-900 text-white">
-        <div>Settings panel</div>
-      </SwipeBarRight>
-
-      <SwipeBarBottom sidebarHeightPx={400} isAbsolute className="bg-gray-900 text-white">
-        <div>Bottom sheet content</div>
-      </SwipeBarBottom>
-
-      <main>
-        <h1>Your app content</h1>
-      </main>
-    </SwipeBarProvider>
-  );
-}`}
-			language="tsx"
-			filename="App.tsx"
-		/>
-	</ContentSection>
-
-	<ContentSection label="Programmatic Control">
-		<p class="text-white/60 mb-4 leading-relaxed">
-			The <InlineCode>useSwipeBarContext</InlineCode> hook gives you full
-			control. Open, close, read state, and attach metadata:
-		</p>
-		<CodeBlock
-			code={`import { useSwipeBarContext } from "@luciodale/swipe-bar";
-
-function Header() {
-  const { openSidebar, closeSidebar, isLeftOpen } = useSwipeBarContext();
-
-  return (
-    <header>
-      <button onClick={() => openSidebar("left")}>
-        Menu
-      </button>
-      {isLeftOpen && <span>Sidebar is open</span>}
-    </header>
-  );
-}`}
-			language="tsx"
-			filename="Header.tsx"
-		/>
 		<Callout type="tip" title="Context scope">
 			<InlineCode>useSwipeBarContext</InlineCode> must be called inside a
-			<InlineCode>SwipeBarProvider</InlineCode>. It throws if no provider
-			is found.
+			<InlineCode>SwipeBarProvider</InlineCode>. That's why we split the
+			provider wrapper and the page into separate components.
 		</Callout>
 	</ContentSection>
 

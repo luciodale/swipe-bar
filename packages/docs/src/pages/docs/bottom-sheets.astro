@@ -80,6 +80,14 @@ openSidebarFully("bottom");`}
 			<InlineCode>"midAnchor"</InlineCode>, or
 			<InlineCode>"open"</InlineCode>.
 		</p>
+		<Callout type="tip" title="swipeToOpen and midAnchorPoint">
+			When <InlineCode>midAnchorPoint</InlineCode> is enabled, set
+			<InlineCode>swipeToOpen={"{false}"}</InlineCode>. The edge swipe
+			gesture opens the sheet fully, which skips the mid-anchor stop.
+			With <InlineCode>swipeToOpen</InlineCode> disabled, users open via
+			<InlineCode>openSidebarToMidAnchor</InlineCode> or the toggle
+			button, preserving the two-step reveal.
+		</Callout>
 	</ContentSection>
 
 	<ContentSection label="Multiple Instances">
