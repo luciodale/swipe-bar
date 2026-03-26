@@ -527,9 +527,15 @@ describe("meta – type narrowing", () => {
 			expectTypeOf<TCtx["setMeta"]>().toBeFunction();
 		});
 
-		it("left overload accepts { page: string } | null", () => {
-			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", { page: "profile" });
-			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", null);
+		it("left overload accepts id-typed meta", () => {
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", {
+				id: "page" as const,
+				meta: "profile",
+			});
+			expectTypeOf<TCtx["setMeta"]>().toBeCallableWith("left", {
+				id: "page" as const,
+				meta: null,
+			});
 		});
 
 		it("right overload accepts number | null", () => {
@@ -582,9 +588,9 @@ describe("meta – type narrowing", () => {
 	});
 
 	describe("sidebar fn opts", () => {
-		it("openSidebar('left') opts accepts typed meta", () => {
+		it("openSidebar('left') opts accepts typed meta with id", () => {
 			type TLeftOpts = Parameters<TCtx["openSidebar"]>[1];
-			expectTypeOf<{ meta?: { page: string }; resetMeta?: boolean }>().toExtend<
+			expectTypeOf<{ id: "page"; meta?: string; resetMeta?: boolean }>().toExtend<
 				NonNullable<TLeftOpts>
 			>();
 		});
