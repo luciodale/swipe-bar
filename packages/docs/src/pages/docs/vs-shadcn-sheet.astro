@@ -1,0 +1,84 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="swipe-bar vs shadcn sheet"
+	description="When to pick shadcn sheet over swipe-bar. Short honest guide on the modal dialog vs gesture drawer trade-off in React."
+>
+	<ContentSection label="Different shapes of the same thing">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			shadcn <InlineCode>&lt;Sheet&gt;</InlineCode> and swipe-bar look
+			similar on the screen, a panel slides in from a side, but they
+			solve different problems.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			shadcn Sheet is a <strong class="text-white/85">modal dialog</strong>
+			wrapped in a slide-in animation. It's Radix Dialog under the
+			hood. You open it, you do the thing, you close it. Open or closed
+			is the entire state space. Accessibility, focus trap, and
+			dismissal come from the Radix contract.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			swipe-bar is a <strong class="text-white/85">gesture drawer</strong>.
+			Users drag to peek, release to commit, flick to dismiss. The
+			panel is part of the layout grammar of the app, not a modal
+			interruption. Multi instance on the same edge and mid anchor
+			bottom sheets are the shape.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="When to pick shadcn sheet">
+		<Callout type="tip" title="Pick shadcn Sheet when">
+			You want a modal that opens from a side. Settings panels,
+			filter dialogs, command palettes, confirmation flows. The user
+			clicks a button, the panel appears, they finish, it closes. You
+			don't need drag gestures, snap points, or multi instance. You're
+			already on Radix or shadcn, and reusing those primitives is a
+			win. Desktop first UI where touch gestures aren't central.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="When to pick swipe-bar">
+		<Callout type="info" title="Pick swipe-bar when">
+			The panel is a persistent part of the layout: navigation,
+			settings, filters that the user opens and closes many times in a
+			session, often by dragging. You need mobile-native drawer feel
+			with spring physics, edge swipe detection, and mouse parity on
+			desktop. You want multi instance on the same side, or a bottom
+			sheet with a mid anchor stop.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Looking for a gesture peer?">
+		<p class="text-white/60 leading-relaxed">
+			If you've already decided you want a gesture driven drawer and
+			you're comparing swipe-bar to something in the same category,
+			the more relevant peer is Vaul, not shadcn Sheet. Head to the
+			<a href={href("/docs/vs-vaul")} class="text-accent hover:underline">
+				swipe-bar vs Vaul
+			</a>
+			comparison for a detailed matrix.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Next steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a href={href("/docs/vs-vaul")} class="text-accent hover:underline">vs Vaul</a> — the same-category gesture drawer comparison
+			</li>
+			<li>
+				<a href={href("/docs/getting-started")} class="text-accent hover:underline">Getting started</a> — install and wire up a sidebar
+			</li>
+			<li>
+				<a href={href("/docs/bottom-sheets")} class="text-accent hover:underline">Bottom sheets</a> — mid anchor and full sheet patterns
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

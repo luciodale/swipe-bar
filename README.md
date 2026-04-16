@@ -5,7 +5,29 @@
 
   [Documentation](https://koolcodez.com/projects/swipe-bar) &nbsp;&middot;&nbsp; [NPM](https://www.npmjs.com/package/@luciodale/swipe-bar) &nbsp;&middot;&nbsp; [GitHub](https://github.com/luciodale/swipe-bar)
 
+  [![npm version](https://img.shields.io/npm/v/@luciodale/swipe-bar.svg)](https://www.npmjs.com/package/@luciodale/swipe-bar)
+  [![npm downloads](https://img.shields.io/npm/dm/@luciodale/swipe-bar.svg)](https://www.npmjs.com/package/@luciodale/swipe-bar)
+  [![bundle size](https://img.shields.io/bundlephobia/minzip/@luciodale/swipe-bar)](https://bundlephobia.com/package/@luciodale/swipe-bar)
+  [![license](https://img.shields.io/npm/l/@luciodale/swipe-bar.svg)](./LICENSE)
+
 </div>
+
+## Why swipe-bar
+
+Coming from Vaul, shadcn `Sheet`, `react-sliding-pane`, or hand-rolled Framer Motion panels, these are the behaviors you get without wiring:
+
+- **Edge swipe to open.** Drag from the edge on touch. No bolting gesture libraries on top of a dialog.
+- **Drag to close with velocity commit.** Flick to dismiss, soft release snaps back. Native iOS and Android drawer feel.
+- **Spring physics, no motion library.** The animation engine is built in. Zero runtime dependencies.
+- **Mouse and touch parity.** The same gesture works on desktop pointers, not only mobile.
+- **Multi instance per side.** Two or more sidebars on the same edge with independent state.
+- **Bottom sheet with mid anchor.** Half-open stop and full-open stop, like native sheets.
+- **Accessible.** Focus trap, Escape to close, aria attributes, keyboard nav.
+
+> Full comparisons:
+> [vs Vaul](https://koolcodez.com/projects/swipe-bar/docs/vs-vaul) (same category gesture drawer)
+> ·
+> [vs shadcn sheet](https://koolcodez.com/projects/swipe-bar/docs/vs-shadcn-sheet) (modal dialog vs drawer)
 
 ## Install
 

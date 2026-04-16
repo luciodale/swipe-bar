@@ -8,3 +8,5 @@ packages/library/README.md
 public/_pagefind
 .wrangler
 .dev.vars*
+# Astro build cache
+packages/docs/.astro/

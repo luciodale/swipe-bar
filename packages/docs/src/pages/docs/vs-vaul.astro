@@ -1,0 +1,248 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import Comparison from "@luciodale/docs-ui-kit/components/Comparison.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
+
+export const prerender = true;
+---
+
+<DocsPage
+	title="swipe-bar vs Vaul"
+	description="How swipe-bar compares to Vaul. Honest trade-offs on side drawers vs bottom sheets, snap points, multi instance support, dependencies, and mobile feel for React."
+>
+	<ContentSection label="The choice">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Vaul (by Emil Kowalski, widely adopted at Vercel) is the modern
+			answer for iOS style drawers in React. It's gesture driven, spring
+			animated, accessible through Radix Dialog primitives, and polished
+			to the point that using it feels closer to a native sheet than
+			most web libraries manage. Bottom drawers with numeric snap points
+			are its bread and butter.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			swipe-bar aims at the adjacent problem. It's opinionated toward
+			left, right, and bottom sidebars as peers, with multi instance
+			support on the same edge, mouse and touch parity on desktop, and
+			zero runtime dependencies. The feel is similar. The API and scope
+			aren't.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Where each one sits">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Vaul is a drawer primitive with a strong bottom sheet identity.
+			You compose its controlled <InlineCode>&lt;Drawer&gt;</InlineCode>
+			elements, pick snap points, and let Radix Dialog take care of
+			accessibility.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			swipe-bar is a sidebar system. Provider plus declarative
+			components, same API for left, right, and bottom, and a context
+			hook for programmatic control. Multi instance and mouse drag are
+			first class concerns.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Feature by feature">
+		<Comparison
+			columns={[
+				{
+					name: "@luciodale/swipe-bar",
+					href: "https://www.npmjs.com/package/@luciodale/swipe-bar",
+					tagline: "Sidebar system, zero deps, multi instance",
+					highlight: true,
+				},
+				{
+					name: "vaul",
+					href: "https://www.npmjs.com/package/vaul",
+					tagline: "iOS style drawer built on Radix Dialog",
+				},
+			]}
+			rows={[
+				{
+					feature: "Edge swipe to open",
+					description:
+						"Drag from the screen edge to reveal the panel on mobile.",
+					values: ["yes", "partial"],
+				},
+				{
+					feature: "Drag to close with velocity commit",
+					values: ["yes", "yes"],
+				},
+				{
+					feature: "Spring physics",
+					values: ["yes", "yes"],
+				},
+				{
+					feature: "Left and right side drawers",
+					description:
+						"First class side sidebars, same API as bottom.",
+					values: ["yes", { text: "Available but bottom-first" }],
+				},
+				{
+					feature: "Bottom sheet with snap points",
+					description:
+						"Half-open stop and full-open stop.",
+					values: [
+						{ text: "mid anchor point" },
+						{ text: "numeric snap array, richer API" },
+					],
+				},
+				{
+					feature: "Multi instance per side",
+					description:
+						"Two or more drawers on the same edge, independent state.",
+					values: ["yes", "no"],
+				},
+				{
+					feature: "Mouse drag on desktop",
+					description:
+						"Same gesture on pointer devices, not only touch.",
+					values: ["yes", "no"],
+				},
+				{
+					feature: "Nested drawers",
+					description:
+						"Push another drawer from inside an open one.",
+					values: ["no", "yes"],
+				},
+				{
+					feature: "Accessibility",
+					description:
+						"Focus trap, Escape, aria attributes.",
+					values: [
+						"yes",
+						{ text: "Radix Dialog backed" },
+					],
+				},
+				{
+					feature: "Runtime dependencies",
+					values: [
+						{ text: "Zero" },
+						{
+							text: "Radix Dialog + primitives",
+						},
+					],
+				},
+				{
+					feature: "Production track record",
+					values: [
+						{
+							text: "In production at a major bank, hundreds of thousands of users",
+						},
+						{ text: "Adopted at Vercel, battle tested" },
+					],
+				},
+				{
+					feature: "Best fit",
+					values: [
+						{
+							text: "Side drawers, multi instance, PWAs. Themeable to match any native look, iOS included.",
+						},
+						{ text: "Bottom sheet with snap points, nested drawer flows." },
+					],
+				},
+			]}
+			caption="Feature comparison between swipe-bar and Vaul"
+		/>
+	</ContentSection>
+
+	<ContentSection label="Scope shape, not quality">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Both libraries do gesture, physics, and accessibility well. The
+			distinction is intent.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Vaul is optimized for the pattern iOS and Android users recognize
+			as a bottom sheet: numeric snap points, nested push flows,
+			dynamic content height, Radix a11y guarantees. It shines in
+			mobile-first product UX where the bottom sheet is the primary
+			surface.
+		</p>
+		<p class="text-white/60 leading-relaxed">
+			swipe-bar is optimized for nav and settings drawers that live on
+			the side, with the same gesture grammar also available on the
+			bottom edge. Two settings drawers on the right edge, a nav on the
+			left, and a bottom sheet is a shape swipe-bar models directly.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Multi instance, side by side">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			swipe-bar treats every sidebar as an independent instance
+			identified by an <InlineCode>id</InlineCode>. Opening the nav drawer
+			doesn't prevent opening a settings drawer from the same edge. The
+			z-index and overlay stacking stay consistent because the provider
+			orchestrates it centrally.
+		</p>
+		<CodeBlock
+			code={`<SwipeBarLeft id="nav" isAbsolute>
+  <Nav />
+</SwipeBarLeft>
+
+<SwipeBarLeft
+  id="settings"
+  isAbsolute
+  swipeToOpen={false}
+  swipeBarZIndex={70}
+  overlayZIndex={65}
+>
+  <Settings />
+</SwipeBarLeft>`}
+			language="tsx"
+			filename="multi-instance.tsx"
+		/>
+		<p class="text-white/60 mt-4 leading-relaxed">
+			Vaul treats a drawer as a dialog. Opening two at once on the same
+			edge isn't a pattern the library models natively, and you'd end
+			up coordinating state yourself.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Dependency weight">
+		<p class="text-white/60 leading-relaxed">
+			Vaul depends on Radix Dialog, which itself pulls a small tree of
+			Radix primitives. That's a fair price for the accessibility
+			guarantees and the existing Radix ecosystem familiarity. swipe-bar
+			keeps the bundle lean and implements the accessibility pieces
+			itself. If you already use Radix across your app, Vaul's extra
+			weight is free. If you don't, swipe-bar's zero-dep claim is real.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="When to pick Vaul">
+		<Callout type="info" title="Pick it when">
+			Your primary surface is a bottom sheet and the snap point grammar
+			matters. You want nested drawer flows. You're already on
+			Radix / shadcn and want consistent accessibility primitives. You
+			value battle testing at Vercel scale over bundle minimalism.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="When to pick swipe-bar">
+		<Callout type="tip" title="Pick it when">
+			Your UX has navigation, settings, or filter drawers on the sides.
+			You need two or more drawers on the same edge. Desktop mouse
+			users should get the same drag gesture as mobile touch users. You
+			want zero runtime dependencies in the bundle.
+		</Callout>
+	</ContentSection>
+
+	<ContentSection label="Next steps">
+		<ul class="space-y-2 text-white/60">
+			<li>
+				<a href={href("/docs/vs-shadcn-sheet")} class="text-accent hover:underline">vs shadcn sheet</a> — when you want a modal, not a drawer
+			</li>
+			<li>
+				<a href={href("/docs/getting-started")} class="text-accent hover:underline">Getting started</a> — install and wire up a sidebar
+			</li>
+			<li>
+				<a href={href("/docs/bottom-sheets")} class="text-accent hover:underline">Bottom sheets</a> — mid anchor and full sheet patterns
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

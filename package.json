@@ -1,7 +1,7 @@
 {
 	"name": "swipe-bar-monorepo",
 	"version": "1.0.0",
-	"description": "Sliding barls like in a native app, built with React.",
+	"description": "Gesture driven React sidebar with spring physics. Touch and mouse support, native app feel for mobile first web interfaces. Tiny bundle, zero runtime dependencies.",
 	"private": true,
 	"workspaces": [
 		"packages/*"
