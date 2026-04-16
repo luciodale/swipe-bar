@@ -46,6 +46,13 @@ export const siteConfig: SiteConfig = {
 				{ href: "/example/props-playground", label: "Props Playground" },
 			],
 		},
+		{
+			title: "Comparison",
+			links: [
+				{ href: "/docs/vs-vaul", label: "vs Vaul" },
+				{ href: "/docs/vs-shadcn-sheet", label: "vs shadcn sheet" },
+			],
+		},
 	],
 	copyright: "Lucio D'Alessandro",
 	parentSite: {
