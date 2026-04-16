@@ -49,6 +49,7 @@ export type TSwipeBarOptions = {
 	fadeContentTransitionMs?: number;
 	swipeToOpen?: boolean;
 	swipeToClose?: boolean;
+	disableSwipe?: boolean;
 	midAnchorPoint?: boolean;
 	midAnchorPointPx?: number;
 	disabled?: boolean;
@@ -120,6 +121,7 @@ export const FADE_CONTENT_TRANSITION_MS = 100;
 export const FADE_CONTENT = false;
 export const SWIPE_TO_OPEN = true;
 export const SWIPE_TO_CLOSE = true;
+export const DISABLE_SWIPE = false;
 export const MID_ANCHOR_POINT = false;
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
@@ -761,6 +763,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		fadeContentTransitionMs,
 		swipeToOpen,
 		swipeToClose,
+		disableSwipe,
 		midAnchorPoint,
 		midAnchorPointPx,
 		disabled,
@@ -791,6 +794,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			fadeContentTransitionMs: fadeContentTransitionMs ?? globalOptions.fadeContentTransitionMs,
 			swipeToOpen: swipeToOpen ?? globalOptions.swipeToOpen,
 			swipeToClose: swipeToClose ?? globalOptions.swipeToClose,
+			disableSwipe: disableSwipe ?? globalOptions.disableSwipe,
 			midAnchorPoint: midAnchorPoint ?? globalOptions.midAnchorPoint,
 			midAnchorPointPx:
 				midAnchorPointPx ?? globalOptions.midAnchorPointPx ?? Math.floor(baseHeight / 3),
@@ -821,6 +825,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		fadeContentTransitionMs,
 		swipeToOpen,
 		swipeToClose,
+		disableSwipe,
 		midAnchorPoint,
 		midAnchorPointPx,
 		disabled,

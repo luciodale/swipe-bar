@@ -86,6 +86,7 @@ export function makeOptions(overrides?: Partial<TSwipeBarOptions>): Required<TSw
 		fadeContentTransitionMs: 100,
 		swipeToOpen: false,
 		swipeToClose: true,
+		disableSwipe: false,
 		midAnchorPoint: true,
 		midAnchorPointPx: 200,
 		disabled: false,

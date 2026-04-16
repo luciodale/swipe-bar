@@ -179,6 +179,130 @@ describe("handleBottomDragEnd", () => {
 		});
 	});
 
+	describe("swipeToClose=false — standard 2-state (snap-back)", () => {
+		it("snaps back to open when swiped down", () => {
+			const refs = makeDragRefsY({ startY: 100, currentY: 300, prevY: 250 });
+			const callbacks = makeBottomCallbacks();
+			const options = makeOptions({ midAnchorPoint: false, swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openSidebar).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("stays open when swiped up", () => {
+			const refs = makeDragRefsY({ startY: 300, currentY: 200, prevY: 250 });
+			const callbacks = makeBottomCallbacks();
+			const options = makeOptions({ midAnchorPoint: false, swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openSidebar).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("swipeToClose=false — midAnchor active, anchorState=open", () => {
+		it("goes to midAnchor (not close) when swiped down past midThreshold", () => {
+			// sidebarHeightPx=600, midAnchorPx=200 -> midThreshold=400
+			// startY=100, currentY=600 -> currentTranslateY=500 > 400
+			const refs = makeDragRefsY({ startY: 100, currentY: 600, prevY: 500 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("open");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("goes to midAnchor when swiped down but above midThreshold", () => {
+			const refs = makeDragRefsY({ startY: 100, currentY: 300, prevY: 200 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("open");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("stays fully open when swiped up and above midThreshold", () => {
+			const refs = makeDragRefsY({ startY: 300, currentY: 200, prevY: 250 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("open");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openSidebarFully).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("snaps to midAnchor (not close) when swiped up but below midThreshold", () => {
+			// startY=100, currentY=590, prevY=600 -> swipedUp, currentTranslateY=490 >= 400
+			const refs = makeDragRefsY({ startY: 100, currentY: 590, prevY: 600 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("open");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("swipeToClose=false — midAnchor active, anchorState=midAnchor", () => {
+		it("opens fully when swiped up and above midThreshold", () => {
+			const refs = makeDragRefsY({ startY: 500, currentY: 200, prevY: 250 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openSidebarFully).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("snaps back to midAnchor (not close) when swiped down", () => {
+			const refs = makeDragRefsY({ startY: 500, currentY: 550, prevY: 540 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+
+		it("snaps to midAnchor when swiped up but still below midThreshold", () => {
+			const refs = makeDragRefsY({ startY: 500, currentY: 501, prevY: 502 });
+			const callbacks = makeBottomCallbacks();
+			callbacks.getBottomAnchorState.mockReturnValue("midAnchor");
+			const options = makeOptions({ swipeToClose: false });
+			const onDragEnd = vi.fn();
+
+			handleBottomDragEnd({ refs, callbacks, options, onDragEnd });
+
+			expect(callbacks.openToMidAnchor).toHaveBeenCalled();
+			expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		});
+	});
+
 	it("does nothing when draggingRef is null", () => {
 		const refs = makeDragRefsY();
 		refs.draggingRef.current = null;
