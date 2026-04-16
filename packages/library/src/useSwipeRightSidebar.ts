@@ -142,7 +142,7 @@ export const handleRightDragEnd = ({ refs, callbacks, options }: HandleRightDrag
 	const moreThanEdgeSwipeThreshold = startX >= viewportWidth - options.edgeActivationWidthPx;
 
 	if (rightOpen) {
-		if (swipedRight) {
+		if (swipedRight && options.swipeToClose) {
 			callbacks.closeSidebar();
 		} else {
 			callbacks.openSidebar();
@@ -238,7 +238,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>, id: st
 			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = firstTouch.clientX >= viewportWidth - options.edgeActivationWidthPx;
 
-			if (currentlyOpen && !options.swipeToClose) return;
+			if (options.disableSwipe) return;
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
@@ -312,7 +312,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>, id: st
 			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = e.clientX >= viewportWidth - options.edgeActivationWidthPx;
 
-			if (currentlyOpen && !options.swipeToClose) return;
+			if (options.disableSwipe) return;
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
@@ -332,7 +332,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>, id: st
 				draggingRef.current = null;
 				return;
 			}
-			if (!draggingRef.current || !draggingRef.current.isMouse) return;
+			if (!draggingRef.current?.isMouse) return;
 
 			handleRightDragMove({
 				refs,
@@ -346,7 +346,7 @@ export function useSwipeRightSidebar(options: Required<TSwipeBarOptions>, id: st
 
 		function onMouseUp() {
 			if (lockedSidebar && lockedSidebar !== "right") return;
-			if (!draggingRef.current || !draggingRef.current.isMouse) return;
+			if (!draggingRef.current?.isMouse) return;
 
 			clearDragLock();
 			handleRightDragEnd({

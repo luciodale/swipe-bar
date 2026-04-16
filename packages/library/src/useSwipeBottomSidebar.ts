@@ -215,7 +215,7 @@ export const handleBottomDragEnd = ({
 
 				if (swipedDown) {
 					// Swipe down from open
-					if (currentTranslateY > midThreshold) {
+					if (currentTranslateY > midThreshold && options.swipeToClose) {
 						// User dragged past midpoint, close directly
 						callbacks.closeSidebar();
 					} else {
@@ -227,9 +227,12 @@ export const handleBottomDragEnd = ({
 					if (currentTranslateY < midThreshold) {
 						// Position above midpoint, stay fully open
 						callbacks.openSidebarFully();
-					} else {
+					} else if (options.swipeToClose) {
 						// Position at or below midpoint, close
 						callbacks.closeSidebar();
+					} else {
+						// swipeToClose disabled, snap to mid-anchor instead
+						callbacks.openToMidAnchor();
 					}
 				}
 				callbacks.dragSidebar(null);
@@ -251,15 +254,18 @@ export const handleBottomDragEnd = ({
 						// User reversed direction upward, snap back to mid-anchor
 						callbacks.openToMidAnchor();
 					}
-				} else {
+				} else if (options.swipeToClose) {
 					// Swiped down from mid-anchor, close
 					callbacks.closeSidebar();
+				} else {
+					// swipeToClose disabled, snap back to mid-anchor
+					callbacks.openToMidAnchor();
 				}
 				callbacks.dragSidebar(null);
 			}
 		} else {
 			// Standard 2-state behavior
-			if (swipedDown) {
+			if (swipedDown && options.swipeToClose) {
 				callbacks.closeSidebar();
 			} else {
 				callbacks.openSidebar();
@@ -386,7 +392,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = firstTouch.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (currentlyOpen && !options.swipeToClose) return;
+			if (options.disableSwipe) return;
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
@@ -463,7 +469,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 			const currentlyOpen = callbacks.getIsOpen();
 			const inEdgeRegion = e.clientY >= windowHeight - options.edgeActivationWidthPx;
 
-			if (currentlyOpen && !options.swipeToClose) return;
+			if (options.disableSwipe) return;
 			if (!currentlyOpen && !options.swipeToOpen) return;
 
 			if (currentlyOpen || inEdgeRegion) {
@@ -485,7 +491,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 				draggingRef.current = null;
 				return;
 			}
-			if (!draggingRef.current || !draggingRef.current.isMouse) return;
+			if (!draggingRef.current?.isMouse) return;
 
 			handleBottomDragMove({
 				refs,
@@ -501,7 +507,7 @@ export function useSwipeBottomSidebar(options: Required<TSwipeBarOptions>, id: s
 
 		function onMouseUp() {
 			if (lockedSidebar && lockedSidebar !== "bottom") return;
-			if (!draggingRef.current || !draggingRef.current.isMouse) return;
+			if (!draggingRef.current?.isMouse) return;
 
 			handleBottomDragEnd({
 				refs,

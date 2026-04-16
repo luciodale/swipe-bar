@@ -147,8 +147,11 @@ const isSecondaryOpen = bottomSidebars.secondary?.isOpen ?? false;`}
 			Set <InlineCode>swipeToOpen={false}</InlineCode> and
 			<InlineCode>showToggle={false}</InlineCode> to create a sheet that
 			opens only via <InlineCode>openSidebar</InlineCode>. Once open, the
-			user can still swipe down to close it (unless you also disable
-			<InlineCode>swipeToClose</InlineCode>).
+			user can still swipe down to close it. Set
+			<InlineCode>swipeToClose={false}</InlineCode> to allow swiping but
+			snap back to open on release. Use
+			<InlineCode>disableSwipe</InlineCode> to kill all gesture
+			interaction entirely.
 		</p>
 	</ContentSection>
 </DocsPage>

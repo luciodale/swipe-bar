@@ -114,6 +114,47 @@ describe("handleLeftDragEnd", () => {
 	});
 });
 
+describe("handleLeftDragEnd — swipeToClose=false (snap-back)", () => {
+	it("snaps back to open when swiped left", () => {
+		const refs = makeDragRefs({ startX: 200, currentX: 150, prevX: 180 });
+		const callbacks = makeCallbacks();
+		callbacks.getIsOpen.mockReturnValue(true);
+		const options = makeOptions({ swipeToClose: false });
+		const leftSidebarRef = { current: null };
+
+		handleLeftDragEnd({ refs, leftSidebarRef, callbacks, options });
+
+		expect(callbacks.openSidebar).toHaveBeenCalled();
+		expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+		expect(callbacks.dragSidebar).toHaveBeenCalledWith(null);
+	});
+
+	it("stays open when swiped right", () => {
+		const refs = makeDragRefs({ startX: 200, currentX: 250, prevX: 220 });
+		const callbacks = makeCallbacks();
+		callbacks.getIsOpen.mockReturnValue(true);
+		const options = makeOptions({ swipeToClose: false });
+		const leftSidebarRef = { current: null };
+
+		handleLeftDragEnd({ refs, leftSidebarRef, callbacks, options });
+
+		expect(callbacks.openSidebar).toHaveBeenCalled();
+		expect(callbacks.closeSidebar).not.toHaveBeenCalled();
+	});
+
+	it("still allows edge swipe to open when closed", () => {
+		const refs = makeDragRefs({ startX: 20, currentX: 100, prevX: 80 });
+		const callbacks = makeCallbacks();
+		callbacks.getIsOpen.mockReturnValue(false);
+		const options = makeOptions({ swipeToClose: false, swipeToOpen: true });
+		const leftSidebarRef = { current: null };
+
+		handleLeftDragEnd({ refs, leftSidebarRef, callbacks, options });
+
+		expect(callbacks.openSidebar).toHaveBeenCalled();
+	});
+});
+
 describe("handleLeftDragMove", () => {
 	it("does nothing when draggingRef is null", () => {
 		const refs = makeDragRefs();
