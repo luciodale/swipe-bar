@@ -1,0 +1,79 @@
+-- Lifecycle of a sidebar instance inside a SwipeBarProvider.
+--
+-- The provider exposes per-side maps (leftSidebars / rightSidebars / bottomSidebars).
+-- Entries are populated lazily by SwipeBar* components on mount, then removed on
+-- unmount. Consumers reading the maps at any other moment may observe a missing
+-- entry, so typed access yields State | undefined.
+
+entity SwipeBarProvider {
+    -- Holds three independent registries keyed by sidebar id.
+    left_registry: Set<SidebarInstance>
+    right_registry: Set<SidebarInstance>
+    bottom_registry: Set<SidebarInstance>
+}
+
+entity SidebarInstance {
+    id: String
+    side: left | right | bottom
+    is_open: Boolean
+    meta: Any?
+    anchor_state: closed | midAnchor | open  -- bottom only; closed for left/right
+    is_registered: Boolean
+}
+
+surface SidebarsMap {
+    facing reader: Consumer
+
+    context provider: SwipeBarProvider
+
+    -- Lookups by id return the instance only if currently registered. This is
+    -- the contract that the TS type must reflect (State | undefined).
+    exposes:
+        for instance in provider.left_registry where is_registered:
+            instance.id, instance.is_open, instance.meta
+        for instance in provider.right_registry where is_registered:
+            instance.id, instance.is_open, instance.meta
+        for instance in provider.bottom_registry where is_registered:
+            instance.id, instance.is_open, instance.meta, instance.anchor_state
+
+    guarantee:
+        -- A lookup with an id that has not yet registered (or has unregistered)
+        -- returns nothing. Consumers must handle this case before reading fields.
+        for side in {left, right, bottom}:
+            for id in any String:
+                if not exists instance in provider.{side}_registry
+                   with instance.id = id and instance.is_registered:
+                    lookup(side, id) = undefined
+}
+
+rule SidebarRegisters {
+    when: SwipeBarMount(provider, id, side)
+    requires: not exists existing in provider.{side}_registry with existing.id = id
+    ensures:
+        SidebarInstance.created(
+            id: id,
+            side: side,
+            is_open: false,
+            meta: null,
+            anchor_state: closed,
+            is_registered: true
+        )
+}
+
+rule SidebarUnregisters {
+    when: SwipeBarUnmount(provider, id, side)
+    let instance = provider.{side}_registry.find(i => i.id = id)
+    requires: instance != null
+    ensures: not exists instance
+}
+
+rule MapLookupBeforeRegistration {
+    -- Documents the pre registration window. A consumer hook that runs in the
+    -- same render as the provider but before the SwipeBar* child has mounted
+    -- will observe undefined for its id. Consumers must guard.
+    when: ConsumerReads(provider, id, side)
+    requires: not exists instance in provider.{side}_registry with instance.id = id
+    ensures: ReadResult(value: undefined)
+}
+
+open question "Should the provider accept a declared id list at construction so entries can be pre seeded and lookups be non null from the first render?"

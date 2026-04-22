@@ -168,7 +168,7 @@ describe("meta – runtime behaviour", () => {
 
 		it("defaults to null on registration", () => {
 			const { result } = setupBottom();
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe(null);
 		});
 
 		it("openSidebar sets bottom meta", () => {
@@ -176,7 +176,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.openSidebar("bottom", { id: "sheet", meta: { type: "confirm" } });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toEqual({ type: "confirm" });
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toEqual({ type: "confirm" });
 		});
 
 		it("closeSidebar sets bottom meta", () => {
@@ -184,7 +184,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.closeSidebar("bottom", { id: "sheet", meta: "closing-data" });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("closing-data");
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe("closing-data");
 		});
 
 		it("preserves bottom meta when no meta/resetMeta provided", () => {
@@ -195,7 +195,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.closeSidebar("bottom", { id: "sheet" });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("keep");
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe("keep");
 		});
 
 		it("resetMeta clears bottom meta to null", () => {
@@ -206,7 +206,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.closeSidebar("bottom", { id: "sheet", resetMeta: true });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe(null);
 		});
 
 		it("unregister removes bottom entry including meta", () => {
@@ -225,7 +225,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.openSidebarToMidAnchor("bottom", { id: "sheet", meta: "mid" });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("mid");
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe("mid");
 		});
 
 		it("openSidebarFully sets bottom meta", () => {
@@ -233,7 +233,7 @@ describe("meta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.openSidebarFully("bottom", { id: "sheet", meta: "full" });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("full");
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe("full");
 		});
 	});
 });
@@ -308,7 +308,7 @@ describe("setMeta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.setMeta("bottom", { id: "sheet", meta: { filter: "active" } });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toEqual({ filter: "active" });
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toEqual({ filter: "active" });
 		});
 
 		it("setMeta('bottom', { id, meta: null }) clears bottom meta", () => {
@@ -316,11 +316,11 @@ describe("setMeta – runtime behaviour", () => {
 			act(() => {
 				result.current.ctx.setMeta("bottom", { id: "sheet", meta: "data" });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe("data");
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe("data");
 			act(() => {
 				result.current.ctx.setMeta("bottom", { id: "sheet", meta: null });
 			});
-			expect(result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+			expect(result.current.ctx.bottomSidebars.sheet?.meta).toBe(null);
 		});
 	});
 });
@@ -394,12 +394,12 @@ describe("resetMetaOnClose", () => {
 		act(() => {
 			hookResult.result.current.ctx.openSidebar("bottom", { id: "sheet", meta: "data" });
 		});
-		expect(hookResult.result.current.ctx.bottomSidebars.sheet.meta).toBe("data");
+		expect(hookResult.result.current.ctx.bottomSidebars.sheet?.meta).toBe("data");
 
 		act(() => {
 			hookResult.result.current.ctx.closeSidebar("bottom", { id: "sheet" });
 		});
-		expect(hookResult.result.current.ctx.bottomSidebars.sheet.meta).toBe(null);
+		expect(hookResult.result.current.ctx.bottomSidebars.sheet?.meta).toBe(null);
 	});
 
 	it("explicit meta in closeSidebar opts overrides resetMetaOnClose", () => {
@@ -481,19 +481,21 @@ describe("meta – type narrowing", () => {
 			expect(_opts).toBeTruthy();
 		});
 
-		it("bottomSidebars is Record<string, TBottomSidebarState>", () => {
-			expectTypeOf<TCtxDefault["bottomSidebars"]>().toExtend<Record<string, TBottomSidebarState>>();
-		});
-
-		it("leftSidebars is Record<string, TLeftRightSidebarState>", () => {
-			expectTypeOf<TCtxDefault["leftSidebars"]>().toExtend<
-				Record<string, TLeftRightSidebarState>
+		it("bottomSidebars is Record<string, TBottomSidebarState | undefined>", () => {
+			expectTypeOf<TCtxDefault["bottomSidebars"]>().toExtend<
+				Record<string, TBottomSidebarState | undefined>
 			>();
 		});
 
-		it("rightSidebars is Record<string, TLeftRightSidebarState>", () => {
+		it("leftSidebars is Record<string, TLeftRightSidebarState | undefined>", () => {
+			expectTypeOf<TCtxDefault["leftSidebars"]>().toExtend<
+				Record<string, TLeftRightSidebarState | undefined>
+			>();
+		});
+
+		it("rightSidebars is Record<string, TLeftRightSidebarState | undefined>", () => {
 			expectTypeOf<TCtxDefault["rightSidebars"]>().toExtend<
-				Record<string, TLeftRightSidebarState>
+				Record<string, TLeftRightSidebarState | undefined>
 			>();
 		});
 	});
@@ -507,18 +509,24 @@ describe("meta – type narrowing", () => {
 			expectTypeOf<TCtx["rightMeta"]>().toEqualTypeOf<number | null>();
 		});
 
-		it("known bottom key has typed meta", () => {
-			expectTypeOf<TCtx["bottomSidebars"]["sheet"]["meta"]>().toEqualTypeOf<{
+		it("known bottom key has typed meta (entry possibly undefined until registered)", () => {
+			expectTypeOf<NonNullable<TCtx["bottomSidebars"]["sheet"]>["meta"]>().toEqualTypeOf<{
 				action: string;
 			} | null>();
 		});
 
-		it("known bottom key (picker) has typed meta", () => {
-			expectTypeOf<TCtx["bottomSidebars"]["picker"]["meta"]>().toEqualTypeOf<boolean | null>();
+		it("known bottom key (picker) has typed meta (entry possibly undefined until registered)", () => {
+			expectTypeOf<NonNullable<TCtx["bottomSidebars"]["picker"]>["meta"]>().toEqualTypeOf<
+				boolean | null
+			>();
 		});
 
-		it("unknown bottom key falls back to TBottomSidebarState", () => {
-			expectTypeOf<TCtx["bottomSidebars"]["unknown"]>().toExtend<TBottomSidebarState>();
+		it("known bottom key entry is possibly undefined", () => {
+			expectTypeOf<TCtx["bottomSidebars"]["sheet"]>().toExtend<TBottomSidebarState | undefined>();
+		});
+
+		it("unknown bottom key falls back to TBottomSidebarState | undefined", () => {
+			expectTypeOf<TCtx["bottomSidebars"]["unknown"]>().toExtend<TBottomSidebarState | undefined>();
 		});
 	});
 
@@ -700,8 +708,8 @@ describe("multi-instance left/right", () => {
 			});
 
 			expect(hookResult.result.current.ctx.leftSidebars.nav).toBeDefined();
-			expect(hookResult.result.current.ctx.leftSidebars.nav.isOpen).toBe(false);
-			expect(hookResult.result.current.ctx.leftSidebars.nav.meta).toBe(null);
+			expect(hookResult.result.current.ctx.leftSidebars.nav?.isOpen).toBe(false);
+			expect(hookResult.result.current.ctx.leftSidebars.nav?.meta).toBe(null);
 		});
 
 		it("registering two left sidebars creates independent entries", () => {
@@ -745,8 +753,8 @@ describe("multi-instance left/right", () => {
 			});
 
 			expect(hookResult.result.current.ctx.rightSidebars["panel-a"]).toBeDefined();
-			expect(hookResult.result.current.ctx.rightSidebars["panel-a"].isOpen).toBe(false);
-			expect(hookResult.result.current.ctx.rightSidebars["panel-a"].meta).toBe(null);
+			expect(hookResult.result.current.ctx.rightSidebars["panel-a"]?.isOpen).toBe(false);
+			expect(hookResult.result.current.ctx.rightSidebars["panel-a"]?.meta).toBe(null);
 		});
 
 		it("unregistering removes entry from rightSidebars", () => {
@@ -771,8 +779,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("left", { id: "nav", meta: "nav-data" });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe("nav-data");
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe(null);
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe("nav-data");
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe(null);
 		});
 
 		it("opening left nav and left settings independently, both receive meta", () => {
@@ -785,8 +793,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("left", { id: "settings", meta: "settings-meta" });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe("nav-meta");
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe("settings-meta");
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe("nav-meta");
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe("settings-meta");
 		});
 
 		it("closing left nav with resetMeta does not affect left settings meta", () => {
@@ -802,8 +810,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.closeSidebar("left", { id: "nav", resetMeta: true });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe(null);
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe("settings-data");
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe(null);
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe("settings-data");
 		});
 
 		it("opening right panel-a meta does not affect right panel-b meta", () => {
@@ -813,8 +821,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("right", { id: "panel-a", meta: "a-data" });
 			});
 
-			expect(result.current.ctx.rightSidebars["panel-a"].meta).toBe("a-data");
-			expect(result.current.ctx.rightSidebars["panel-b"].meta).toBe(null);
+			expect(result.current.ctx.rightSidebars["panel-a"]?.meta).toBe("a-data");
+			expect(result.current.ctx.rightSidebars["panel-b"]?.meta).toBe(null);
 		});
 
 		it("closing right panel-a with resetMeta does not affect right panel-b meta", () => {
@@ -830,8 +838,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.closeSidebar("right", { id: "panel-a", resetMeta: true });
 			});
 
-			expect(result.current.ctx.rightSidebars["panel-a"].meta).toBe(null);
-			expect(result.current.ctx.rightSidebars["panel-b"].meta).toBe("b-data");
+			expect(result.current.ctx.rightSidebars["panel-a"]?.meta).toBe(null);
+			expect(result.current.ctx.rightSidebars["panel-b"]?.meta).toBe("b-data");
 		});
 	});
 
@@ -843,7 +851,7 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("left", { id: "nav", meta: { route: "/home" } });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toEqual({ route: "/home" });
+			expect(result.current.ctx.leftSidebars.nav?.meta).toEqual({ route: "/home" });
 		});
 
 		it("openSidebar sets meta on specific right instance by id", () => {
@@ -853,7 +861,7 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("right", { id: "panel-b", meta: 99 });
 			});
 
-			expect(result.current.ctx.rightSidebars["panel-b"].meta).toBe(99);
+			expect(result.current.ctx.rightSidebars["panel-b"]?.meta).toBe(99);
 		});
 
 		it("meta on one left instance does not affect another", () => {
@@ -863,8 +871,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("left", { id: "nav", meta: "nav-only" });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe("nav-only");
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe(null);
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe("nav-only");
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe(null);
 		});
 
 		it("closeSidebar with resetMeta only resets targeted instance", () => {
@@ -880,8 +888,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.closeSidebar("left", { id: "settings", resetMeta: true });
 			});
 
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe("nav-m");
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe(null);
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe("nav-m");
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe(null);
 		});
 
 		it("setMeta with id targets specific left instance", () => {
@@ -891,8 +899,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.setMeta("left", { id: "settings", meta: "targeted" });
 			});
 
-			expect(result.current.ctx.leftSidebars.settings.meta).toBe("targeted");
-			expect(result.current.ctx.leftSidebars.nav.meta).toBe(null);
+			expect(result.current.ctx.leftSidebars.settings?.meta).toBe("targeted");
+			expect(result.current.ctx.leftSidebars.nav?.meta).toBe(null);
 		});
 
 		it("setMeta with id targets specific right instance", () => {
@@ -902,8 +910,8 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.setMeta("right", { id: "panel-a", meta: "targeted-right" });
 			});
 
-			expect(result.current.ctx.rightSidebars["panel-a"].meta).toBe("targeted-right");
-			expect(result.current.ctx.rightSidebars["panel-b"].meta).toBe(null);
+			expect(result.current.ctx.rightSidebars["panel-a"]?.meta).toBe("targeted-right");
+			expect(result.current.ctx.rightSidebars["panel-b"]?.meta).toBe(null);
 		});
 	});
 
@@ -945,7 +953,7 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.openSidebar("left", { meta: "no-id" });
 			});
 
-			expect(result.current.ctx.leftSidebars.primary.meta).toBe("no-id");
+			expect(result.current.ctx.leftSidebars.primary?.meta).toBe("no-id");
 			expect(result.current.ctx.leftMeta).toBe("no-id");
 		});
 
@@ -959,7 +967,7 @@ describe("multi-instance left/right", () => {
 				result.current.ctx.closeSidebar("right", { resetMeta: true });
 			});
 
-			expect(result.current.ctx.rightSidebars.primary.meta).toBe(null);
+			expect(result.current.ctx.rightSidebars.primary?.meta).toBe(null);
 			expect(result.current.ctx.rightMeta).toBe(null);
 		});
 	});
@@ -1004,8 +1012,8 @@ describe("multi-instance left/right", () => {
 				hookResult.result.current.ctx.openSidebar("left", { id: "nav", meta: "left-nav" });
 			});
 
-			expect(hookResult.result.current.ctx.leftSidebars.nav.meta).toBe("left-nav");
-			expect(hookResult.result.current.ctx.rightSidebars.panel.meta).toBe(null);
+			expect(hookResult.result.current.ctx.leftSidebars.nav?.meta).toBe("left-nav");
+			expect(hookResult.result.current.ctx.rightSidebars.panel?.meta).toBe(null);
 		});
 
 		it("bottom instance meta does not affect left instances", () => {
@@ -1050,8 +1058,8 @@ describe("multi-instance left/right", () => {
 				});
 			});
 
-			expect(hookResult.result.current.ctx.bottomSidebars.sheet.meta).toBe("bottom-data");
-			expect(hookResult.result.current.ctx.leftSidebars.nav.meta).toBe(null);
+			expect(hookResult.result.current.ctx.bottomSidebars.sheet?.meta).toBe("bottom-data");
+			expect(hookResult.result.current.ctx.leftSidebars.nav?.meta).toBe(null);
 		});
 	});
 });
