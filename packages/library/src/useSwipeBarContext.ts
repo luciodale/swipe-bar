@@ -90,27 +90,30 @@ type TSetMetaFn<TMap extends TSidebarMetaMap> = <S extends TSidebarSide>(
 	metaOrOpts: TSetMetaCallArg<TMap, S>,
 ) => void;
 
+// Sidebar entries are populated lazily by registerLeftSidebar / registerRightSidebar /
+// registerBottomSidebar after the matching SwipeBar* component mounts. Until that runs,
+// the entry is missing — so typed access must reflect that lookups can be undefined.
 type TTypedLeftRightSidebars<
 	TMap extends TSidebarMetaMap,
 	S extends "left" | "right",
 > = S extends keyof TMap
 	? TMap[S] extends Record<string, unknown>
 		? {
-				[K in keyof TMap[S]]: TLeftRightSidebarState & {
+				[K in keyof TMap[S]]?: TLeftRightSidebarState & {
 					meta: TMap[S][K] | null;
 				};
-			} & Record<string, TLeftRightSidebarState>
-		: Record<string, TLeftRightSidebarState>
-	: Record<string, TLeftRightSidebarState>;
+			} & Record<string, TLeftRightSidebarState | undefined>
+		: Record<string, TLeftRightSidebarState | undefined>
+	: Record<string, TLeftRightSidebarState | undefined>;
 
 type TTypedBottomSidebars<TMap extends TSidebarMetaMap> =
 	TMap["bottom"] extends Record<string, unknown>
 		? {
-				[K in keyof TMap["bottom"]]: TBottomSidebarState & {
+				[K in keyof TMap["bottom"]]?: TBottomSidebarState & {
 					meta: TMap["bottom"][K] | null;
 				};
-			} & Record<string, TBottomSidebarState>
-		: Record<string, TBottomSidebarState>;
+			} & Record<string, TBottomSidebarState | undefined>
+		: Record<string, TBottomSidebarState | undefined>;
 
 type TSwipeSidebarContext<TMap extends TSidebarMetaMap = object> = Omit<
 	TSwipeSidebarContextInternal,
