@@ -66,6 +66,8 @@ export const prerender = true;
   defaultOpen={false}          // open on mount
   resetMetaOnClose={false}     // clear meta when sidebar closes
   disabled={false}             // disable this specific sidebar
+  showRail={false}             // left/right only: close to icon rail on desktop
+  railWidthPx={64}             // rail width when showRail is on
 
   // Override any provider-level option:
   sidebarWidthPx={400}
@@ -120,6 +122,27 @@ export const prerender = true;
 			breakpoint below which swipe gestures activate. Above this width,
 			sidebars respond only to toggle clicks and programmatic control.
 			Default is 640px.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">Viewport reconciliation</strong> —
+			whenever the viewport crosses
+			<InlineCode>mediaQueryWidth</InlineCode> (in either direction), any
+			open sidebar is closed automatically with no animation. The sidebar
+			ends up in the appropriate close-state for the new viewport: fully
+			hidden on mobile, or — if <InlineCode>showRail</InlineCode> is on —
+			the rail on desktop. This keeps state, overlays, and body scroll lock
+			in sync across resizes.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">showRail</strong> turns the desktop
+			close-state into a narrow icon column instead of fully hiding. Set
+			<InlineCode>railWidthPx</InlineCode> to control its width (default
+			64). Rail items remain interactive; the focus trap only activates in
+			the open mode. On viewports below
+			<InlineCode>mediaQueryWidth</InlineCode>, rail is suppressed and the
+			sidebar uses the traditional overlay close. The built-in toggle is
+			hidden on desktop while the rail is showing — the rail itself is the
+			affordance.
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">disabled</strong> completely shuts down

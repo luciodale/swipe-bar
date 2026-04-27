@@ -401,11 +401,11 @@ describe("showRail — viewport reconciliation", () => {
 		expect(sidebar?.style.transform).toBe("translateX(-100%)");
 	});
 
-	it("open survives viewport change in either direction", async () => {
+	it("open closes on viewport cross, then settles into rail back on desktop", async () => {
 		setViewportWidth(DESKTOP_INNER_WIDTH);
 
 		renderWithProvider(
-			<SwipeBarLeft showRail defaultOpen sidebarWidthPx={300}>
+			<SwipeBarLeft showRail defaultOpen sidebarWidthPx={300} railWidthPx={64}>
 				<div>Content</div>
 			</SwipeBarLeft>,
 		);
@@ -415,17 +415,26 @@ describe("showRail — viewport reconciliation", () => {
 			expect(sidebar).toHaveAttribute("aria-modal", "true");
 		});
 
-		// Resize to small — open should persist
+		// Resize to small — open is reset (overlay UX expects fresh state on the
+		// new breakpoint).
 		act(() => {
 			setViewportWidth(SMALL_INNER_WIDTH);
 		});
-		expect(sidebar).toHaveAttribute("aria-modal", "true");
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("aria-modal", "false");
+			expect(sidebar).toHaveAttribute("inert");
+		});
 
-		// Resize back to large — open should still persist
+		// Resize back to large — rail reconciliation lands the sidebar in rail
+		// (visible icon column, not fully hidden).
 		act(() => {
 			setViewportWidth(DESKTOP_INNER_WIDTH);
 		});
-		expect(sidebar).toHaveAttribute("aria-modal", "true");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+			expect(sidebar?.style.width).toBe("64px");
+		});
+		expect(sidebar).toHaveAttribute("aria-modal", "false");
 	});
 });
 

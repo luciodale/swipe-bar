@@ -10,6 +10,7 @@ import {
 } from "react";
 import {
 	applyClosePaneStyles,
+	applyClosePaneStylesImmediate,
 	applyDragPaneStyles,
 	applyDragPaneStylesBottom,
 	applyMidAnchorPaneStyles,
@@ -822,7 +823,10 @@ export const SwipeBarProvider = ({
 						},
 					});
 				} else {
-					applyClosePaneStyles({
+					const applyClose = opts?.skipTransition
+						? applyClosePaneStylesImmediate
+						: applyClosePaneStyles;
+					applyClose({
 						ref: lRefs.sidebarRef,
 						options: lOpts,
 						toggleRef: lRefs.toggleRef,
@@ -861,7 +865,10 @@ export const SwipeBarProvider = ({
 						},
 					});
 				} else {
-					applyClosePaneStyles({
+					const applyClose = opts?.skipTransition
+						? applyClosePaneStylesImmediate
+						: applyClosePaneStyles;
+					applyClose({
 						ref: rRefs.sidebarRef,
 						options: rOpts,
 						toggleRef: rRefs.toggleRef,
@@ -884,7 +891,10 @@ export const SwipeBarProvider = ({
 						: opts;
 				applyBottomMeta(id, effectiveOpts);
 
-				applyClosePaneStyles({
+				const applyClose = opts?.skipTransition
+					? applyClosePaneStylesImmediate
+					: applyClosePaneStyles;
+				applyClose({
 					ref: bRefs.sidebarRef,
 					options: bOpts,
 					toggleRef: bRefs.toggleRef,

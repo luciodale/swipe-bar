@@ -361,6 +361,52 @@ type TApplyClosePaneStyles = {
 	afterApply: () => void;
 };
 
+export const applyClosePaneStylesImmediate = ({
+	ref,
+	options,
+	side,
+	toggleRef,
+	afterApply,
+}: TApplyClosePaneStyles) => {
+	if (!ref.current) return;
+	const child = getChildElement(ref);
+
+	if (side === "left" || side === "right") {
+		if (child && options.sidebarWidthPx) child.style.minWidth = `${options.sidebarWidthPx}px`;
+	} else if (side === "bottom") {
+		if (child && options.sidebarHeightPx) child.style.minHeight = `${options.sidebarHeightPx}px`;
+	} else {
+		assertNever(side);
+	}
+
+	ref.current.style.transition = "none";
+	if (side === "left") {
+		ref.current.style.transform = "translateX(-100%)";
+		if (!options.isAbsolute) ref.current.style.width = "0px";
+	} else if (side === "right") {
+		ref.current.style.transform = "translateX(100%)";
+		if (!options.isAbsolute) ref.current.style.width = "0px";
+	} else if (side === "bottom") {
+		ref.current.style.transform = "translateY(100%)";
+		if (!options.isAbsolute) ref.current.style.height = "0px";
+	}
+
+	if (toggleRef.current) {
+		toggleRef.current.style.opacity = "1";
+		if (side === "left" || side === "right") {
+			toggleRef.current.style.transform = "translateY(-50%)";
+		} else if (side === "bottom") {
+			toggleRef.current.style.transform = "translateX(-50%)";
+		}
+	}
+
+	if (child && options.fadeContent) {
+		child.style.opacity = "0";
+	}
+
+	afterApply();
+};
+
 export const applyClosePaneStyles = ({
 	ref,
 	options,

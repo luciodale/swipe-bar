@@ -9,6 +9,7 @@ import {
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
 import { ToggleLeft } from "../ToggleLeft";
+import { useCloseOnBreakpointChange } from "../useCloseOnBreakpointChange";
 import { useDefaultOpen } from "../useDefaultOpen";
 import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
@@ -65,17 +66,35 @@ export function SwipeBarLeft({
 	});
 
 	const optionsReady = !!leftSidebarOptionsMap[id];
+	const railReconcileFirstRun = useRef(true);
 	useEffect(() => {
 		if (!optionsReady) return;
-		if (defaultOpen) return;
-		// Reconcile rail vs closed for current viewport. closeSidebar already routes
-		// to rail when showRail && !isSmallScreen, and to hide otherwise.
+		// First effect phase: yield to useDefaultOpen so we don't fight it for
+		// the initial mode. Subsequent runs (viewport changes, manual close)
+		// reconcile rail vs closed via closeSidebar — provider already routes
+		// to rail when showRail && !isSmallScreen, hide otherwise.
+		if (defaultOpen && railReconcileFirstRun.current) {
+			railReconcileFirstRun.current = false;
+			return;
+		}
+		railReconcileFirstRun.current = false;
 		if (railEffective && !isOpen && !isRail) {
 			closeSidebar("left", { id, skipTransition: true });
 		} else if (!railEffective && isRail) {
 			closeSidebar("left", { id, skipTransition: true });
 		}
 	}, [optionsReady, defaultOpen, railEffective, isOpen, isRail, closeSidebar, id]);
+
+	const handleViewportClose = useCallback(
+		() => closeSidebar("left", { id, skipTransition: true }),
+		[closeSidebar, id],
+	);
+	useCloseOnBreakpointChange({
+		isSmallScreen,
+		isOpen,
+		optionsReady,
+		onClose: handleViewportClose,
+	});
 
 	const handleClose = useCallback(() => closeSidebar("left", { id }), [closeSidebar, id]);
 	useFocusTrap({
