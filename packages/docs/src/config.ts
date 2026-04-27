@@ -39,6 +39,7 @@ export const siteConfig: SiteConfig = {
 			title: "Examples",
 			links: [
 				{ href: "/example/left-right-sidebar", label: "Left & Right Sidebar" },
+				{ href: "/example/rail-sidebar", label: "Rail Sidebar" },
 				{ href: "/example/bottom-sheet", label: "Bottom Sheet" },
 				{ href: "/example/multi-instance", label: "Multi-Instance" },
 				{ href: "/example/multi-instance-left-right", label: "Multi-Instance Left & Right" },

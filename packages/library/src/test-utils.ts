@@ -92,6 +92,8 @@ export function makeOptions(overrides?: Partial<TSwipeBarOptions>): Required<TSw
 		disabled: false,
 		closeSidebarOnOverlayClick: true,
 		resetMetaOnClose: false,
+		showRail: false,
+		railWidthPx: 64,
 		...overrides,
 	};
 }

@@ -1,0 +1,116 @@
+---
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { RailSidebarDemo } from "../../components/demos/RailSidebar";
+import DocsPage from "../../layouts/DocsPage.astro";
+
+export const prerender = true;
+---
+
+<DocsPage title="Rail Sidebar" description="Sidebar that collapses to an icon rail on desktop instead of disappearing.">
+	<ContentSection label="Rail Sidebar">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			With <InlineCode>showRail</InlineCode>, closing the sidebar on desktop
+			leaves a narrow icon column visible (the rail) instead of fully
+			hiding. The rail is interactive, so users can click icons or tap an
+			expand button to come back to the full panel. On viewports below
+			<InlineCode>mediaQueryWidth</InlineCode>, rail is suppressed and the
+			sidebar reverts to the traditional overlay close behavior.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Live Demo">
+		<RailSidebarDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Add <InlineCode>showRail</InlineCode> and an optional
+			<InlineCode>railWidthPx</InlineCode> (defaults to 64). Read
+			<InlineCode>isLeftRail</InlineCode> from context to render compact
+			content while in rail mode:
+		</p>
+		<CodeBlock
+			code={`import {
+  SwipeBarProvider,
+  SwipeBarLeft,
+  useSwipeBarContext,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider>
+      <Layout />
+    </SwipeBarProvider>
+  );
+}
+
+function Layout() {
+  const { openSidebar, closeSidebar, isLeftOpen, isLeftRail } =
+    useSwipeBarContext();
+
+  const showLabels = isLeftOpen;
+
+  return (
+    <div className="flex h-full w-full">
+      <SwipeBarLeft showRail railWidthPx={64} sidebarWidthPx={240}>
+        <div className="flex flex-col p-2">
+          <button
+            onClick={() => (isLeftOpen ? closeSidebar("left") : openSidebar("left"))}
+            aria-label={isLeftOpen ? "Collapse" : "Expand"}
+          >
+            {isLeftOpen ? "←" : "→"}
+          </button>
+          <nav>
+            <button>
+              <span aria-hidden="true">▤</span>
+              {showLabels && <span>Dashboard</span>}
+            </button>
+            {/* ...more items */}
+          </nav>
+        </div>
+      </SwipeBarLeft>
+
+      <main>{/* page content */}</main>
+    </div>
+  );
+}`}
+			language="tsx"
+			filename="RailExample.tsx"
+		/>
+	</ContentSection>
+
+	<ContentSection label="How it behaves">
+		<ul class="text-white/60 leading-relaxed list-disc pl-6 space-y-2">
+			<li>
+				Mounting with <InlineCode>showRail</InlineCode> and no
+				<InlineCode>defaultOpen</InlineCode> on desktop renders the rail
+				immediately at <InlineCode>railWidthPx</InlineCode>.
+			</li>
+			<li>
+				<InlineCode>closeSidebar</InlineCode> on desktop transitions to the
+				rail; on small viewports it fully hides.
+			</li>
+			<li>
+				<InlineCode>openSidebar</InlineCode> always lands in the open mode
+				(full <InlineCode>sidebarWidthPx</InlineCode>) and clears the rail
+				flag.
+			</li>
+			<li>
+				The built-in toggle is hidden when the rail is showing on desktop —
+				the rail itself is the affordance. On small viewports, the toggle
+				reappears since the rail is suppressed.
+			</li>
+			<li>
+				Rail items are interactive (<InlineCode>inert</InlineCode> is
+				cleared); the focus trap only activates in the open mode.
+			</li>
+			<li>
+				Crossing <InlineCode>mediaQueryWidth</InlineCode> reconciles
+				automatically: closed → rail when entering desktop; rail → closed
+				when entering mobile. Open survives both directions.
+			</li>
+		</ul>
+	</ContentSection>
+</DocsPage>

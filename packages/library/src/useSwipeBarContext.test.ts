@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode, useRef } from "react";
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { SwipeBarProvider } from "./SwipeBarProvider";
 import type { TBottomSidebarState, TLeftRightSidebarState } from "./swipeSidebarShared";
 import { makeOptions } from "./test-utils";
@@ -443,6 +443,45 @@ describe("resetMetaOnClose", () => {
 		});
 		expect(result.current.ctx.leftMeta).toBe("keep-me");
 	});
+});
+
+// ─── showRail / isRail state ─────────────────────────────────────────
+
+describe("showRail — provider state", () => {
+	beforeEach(() => {
+		vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+			cb(0);
+			return 0;
+		});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("left sidebar registers with isRail=false", () => {
+		const { result } = setupLeft();
+		expect(result.current.ctx.leftSidebars.primary?.isRail).toBe(false);
+		expect(result.current.ctx.leftSidebars.primary?.isOpen).toBe(false);
+	});
+
+	it("right sidebar registers with isRail=false", () => {
+		const { result } = setupRight();
+		expect(result.current.ctx.rightSidebars.primary?.isRail).toBe(false);
+	});
+
+	it("isLeftRail back-compat alias reflects primary instance", () => {
+		const { result } = setupLeft();
+		expect(result.current.ctx.isLeftRail).toBe(false);
+	});
+
+	it("isRightRail back-compat alias reflects primary instance", () => {
+		const { result } = setupRight();
+		expect(result.current.ctx.isRightRail).toBe(false);
+	});
+
+	// Behavior tests for rail/close routing live in __tests__/rail.test.tsx —
+	// they require a real DOM ref so applyClose/applyRail can run end-to-end.
 });
 
 // ─── Type-level assertions ───────────────────────────────────────────
