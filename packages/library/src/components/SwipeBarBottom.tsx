@@ -9,6 +9,7 @@ import {
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
 import { ToggleBottom } from "../ToggleBottom";
+import { useCloseOnBreakpointChange } from "../useCloseOnBreakpointChange";
 import { useDefaultOpen } from "../useDefaultOpen";
 import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
@@ -56,10 +57,22 @@ export function SwipeBarBottom({
 		() => openSidebarFully("bottom", { id, skipTransition: true }),
 		[openSidebarFully, id],
 	);
+	const optionsReady = !!bottomSidebarOptionsMap[id];
 	const { forceOverlayVisible } = useDefaultOpen({
 		defaultOpen,
-		optionsReady: !!bottomSidebarOptionsMap[id],
+		optionsReady,
 		onOpen: handleDefaultOpen,
+	});
+
+	const handleViewportClose = useCallback(
+		() => closeSidebar("bottom", { id, skipTransition: true }),
+		[closeSidebar, id],
+	);
+	useCloseOnBreakpointChange({
+		isSmallScreen,
+		isOpen,
+		optionsReady,
+		onClose: handleViewportClose,
 	});
 
 	const handleClose = useCallback(() => closeSidebar("bottom", { id }), [closeSidebar, id]);

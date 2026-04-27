@@ -108,8 +108,10 @@ function Layout() {
 			</li>
 			<li>
 				Crossing <InlineCode>mediaQueryWidth</InlineCode> reconciles
-				automatically: closed → rail when entering desktop; rail → closed
-				when entering mobile. Open survives both directions.
+				automatically. Any open sidebar is closed first (no animation),
+				then the new viewport's close-state takes over: rail on desktop,
+				fully hidden on mobile. Open does not survive a viewport cross —
+				it always resets to the appropriate close-state.
 			</li>
 		</ul>
 	</ContentSection>

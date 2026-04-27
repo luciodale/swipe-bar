@@ -9,6 +9,7 @@ import {
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
 import { ToggleRight } from "../ToggleRight";
+import { useCloseOnBreakpointChange } from "../useCloseOnBreakpointChange";
 import { useDefaultOpen } from "../useDefaultOpen";
 import { useFocusTrap } from "../useFocusTrap";
 import { useMediaQuery } from "../useMediaQuery";
@@ -65,15 +66,31 @@ export function SwipeBarRight({
 	});
 
 	const optionsReady = !!rightSidebarOptionsMap[id];
+	const railReconcileFirstRun = useRef(true);
 	useEffect(() => {
 		if (!optionsReady) return;
-		if (defaultOpen) return;
+		if (defaultOpen && railReconcileFirstRun.current) {
+			railReconcileFirstRun.current = false;
+			return;
+		}
+		railReconcileFirstRun.current = false;
 		if (railEffective && !isOpen && !isRail) {
 			closeSidebar("right", { id, skipTransition: true });
 		} else if (!railEffective && isRail) {
 			closeSidebar("right", { id, skipTransition: true });
 		}
 	}, [optionsReady, defaultOpen, railEffective, isOpen, isRail, closeSidebar, id]);
+
+	const handleViewportClose = useCallback(
+		() => closeSidebar("right", { id, skipTransition: true }),
+		[closeSidebar, id],
+	);
+	useCloseOnBreakpointChange({
+		isSmallScreen,
+		isOpen,
+		optionsReady,
+		onClose: handleViewportClose,
+	});
 
 	const handleClose = useCallback(() => closeSidebar("right", { id }), [closeSidebar, id]);
 	useFocusTrap({
