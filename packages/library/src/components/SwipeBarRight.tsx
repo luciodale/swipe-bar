@@ -51,6 +51,8 @@ export function SwipeBarRight({
 	useSwipeRightSidebar(options, id);
 
 	const isOpen = rightSidebars[id]?.isOpen ?? false;
+	const isRail = rightSidebars[id]?.isRail ?? false;
+	const railEffective = !!options.showRail && !isSmallScreen;
 
 	const handleDefaultOpen = useCallback(
 		() => openSidebar("right", { id, skipTransition: true }),
@@ -62,6 +64,17 @@ export function SwipeBarRight({
 		onOpen: handleDefaultOpen,
 	});
 
+	const optionsReady = !!rightSidebarOptionsMap[id];
+	useEffect(() => {
+		if (!optionsReady) return;
+		if (defaultOpen) return;
+		if (railEffective && !isOpen && !isRail) {
+			closeSidebar("right", { id, skipTransition: true });
+		} else if (!railEffective && isRail) {
+			closeSidebar("right", { id, skipTransition: true });
+		}
+	}, [optionsReady, defaultOpen, railEffective, isOpen, isRail, closeSidebar, id]);
+
 	const handleClose = useCallback(() => closeSidebar("right", { id }), [closeSidebar, id]);
 	useFocusTrap({
 		sidebarRef,
@@ -71,11 +84,13 @@ export function SwipeBarRight({
 		transitionMs: options.transitionMs,
 	});
 
+	const overlayCollapsed = (!isOpen || isRail) && !forceOverlayVisible;
+
 	return (
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isOpen && !forceOverlayVisible}
+					isCollapsed={overlayCollapsed}
 					setCollapsed={() => closeSidebar("right", { id })}
 					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
@@ -88,7 +103,7 @@ export function SwipeBarRight({
 				id={id}
 				toggleRef={toggleRef}
 				options={options}
-				showToggle={options.showToggle}
+				showToggle={options.showToggle && !railEffective}
 				ToggleComponent={ToggleComponent}
 			/>
 
@@ -98,7 +113,7 @@ export function SwipeBarRight({
 				role="dialog"
 				aria-modal={isOpen}
 				aria-label={ariaLabel ?? "Right sidebar"}
-				inert={!isOpen}
+				inert={!isOpen && !isRail}
 				style={{
 					...swipeBarStyle,
 					...rightSwipeBarInitialTransform,
@@ -107,7 +122,9 @@ export function SwipeBarRight({
 					zIndex: options.swipeBarZIndex,
 					...(defaultOpen
 						? { transform: "translateX(0px)", width: `${options.sidebarWidthPx}px` }
-						: {}),
+						: railEffective
+							? { transform: "translateX(0px)", width: `${options.railWidthPx}px` }
+							: {}),
 				}}
 				className={className}
 			>

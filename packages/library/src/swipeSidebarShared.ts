@@ -55,6 +55,8 @@ export type TSwipeBarOptions = {
 	disabled?: boolean;
 	closeSidebarOnOverlayClick?: boolean;
 	resetMetaOnClose?: boolean;
+	showRail?: boolean;
+	railWidthPx?: number;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -68,6 +70,7 @@ export type TSwipeSidebar = TSwipeBarOptions & {
 
 export type TLeftRightSidebarState = {
 	isOpen: boolean;
+	isRail: boolean;
 	meta: unknown;
 };
 
@@ -110,6 +113,8 @@ export const DEFAULT_TOGGLE_ICON_COLOR = "white";
 export const DEFAULT_TOGGLE_ICON_SIZE_PX = 40;
 export const DEFAULT_TOGGLE_ICON_EDGE_DISTANCE_PX = 40;
 export const SHOW_TOGGLE = true;
+export const SHOW_RAIL = false;
+export const RAIL_WIDTH_PX = 64;
 export const MEDIA_QUERY_WIDTH = 640;
 export const LATENCY_OPACITY_TRANSITION_MS = 100;
 export const DEFAULT_SWIPEBAR_Z_INDEX = 30;
@@ -421,6 +426,110 @@ export const applyClosePaneStyles = ({
 
 			if (child && options.fadeContent) {
 				child.style.opacity = "0";
+			}
+
+			afterApply();
+		});
+	});
+};
+
+type TApplyRailPaneStyles = {
+	ref: RefObject<HTMLDivElement | null>;
+	side: "left" | "right";
+	options: TSwipeBarOptions;
+	toggleRef: RefObject<HTMLDivElement | null>;
+	afterApply: () => void;
+};
+
+const getRailWidthPx = (options: TSwipeBarOptions): number => {
+	return options.railWidthPx ?? RAIL_WIDTH_PX;
+};
+
+const applyToggleRailPosition = (
+	toggleRef: RefObject<HTMLDivElement | null>,
+	side: "left" | "right",
+	railWidthPx: number,
+) => {
+	if (!toggleRef.current) return;
+	toggleRef.current.style.opacity = "1";
+	if (side === "left") {
+		toggleRef.current.style.transform = `translateY(-50%) translateX(${railWidthPx}px)`;
+	} else {
+		toggleRef.current.style.transform = `translateY(-50%) translateX(-${railWidthPx}px)`;
+	}
+};
+
+export const applyRailPaneStylesImmediate = ({
+	ref,
+	side,
+	options,
+	toggleRef,
+	afterApply,
+}: TApplyRailPaneStyles) => {
+	if (!ref.current) return;
+	const child = getChildElement(ref);
+	const railWidthPx = getRailWidthPx(options);
+
+	if (child) {
+		child.style.minWidth = `${railWidthPx}px`;
+	}
+
+	ref.current.style.transition = "none";
+	ref.current.style.transform = "translateX(0px)";
+	ref.current.style.width = `${railWidthPx}px`;
+	if (child) child.style.opacity = "1";
+	applyToggleRailPosition(toggleRef, side, railWidthPx);
+	afterApply();
+};
+
+export const applyRailPaneStyles = ({
+	ref,
+	side,
+	options,
+	toggleRef,
+	afterApply,
+}: TApplyRailPaneStyles) => {
+	const child = getChildElement(ref);
+	const railWidthPx = getRailWidthPx(options);
+
+	if (child) {
+		child.style.minWidth = `${railWidthPx}px`;
+	}
+
+	const delayMs = options.transitionMs ? options.transitionMs / 2 : 0;
+	if (child && options.fadeContent) {
+		child.style.opacity = "0";
+	}
+
+	requestAnimationFrame(() => {
+		if (!ref.current) return;
+		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = options.isAbsolute
+			? ""
+			: `, width ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
+		if (child && options.fadeContent) {
+			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
+		}
+
+		requestAnimationFrame(() => {
+			if (!ref.current) return;
+			ref.current.style.transform = "translateX(0px)";
+			if (!options.isAbsolute) {
+				ref.current.style.width = `${railWidthPx}px`;
+			} else if (ref.current.style.width !== `${railWidthPx}px`) {
+				const prevTransition = ref.current.style.transition;
+				ref.current.style.transition = transformTransition;
+				ref.current.style.width = `${railWidthPx}px`;
+				ref.current.style.transition = prevTransition;
+			}
+
+			applyToggleRailPosition(toggleRef, side, railWidthPx);
+
+			if (child && options.fadeContent) {
+				setTimeout(() => {
+					child.style.opacity = "1";
+				}, delayMs);
 			}
 
 			afterApply();
@@ -769,6 +878,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		disabled,
 		closeSidebarOnOverlayClick,
 		resetMetaOnClose,
+		showRail,
+		railWidthPx,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -802,6 +913,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			closeSidebarOnOverlayClick:
 				closeSidebarOnOverlayClick ?? globalOptions.closeSidebarOnOverlayClick,
 			resetMetaOnClose: resetMetaOnClose ?? globalOptions.resetMetaOnClose,
+			showRail: showRail ?? globalOptions.showRail,
+			railWidthPx: railWidthPx ?? globalOptions.railWidthPx,
 		};
 	}, [
 		sidebarWidthPx,
@@ -831,6 +944,8 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		disabled,
 		closeSidebarOnOverlayClick,
 		resetMetaOnClose,
+		showRail,
+		railWidthPx,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

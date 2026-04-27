@@ -4,6 +4,10 @@
 -- Entries are populated lazily by SwipeBar* components on mount, then removed on
 -- unmount. Consumers reading the maps at any other moment may observe a missing
 -- entry, so typed access yields State | undefined.
+--
+-- Left and right sidebars carry an additional rail mode controlled by the
+-- showRail prop. Rail is desktop-only (suppressed when viewport width is below
+-- mediaQueryWidth). Bottom sidebars do not support rail.
 
 entity SwipeBarProvider {
     -- Holds three independent registries keyed by sidebar id.
@@ -16,9 +20,16 @@ entity SidebarInstance {
     id: String
     side: left | right | bottom
     is_open: Boolean
+    is_rail: Boolean                         -- left/right only; always false for bottom
     meta: Any?
     anchor_state: closed | midAnchor | open  -- bottom only; closed for left/right
     is_registered: Boolean
+
+    -- Invariant: not (is_open and is_rail). At any moment the left/right sidebar
+    -- is in exactly one of three modes:
+    --   open:   is_open = true,  is_rail = false
+    --   rail:   is_open = false, is_rail = true   (left/right with showRail on desktop)
+    --   closed: is_open = false, is_rail = false
 }
 
 surface SidebarsMap {
@@ -30,9 +41,9 @@ surface SidebarsMap {
     -- the contract that the TS type must reflect (State | undefined).
     exposes:
         for instance in provider.left_registry where is_registered:
-            instance.id, instance.is_open, instance.meta
+            instance.id, instance.is_open, instance.is_rail, instance.meta
         for instance in provider.right_registry where is_registered:
-            instance.id, instance.is_open, instance.meta
+            instance.id, instance.is_open, instance.is_rail, instance.meta
         for instance in provider.bottom_registry where is_registered:
             instance.id, instance.is_open, instance.meta, instance.anchor_state
 
@@ -54,6 +65,7 @@ rule SidebarRegisters {
             id: id,
             side: side,
             is_open: false,
+            is_rail: false,
             meta: null,
             anchor_state: closed,
             is_registered: true
@@ -76,4 +88,105 @@ rule MapLookupBeforeRegistration {
     ensures: ReadResult(value: undefined)
 }
 
+rule CloseRoutesToRailWhenEnabled {
+    -- For left/right sidebars only. closeSidebar inspects showRail and the
+    -- current viewport width. When showRail is on AND viewport_width >=
+    -- options.mediaQueryWidth, the close action transitions to the rail mode
+    -- (visible at railWidthPx, interactive) rather than fully hiding.
+    when: ConsumerCalls.closeSidebar(provider, id, side)
+    requires:
+        side in {left, right}
+        and let opts = provider.{side}_options[id]
+        and opts.showRail = true
+        and viewport_width() >= opts.mediaQueryWidth
+    ensures:
+        instance.is_open = false
+        and instance.is_rail = true
+}
+
+rule CloseHidesOnSmallViewportEvenIfShowRail {
+    -- On viewports below mediaQueryWidth, rail is suppressed. close fully hides
+    -- so the small-screen overlay UX is preserved.
+    when: ConsumerCalls.closeSidebar(provider, id, side)
+    requires:
+        side in {left, right}
+        and let opts = provider.{side}_options[id]
+        and viewport_width() < opts.mediaQueryWidth
+    ensures:
+        instance.is_open = false
+        and instance.is_rail = false
+}
+
+rule OpenClearsRail {
+    -- openSidebar always lands in the open mode regardless of prior rail state.
+    when: ConsumerCalls.openSidebar(provider, id, side)
+    requires: side in {left, right}
+    ensures:
+        instance.is_open = true
+        and instance.is_rail = false
+}
+
+rule MountReconcilesRail {
+    -- On mount, when defaultOpen is not set, the SwipeBar* component reconciles
+    -- mode for the current viewport: rail if showRail and !small, otherwise
+    -- closed. Implemented via a closeSidebar({skipTransition: true}) call that
+    -- routes per the rules above.
+    when: SwipeBarMount(provider, id, side)
+    requires:
+        side in {left, right}
+        and let opts = provider.{side}_options[id]
+        and not opts.defaultOpen
+    ensures:
+        if opts.showRail and viewport_width() >= opts.mediaQueryWidth:
+            instance.is_rail = true
+        else:
+            instance.is_rail = false
+}
+
+rule ViewportTransitionReconcilesRail {
+    -- When viewport crosses mediaQueryWidth, mode reconciles to remain valid:
+    --   small -> large with mode=closed and showRail: transition to rail
+    --   large -> small with mode=rail: transition to closed
+    --   open is preserved across viewport changes.
+    when: ViewportCrossesMediaQuery(provider, id, side)
+    requires: side in {left, right}
+    ensures:
+        let opts = provider.{side}_options[id]
+        and let was_small_before = previous_viewport_width() < opts.mediaQueryWidth
+        and let is_small_now = viewport_width() < opts.mediaQueryWidth
+        and case:
+            (not is_small_now and was_small_before
+                and instance.is_open = false and instance.is_rail = false
+                and opts.showRail):
+                    instance.is_rail = true
+            (is_small_now and not was_small_before and instance.is_rail):
+                    instance.is_open = false and instance.is_rail = false
+            otherwise: state preserved
+}
+
+rule InertWhenClosed {
+    -- The dialog div sets inert when fully closed. Rail items must remain
+    -- interactive so inert is cleared when in rail mode.
+    when: SwipeBarLeftOrRight.render(instance)
+    ensures:
+        dialog.inert = (not instance.is_open and not instance.is_rail)
+        dialog.aria_modal = instance.is_open
+}
+
+rule BuiltInToggleHiddenInRail {
+    -- The built-in toggle button is the affordance for opening from a fully
+    -- hidden state. When the rail is the close-state on desktop, the rail
+    -- itself is the affordance (consumers place their own expand control in
+    -- rail content). Toggle stays visible on small viewport because rail does
+    -- not apply there.
+    when: ToggleLeft.render(instance) or ToggleRight.render(instance)
+    requires:
+        let opts = provider.{side}_options[instance.id]
+        and opts.showRail = true
+        and viewport_width() >= opts.mediaQueryWidth
+    ensures: toggle is not rendered
+}
+
 open question "Should the provider accept a declared id list at construction so entries can be pre seeded and lookups be non null from the first render?"
+
+open question "Should bottom sidebars also support a rail-equivalent (peek) mode separate from midAnchorPoint?"

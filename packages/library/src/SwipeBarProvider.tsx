@@ -16,6 +16,8 @@ import {
 	applyMidAnchorPaneStylesImmediate,
 	applyOpenPaneStyles,
 	applyOpenPaneStylesImmediate,
+	applyRailPaneStyles,
+	applyRailPaneStylesImmediate,
 	CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 	DEFAULT_OVERLAY_BACKGROUND_COLOR,
 	DEFAULT_OVERLAY_Z_INDEX,
@@ -34,7 +36,9 @@ import {
 	MID_ANCHOR_POINT,
 	PANE_HEIGHT_PX,
 	PANE_WIDTH_PX,
+	RAIL_WIDTH_PX,
 	SHOW_OVERLAY,
+	SHOW_RAIL,
 	SHOW_TOGGLE,
 	SWIPE_TO_CLOSE,
 	SWIPE_TO_OPEN,
@@ -61,6 +65,8 @@ export type TSwipeSidebarContextInternal = {
 	rightSidebarRef: React.RefObject<HTMLDivElement | null>;
 	isLeftOpen: boolean;
 	isRightOpen: boolean;
+	isLeftRail: boolean;
+	isRightRail: boolean;
 	leftSidebarOptions: TSwipeBarOptions;
 	rightSidebarOptions: TSwipeBarOptions;
 	leftToggleRef: React.RefObject<HTMLDivElement | null>;
@@ -119,6 +125,7 @@ const assertNever = (side: never): never => {
 
 const DEFAULT_LEFT_RIGHT_STATE: TLeftRightSidebarState = {
 	isOpen: false,
+	isRail: false,
 	meta: null,
 };
 
@@ -149,6 +156,8 @@ export const SwipeBarProvider = ({
 	fadeContentTransitionMs,
 	closeSidebarOnOverlayClick,
 	resetMetaOnClose,
+	showRail,
+	railWidthPx,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 
@@ -181,6 +190,7 @@ export const SwipeBarProvider = ({
 
 	// Backwards-compat: derive primary left state
 	const isLeftOpen = leftSidebars.primary?.isOpen ?? false;
+	const isLeftRail = leftSidebars.primary?.isRail ?? false;
 	const leftMeta = leftSidebars.primary?.meta ?? null;
 	const anyLeftOpen = useMemo(
 		() => Object.values(leftSidebars).some((s) => s.isOpen),
@@ -195,6 +205,7 @@ export const SwipeBarProvider = ({
 
 	// Backwards-compat: derive primary right state
 	const isRightOpen = rightSidebars.primary?.isOpen ?? false;
+	const isRightRail = rightSidebars.primary?.isRail ?? false;
 	const rightMeta = rightSidebars.primary?.meta ?? null;
 	const anyRightOpen = useMemo(
 		() => Object.values(rightSidebars).some((s) => s.isOpen),
@@ -248,6 +259,8 @@ export const SwipeBarProvider = ({
 		disabled: false,
 		closeSidebarOnOverlayClick: closeSidebarOnOverlayClick ?? CLOSE_SIDEBAR_ON_OVERLAY_CLICK,
 		resetMetaOnClose: resetMetaOnClose ?? false,
+		showRail: showRail ?? SHOW_RAIL,
+		railWidthPx: railWidthPx ?? RAIL_WIDTH_PX,
 	});
 
 	// --- Left registration ---
@@ -368,8 +381,16 @@ export const SwipeBarProvider = ({
 	const setLeftSidebarOpen = useCallback((id: string, open: boolean) => {
 		setLeftSidebars((prev) => {
 			const entry = prev[id] ?? DEFAULT_LEFT_RIGHT_STATE;
-			if (entry.isOpen === open) return prev;
-			return { ...prev, [id]: { ...entry, isOpen: open } };
+			if (entry.isOpen === open && !entry.isRail) return prev;
+			return { ...prev, [id]: { ...entry, isOpen: open, isRail: false } };
+		});
+	}, []);
+
+	const setLeftSidebarRail = useCallback((id: string) => {
+		setLeftSidebars((prev) => {
+			const entry = prev[id] ?? DEFAULT_LEFT_RIGHT_STATE;
+			if (!entry.isOpen && entry.isRail) return prev;
+			return { ...prev, [id]: { ...entry, isOpen: false, isRail: true } };
 		});
 	}, []);
 
@@ -385,8 +406,16 @@ export const SwipeBarProvider = ({
 	const setRightSidebarOpen = useCallback((id: string, open: boolean) => {
 		setRightSidebars((prev) => {
 			const entry = prev[id] ?? DEFAULT_LEFT_RIGHT_STATE;
-			if (entry.isOpen === open) return prev;
-			return { ...prev, [id]: { ...entry, isOpen: open } };
+			if (entry.isOpen === open && !entry.isRail) return prev;
+			return { ...prev, [id]: { ...entry, isOpen: open, isRail: false } };
+		});
+	}, []);
+
+	const setRightSidebarRail = useCallback((id: string) => {
+		setRightSidebars((prev) => {
+			const entry = prev[id] ?? DEFAULT_LEFT_RIGHT_STATE;
+			if (!entry.isOpen && entry.isRail) return prev;
+			return { ...prev, [id]: { ...entry, isOpen: false, isRail: true } };
 		});
 	}, []);
 
@@ -758,6 +787,11 @@ export const SwipeBarProvider = ({
 		],
 	);
 
+	const isViewportSmall = useCallback((mqWidth: number) => {
+		if (typeof window === "undefined") return false;
+		return window.innerWidth < mqWidth;
+	}, []);
+
 	const closeSidebar = useCallback(
 		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			if (side === "left") {
@@ -772,16 +806,33 @@ export const SwipeBarProvider = ({
 						: opts;
 				applyLeftRightMeta("left", id, effectiveOpts);
 
-				applyClosePaneStyles({
-					ref: lRefs.sidebarRef,
-					options: lOpts,
-					toggleRef: lRefs.toggleRef,
-					side,
-					afterApply: () => {
-						setLeftSidebarOpen(id, false);
-						popLeftFocus(id);
-					},
-				});
+				const shouldRail = lOpts.showRail && !isViewportSmall(lOpts.mediaQueryWidth);
+				if (shouldRail) {
+					const applyRail = opts?.skipTransition
+						? applyRailPaneStylesImmediate
+						: applyRailPaneStyles;
+					applyRail({
+						ref: lRefs.sidebarRef,
+						side: "left",
+						options: lOpts,
+						toggleRef: lRefs.toggleRef,
+						afterApply: () => {
+							setLeftSidebarRail(id);
+							popLeftFocus(id);
+						},
+					});
+				} else {
+					applyClosePaneStyles({
+						ref: lRefs.sidebarRef,
+						options: lOpts,
+						toggleRef: lRefs.toggleRef,
+						side,
+						afterApply: () => {
+							setLeftSidebarOpen(id, false);
+							popLeftFocus(id);
+						},
+					});
+				}
 			} else if (side === "right") {
 				const id = opts?.id ?? "primary";
 				const rOpts = rightSidebarOptionsMap[id];
@@ -794,16 +845,33 @@ export const SwipeBarProvider = ({
 						: opts;
 				applyLeftRightMeta("right", id, effectiveOpts);
 
-				applyClosePaneStyles({
-					ref: rRefs.sidebarRef,
-					options: rOpts,
-					toggleRef: rRefs.toggleRef,
-					side,
-					afterApply: () => {
-						setRightSidebarOpen(id, false);
-						popRightFocus(id);
-					},
-				});
+				const shouldRail = rOpts.showRail && !isViewportSmall(rOpts.mediaQueryWidth);
+				if (shouldRail) {
+					const applyRail = opts?.skipTransition
+						? applyRailPaneStylesImmediate
+						: applyRailPaneStyles;
+					applyRail({
+						ref: rRefs.sidebarRef,
+						side: "right",
+						options: rOpts,
+						toggleRef: rRefs.toggleRef,
+						afterApply: () => {
+							setRightSidebarRail(id);
+							popRightFocus(id);
+						},
+					});
+				} else {
+					applyClosePaneStyles({
+						ref: rRefs.sidebarRef,
+						options: rOpts,
+						toggleRef: rRefs.toggleRef,
+						side,
+						afterApply: () => {
+							setRightSidebarOpen(id, false);
+							popRightFocus(id);
+						},
+					});
+				}
 			} else if (side === "bottom") {
 				const id = opts?.id ?? "primary";
 				const bOpts = bottomSidebarOptionsMap[id];
@@ -839,11 +907,14 @@ export const SwipeBarProvider = ({
 			setRightSidebarOpen,
 			setBottomSidebarOpen,
 			setBottomAnchorState,
+			setLeftSidebarRail,
+			setRightSidebarRail,
 			popLeftFocus,
 			popRightFocus,
 			popBottomFocus,
 			applyLeftRightMeta,
 			applyBottomMeta,
+			isViewportSmall,
 		],
 	);
 
@@ -902,6 +973,8 @@ export const SwipeBarProvider = ({
 				rightSidebarRef,
 				isLeftOpen,
 				isRightOpen,
+				isLeftRail,
+				isRightRail,
 				leftSidebarOptions,
 				rightSidebarOptions,
 				leftToggleRef,

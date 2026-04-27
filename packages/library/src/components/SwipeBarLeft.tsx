@@ -51,6 +51,8 @@ export function SwipeBarLeft({
 	useSwipeLeftSidebar(options, id);
 
 	const isOpen = leftSidebars[id]?.isOpen ?? false;
+	const isRail = leftSidebars[id]?.isRail ?? false;
+	const railEffective = !!options.showRail && !isSmallScreen;
 
 	const handleDefaultOpen = useCallback(
 		() => openSidebar("left", { id, skipTransition: true }),
@@ -62,6 +64,19 @@ export function SwipeBarLeft({
 		onOpen: handleDefaultOpen,
 	});
 
+	const optionsReady = !!leftSidebarOptionsMap[id];
+	useEffect(() => {
+		if (!optionsReady) return;
+		if (defaultOpen) return;
+		// Reconcile rail vs closed for current viewport. closeSidebar already routes
+		// to rail when showRail && !isSmallScreen, and to hide otherwise.
+		if (railEffective && !isOpen && !isRail) {
+			closeSidebar("left", { id, skipTransition: true });
+		} else if (!railEffective && isRail) {
+			closeSidebar("left", { id, skipTransition: true });
+		}
+	}, [optionsReady, defaultOpen, railEffective, isOpen, isRail, closeSidebar, id]);
+
 	const handleClose = useCallback(() => closeSidebar("left", { id }), [closeSidebar, id]);
 	useFocusTrap({
 		sidebarRef,
@@ -71,11 +86,13 @@ export function SwipeBarLeft({
 		transitionMs: options.transitionMs,
 	});
 
+	const overlayCollapsed = (!isOpen || isRail) && !forceOverlayVisible;
+
 	return (
 		<>
 			{options.showOverlay && (
 				<Overlay
-					isCollapsed={!isOpen && !forceOverlayVisible}
+					isCollapsed={overlayCollapsed}
 					setCollapsed={() => closeSidebar("left", { id })}
 					closeSidebarOnClick={options.closeSidebarOnOverlayClick}
 					transitionMs={options.transitionMs}
@@ -88,7 +105,7 @@ export function SwipeBarLeft({
 				id={id}
 				toggleRef={toggleRef}
 				options={options}
-				showToggle={options.showToggle}
+				showToggle={options.showToggle && !railEffective}
 				ToggleComponent={ToggleComponent}
 			/>
 
@@ -98,7 +115,7 @@ export function SwipeBarLeft({
 				role="dialog"
 				aria-modal={isOpen}
 				aria-label={ariaLabel ?? "Left sidebar"}
-				inert={!isOpen}
+				inert={!isOpen && !isRail}
 				style={{
 					...swipeBarStyle,
 					...leftSwipeBarInitialTransform,
@@ -107,7 +124,9 @@ export function SwipeBarLeft({
 					zIndex: options.swipeBarZIndex,
 					...(defaultOpen
 						? { transform: "translateX(0px)", width: `${options.sidebarWidthPx}px` }
-						: {}),
+						: railEffective
+							? { transform: "translateX(0px)", width: `${options.railWidthPx}px` }
+							: {}),
 				}}
 				className={className}
 			>
