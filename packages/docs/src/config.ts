@@ -7,6 +7,7 @@ export const siteConfig: SiteConfig = {
 	siteUrl: "https://koolcodez.com/projects/swipe-bar",
 	logoSrc: "/logo.svg",
 	logoAlt: "swipe-bar logo",
+	faviconSrc: "/projects/swipe-bar/favicon.svg",
 	ogImage: "/og-image.png",
 	installCommand: "npm install @luciodale/swipe-bar",
 	githubUrl: "https://github.com/luciodale/swipe-bar",
