@@ -2,7 +2,7 @@
 	"name": "swipe-bar-monorepo",
 	"version": "1.0.0",
 	"description": "Gesture driven React sidebar with spring physics. Touch and mouse support, native app feel for mobile first web interfaces. Tiny bundle, zero runtime dependencies.",
-	"homepage": "https://koolcodez.com/projects/swipe-bar",
+	"homepage": "https://koolcodez.com/projects/swipe-bar/",
 	"private": true,
 	"workspaces": [
 		"packages/*"
