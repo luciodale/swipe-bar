@@ -230,6 +230,13 @@ export const toggleIconWrapperStyle = {
 
 export type TSidebarSide = "left" | "right" | "bottom";
 
+// Modal panes (floating, or blocking the page with an overlay) are dialogs.
+// In flow panes without overlay are page landmarks, where aria-modal is invalid.
+export function getPaneA11yProps(isModal: boolean, isOpen: boolean, ariaLabel: string) {
+	if (isModal) return { role: "dialog", "aria-modal": isOpen, "aria-label": ariaLabel } as const;
+	return { role: "complementary", "aria-label": ariaLabel } as const;
+}
+
 const assertNever = (side: never): never => {
 	throw new Error(`Unhandled sidebar side: ${side}`);
 };

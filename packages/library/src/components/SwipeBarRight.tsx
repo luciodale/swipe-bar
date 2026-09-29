@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { Fragment } from "react/jsx-runtime";
 import {
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
+	getPaneA11yProps,
 	rightSwipeBarAbsoluteStyle,
 	rightSwipeBarInitialTransform,
 	swipeBarStyle,
@@ -49,6 +50,9 @@ export function SwipeBarRight({
 
 	const options = useSetMergedOptions("right", currentOptions, id);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
+	const isFloating = options.isAbsolute || isSmallScreen;
+	// Floating panes and panes behind an overlay block the page, so they act as dialogs.
+	const isModal = isFloating || options.showOverlay;
 	useSwipeRightSidebar(options, id);
 
 	const isOpen = rightSidebars[id]?.isOpen ?? false;
@@ -97,6 +101,7 @@ export function SwipeBarRight({
 		sidebarRef,
 		triggerRef: toggleRef,
 		isOpen,
+		isModal,
 		onClose: handleClose,
 		transitionMs: options.transitionMs,
 	});
@@ -127,14 +132,12 @@ export function SwipeBarRight({
 			<div
 				ref={sidebarRef}
 				id={`swipebar-right-${id}`}
-				role="dialog"
-				aria-modal={isOpen}
-				aria-label={ariaLabel ?? "Right sidebar"}
+				{...getPaneA11yProps(isModal, isOpen, ariaLabel ?? "Right sidebar")}
 				inert={!isOpen && !isRail}
 				style={{
 					...swipeBarStyle,
 					...rightSwipeBarInitialTransform,
-					...(options.isAbsolute || isSmallScreen ? rightSwipeBarAbsoluteStyle : {}),
+					...(isFloating ? rightSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,
 					...(defaultOpen

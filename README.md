@@ -68,7 +68,7 @@ Swipe from the left edge on mobile or click the toggle on desktop. That's it.
 - **Typed sidebar metadata** &mdash; attach a generic type map and get compile-time safety
 - **Programmatic control** &mdash; open, close, and read state from anywhere via context hook
 - **Cross-direction locking** &mdash; one direction at a time, no gesture conflicts
-- **Accessibility** &mdash; focus trap, Escape to close, aria attributes, keyboard navigation
+- **Accessibility** &mdash; focus trap for modal sidebars (floating or behind an overlay), Escape to close, aria attributes, keyboard navigation
 - **Runtime configuration** &mdash; change any prop at runtime via `setGlobalOptions`
 
 ## Programmatic Control

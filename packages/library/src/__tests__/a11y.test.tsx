@@ -6,6 +6,7 @@ import { SwipeBarBottom } from "../components/SwipeBarBottom";
 import { SwipeBarLeft } from "../components/SwipeBarLeft";
 import { SwipeBarRight } from "../components/SwipeBarRight";
 import { SwipeBarProvider } from "../SwipeBarProvider";
+import { useSwipeBarContext } from "../useSwipeBarContext";
 
 // Stub requestAnimationFrame to run synchronously in tests
 beforeEach(() => {
@@ -596,5 +597,202 @@ describe("defaultOpen", () => {
 		// Sidebar should stay closed — defaultOpen doesn't re-trigger
 		expect(sidebar).toHaveAttribute("inert");
 		expect(sidebar?.style.transform).toBe("translateX(-100%)");
+	});
+});
+
+// Without isAbsolute on a large viewport the pane sits in the page flow and
+// is not a modal dialog: Tab must be able to leave it.
+function renderInFlow(ui: React.ReactElement) {
+	return render(<SwipeBarProvider transitionMs={0}>{ui}</SwipeBarProvider>);
+}
+
+function PageCloseButton() {
+	const { closeSidebar } = useSwipeBarContext();
+	return (
+		<button type="button" onClick={() => closeSidebar("left")}>
+			Close from page
+		</button>
+	);
+}
+
+describe("In flow sidebar focus (non modal)", () => {
+	it("is a complementary landmark without aria-modal when open", async () => {
+		renderInFlow(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+
+		const sidebar = document.getElementById("swipebar-left-primary");
+		await waitFor(() => {
+			expect(sidebar).not.toHaveAttribute("inert");
+		});
+		expect(sidebar).toHaveAttribute("role", "complementary");
+		expect(sidebar).not.toHaveAttribute("aria-modal");
+	});
+
+	it("still focuses the first focusable child on open", async () => {
+		renderInFlow(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(insideBtn);
+		});
+	});
+
+	it("lets Tab leave the last element instead of wrapping", async () => {
+		renderInFlow(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">First</button>
+					<button type="button">Last</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+		const firstBtn = screen.getByRole("button", { name: "First" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(firstBtn);
+		});
+
+		const lastBtn = screen.getByRole("button", { name: "Last" });
+		lastBtn.focus();
+		const notPrevented = fireEvent.keyDown(document, { key: "Tab" });
+
+		expect(notPrevented).toBe(true);
+		expect(document.activeElement).toBe(lastBtn);
+	});
+
+	it("lets Shift+Tab leave the first element instead of wrapping", async () => {
+		renderInFlow(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">First</button>
+					<button type="button">Last</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+		const firstBtn = screen.getByRole("button", { name: "First" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(firstBtn);
+		});
+
+		const notPrevented = fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+
+		expect(notPrevented).toBe(true);
+		expect(document.activeElement).toBe(firstBtn);
+	});
+
+	it("does not steal focus back when closed from elsewhere on the page", async () => {
+		renderInFlow(
+			<>
+				<SwipeBarLeft showOverlay={false}>
+					<div>
+						<button type="button">Inside</button>
+					</div>
+				</SwipeBarLeft>
+				<PageCloseButton />
+			</>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(insideBtn);
+		});
+
+		const pageCloseBtn = screen.getByRole("button", { name: "Close from page" });
+		await userEvent.click(pageCloseBtn);
+
+		const sidebar = document.getElementById("swipebar-left-primary");
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("inert");
+		});
+		expect(document.activeElement).toBe(pageCloseBtn);
+	});
+
+	it("returns focus to the toggle when closed from inside", async () => {
+		renderInFlow(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+		const insideBtn = screen.getByRole("button", { name: "Inside" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(insideBtn);
+		});
+
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		await waitFor(() => {
+			const toggleBtn = screen.getByRole("button", { name: /open left sidebar/i });
+			expect(document.activeElement).toBe(toggleBtn);
+		});
+	});
+});
+
+describe("In flow sidebar with overlay (modal)", () => {
+	it("is a dialog and traps Tab because the overlay blocks the page", async () => {
+		renderInFlow(
+			<SwipeBarLeft>
+				<div>
+					<button type="button">First</button>
+					<button type="button">Last</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+		const firstBtn = screen.getByRole("button", { name: "First" });
+		await waitFor(() => {
+			expect(document.activeElement).toBe(firstBtn);
+		});
+
+		const sidebar = document.getElementById("swipebar-left-primary");
+		expect(sidebar).toHaveAttribute("role", "dialog");
+		expect(sidebar).toHaveAttribute("aria-modal", "true");
+
+		screen.getByRole("button", { name: "Last" }).focus();
+		fireEvent.keyDown(document, { key: "Tab" });
+
+		expect(document.activeElement).toBe(firstBtn);
+	});
+});
+
+describe("Floating sidebar focus (modal)", () => {
+	it("is aria-modal when open", async () => {
+		renderWithProvider(
+			<SwipeBarLeft showOverlay={false}>
+				<div>
+					<button type="button">Inside</button>
+				</div>
+			</SwipeBarLeft>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: /open left sidebar/i }));
+
+		const sidebar = document.getElementById("swipebar-left-primary");
+		await waitFor(() => {
+			expect(sidebar).toHaveAttribute("aria-modal", "true");
+		});
 	});
 });

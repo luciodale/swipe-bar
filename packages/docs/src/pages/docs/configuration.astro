@@ -156,6 +156,17 @@ export const prerender = true;
 			affordance.
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">Modal vs. in flow</strong> — a sidebar
+			is modal when it blocks the page: it floats over it
+			(<InlineCode>isAbsolute</InlineCode>, or any sidebar below
+			<InlineCode>mediaQueryWidth</InlineCode>) or it shows an overlay. A
+			modal sidebar is a <InlineCode>dialog</InlineCode> with
+			<InlineCode>aria-modal</InlineCode> and traps Tab while open. An in
+			flow sidebar without overlay is a <InlineCode>complementary</InlineCode>
+			landmark: Tab moves past its last element into the rest of the page,
+			and closing it never pulls focus back from elsewhere on the page.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">disabled</strong> completely shuts down
 			a sidebar: no swipe gestures, no toggle button, no programmatic
 			control. Set it on the provider to disable everything, or on

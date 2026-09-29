@@ -147,7 +147,7 @@ describe("Viewport breakpoint crossing should reset open sidebar", () => {
 
 		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar).not.toHaveAttribute("inert");
 		});
 
 		act(() => {
@@ -280,7 +280,7 @@ describe("Viewport breakpoint crossing should reset open sidebar", () => {
 
 		const sidebar = document.getElementById("swipebar-bottom-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar).not.toHaveAttribute("inert");
 		});
 
 		act(() => {
@@ -325,7 +325,7 @@ describe("First mount does not auto-close", () => {
 
 		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar).not.toHaveAttribute("inert");
 		});
 
 		await Promise.resolve();

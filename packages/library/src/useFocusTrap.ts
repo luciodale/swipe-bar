@@ -16,6 +16,9 @@ type TUseFocusTrap = {
 	sidebarRef: RefObject<HTMLElement | null>;
 	triggerRef: RefObject<HTMLElement | null>;
 	isOpen: boolean;
+	// Floating panes act as dialogs and trap Tab. In flow panes are part of the
+	// page, so Tab moves on to the rest of the document.
+	isModal: boolean;
 	onClose: () => void;
 	transitionMs: number;
 };
@@ -24,6 +27,7 @@ export function useFocusTrap({
 	sidebarRef,
 	triggerRef,
 	isOpen,
+	isModal,
 	onClose,
 	transitionMs,
 }: TUseFocusTrap) {
@@ -49,6 +53,14 @@ export function useFocusTrap({
 
 		// Restore focus on close
 		const el = previousFocusRef.current;
+		const active = document.activeElement;
+		const isFocusElsewhereOnPage =
+			!!active && active !== document.body && !sidebarRef.current?.contains(active);
+		// A non modal pane never owned focus, so don't pull it away from where the user moved it.
+		if (!isModal && isFocusElsewhereOnPage) {
+			previousFocusRef.current = null;
+			return;
+		}
 		if (el) {
 			// Find the button inside the trigger wrapper
 			const button = triggerRef.current?.querySelector("button") ?? el;
@@ -57,7 +69,7 @@ export function useFocusTrap({
 			});
 			previousFocusRef.current = null;
 		}
-	}, [isOpen, sidebarRef, triggerRef, transitionMs]);
+	}, [isOpen, isModal, sidebarRef, triggerRef, transitionMs]);
 
 	// Tab trapping + Escape
 	useEffect(() => {
@@ -75,6 +87,7 @@ export function useFocusTrap({
 			}
 
 			if (e.key !== "Tab") return;
+			if (!isModal) return;
 			if (!sidebarRef.current) return;
 
 			const focusable = getFocusableElements(sidebarRef.current);
@@ -98,5 +111,5 @@ export function useFocusTrap({
 
 		document.addEventListener("keydown", handleKeyDown);
 		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [isOpen, sidebarRef, onClose]);
+	}, [isOpen, isModal, sidebarRef, onClose]);
 }

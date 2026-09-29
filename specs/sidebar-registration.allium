@@ -169,13 +169,45 @@ rule ViewportTransitionReconcilesRail {
 }
 
 rule InertWhenClosed {
-    -- The dialog div sets inert when fully closed. Rail items must remain
+    -- The pane sets inert when fully closed. Rail items must remain
     -- interactive so inert is cleared when in rail mode.
+    -- Role and aria_modal follow pane modality (see PaneModality).
     when: SwipeBarLeftOrRight.render(instance)
     ensures:
-        dialog.inert = (not instance.is_open and not instance.is_rail)
-        dialog.aria_modal = instance.is_open
+        let opts = provider.{instance.side}_options[instance.id]
+        and let is_modal = pane_is_modal(opts)
+        and pane.inert = (not instance.is_open and not instance.is_rail)
+        and if is_modal:
+            pane.role = dialog and pane.aria_modal = instance.is_open
+        else:
+            pane.role = complementary and pane.aria_modal is absent
 }
+
+rule PaneModality {
+    -- Applies to all sides. A pane is modal when it blocks the rest of the
+    -- page: it floats over it (isAbsolute, or any pane on a small viewport
+    -- where it is always fixed) or it shows an overlay. A modal pane is a
+    -- dialog and Tab / Shift+Tab wrap inside it while open.
+    -- A non modal pane (in flow on a large viewport, no overlay) is a page
+    -- landmark: Tab moves past its last element into the rest of the document.
+    -- Both kinds move focus to their first focusable element on open and close
+    -- on Escape while focus is inside.
+    -- On close, focus returns to the toggle, except for a non modal pane when
+    -- the user has already moved focus elsewhere on the page.
+    when: SidebarOpenChanges(provider, id, side)
+    ensures:
+        let opts = provider.{side}_options[id]
+        and let is_modal = pane_is_modal(opts)
+        and tab_wraps_inside_pane = (instance.is_open and is_modal)
+        and if not instance.is_open:
+            if is_modal or focus_inside_pane_or_nowhere():
+                focus = toggle
+            else:
+                focus unchanged
+}
+
+-- pane_is_modal(opts) =
+--     opts.isAbsolute or viewport_width() < opts.mediaQueryWidth or opts.showOverlay
 
 rule BuiltInToggleHiddenInRail {
     -- The built-in toggle button is the affordance for opening from a fully

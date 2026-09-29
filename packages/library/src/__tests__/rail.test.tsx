@@ -178,7 +178,7 @@ describe("showRail — mount behavior on desktop", () => {
 
 		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar?.style.width).toBe("300px");
 		});
 		expect(sidebar?.style.transform).toBe("translateX(0px)");
 		expect(sidebar?.style.width).toBe("300px");
@@ -292,7 +292,7 @@ describe("showRail — close on desktop routes to rail", () => {
 
 		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar?.style.width).toBe("300px");
 		});
 
 		// While open, the toggle is hidden because rail mode is effective.
@@ -303,7 +303,7 @@ describe("showRail — close on desktop routes to rail", () => {
 		fireEvent.keyDown(document, { key: "Escape" });
 
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "false");
+			expect(sidebar?.style.width).toBe("72px");
 		});
 		// After close, should be in rail mode (not inert)
 		expect(sidebar).not.toHaveAttribute("inert");
@@ -322,7 +322,7 @@ describe("showRail — close on desktop routes to rail", () => {
 
 		const sidebar = document.getElementById("swipebar-right-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar?.style.width).toBe("300px");
 		});
 
 		const insideBtn = screen.getByRole("button", { name: "Inside" });
@@ -412,7 +412,7 @@ describe("showRail — viewport reconciliation", () => {
 
 		const sidebar = document.getElementById("swipebar-left-primary");
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar?.style.width).toBe("300px");
 		});
 
 		// Resize to small — open is reset (overlay UX expects fresh state on the
@@ -464,7 +464,7 @@ describe("showRail — state shape", () => {
 
 		// Open immediately
 		await waitFor(() => {
-			expect(sidebar).toHaveAttribute("aria-modal", "true");
+			expect(sidebar?.style.width).toBe("300px");
 		});
 		expect(sidebar?.style.width).toBe("300px");
 	});

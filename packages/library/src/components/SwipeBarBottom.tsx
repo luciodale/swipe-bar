@@ -5,6 +5,7 @@ import {
 	bottomSwipeBarInitialTransform,
 	bottomSwipeBarStyle,
 	DEFAULT_SIDEBAR_BACKGROUND_COLOR,
+	getPaneA11yProps,
 	type TSwipeSidebar,
 	useSetMergedOptions,
 } from "../swipeSidebarShared";
@@ -49,6 +50,9 @@ export function SwipeBarBottom({
 
 	const options = useSetMergedOptions("bottom", currentOptions, id);
 	const isSmallScreen = useMediaQuery(options.mediaQueryWidth);
+	const isFloating = options.isAbsolute || isSmallScreen;
+	// Floating panes and panes behind an overlay block the page, so they act as dialogs.
+	const isModal = isFloating || options.showOverlay;
 	useSwipeBottomSidebar(options, id);
 
 	const isOpen = bottomSidebars[id]?.isOpen ?? false;
@@ -80,6 +84,7 @@ export function SwipeBarBottom({
 		sidebarRef: sidebarRef,
 		triggerRef: toggleRef,
 		isOpen,
+		isModal,
 		onClose: handleClose,
 		transitionMs: options.transitionMs,
 	});
@@ -108,14 +113,12 @@ export function SwipeBarBottom({
 			<div
 				ref={sidebarRef}
 				id={`swipebar-bottom-${id}`}
-				role="dialog"
-				aria-modal={isOpen}
-				aria-label={ariaLabel ?? "Bottom sidebar"}
+				{...getPaneA11yProps(isModal, isOpen, ariaLabel ?? "Bottom sidebar")}
 				inert={!isOpen}
 				style={{
 					...bottomSwipeBarStyle,
 					...bottomSwipeBarInitialTransform,
-					...(options.isAbsolute || isSmallScreen ? bottomSwipeBarAbsoluteStyle : {}),
+					...(isFloating ? bottomSwipeBarAbsoluteStyle : {}),
 					...(!className ? { backgroundColor: DEFAULT_SIDEBAR_BACKGROUND_COLOR } : {}),
 					zIndex: options.swipeBarZIndex,
 					...(defaultOpen
