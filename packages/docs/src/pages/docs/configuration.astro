@@ -42,6 +42,7 @@ export const prerender = true;
   swipeToOpen={true}
   swipeToClose={true}
   disableSwipe={false}              // kills all gesture interaction
+  touchSwipeOnAllScreens={false}    // touch swipe above mediaQueryWidth too
   disabled={false}                  // disables everything
 >
   {children}
@@ -122,6 +123,16 @@ export const prerender = true;
 			breakpoint below which swipe gestures activate. Above this width,
 			sidebars respond only to toggle clicks and programmatic control.
 			Default is 640px.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">touchSwipeOnAllScreens</strong> lifts
+			that limit for touch input on left and right sidebars, so tablets and
+			touch laptops can swipe at any width. Mouse drags stay limited to
+			small viewports, and a sidebar showing its rail never reacts to
+			swipes. When the sidebar is in the page flow
+			(<InlineCode>isAbsolute</InlineCode> off), the content follows the
+			finger during the drag, just like the toggle animation. Bottom
+			sidebars ignore this option.
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">Viewport reconciliation</strong> —

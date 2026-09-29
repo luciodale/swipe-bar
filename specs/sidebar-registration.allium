@@ -8,6 +8,10 @@
 -- Left and right sidebars carry an additional rail mode controlled by the
 -- showRail prop. Rail is desktop-only (suppressed when viewport width is below
 -- mediaQueryWidth). Bottom sidebars do not support rail.
+--
+-- Swipe gestures are small viewport only by default. touchSwipeOnAllScreens
+-- lifts that limit for touch input on left/right sidebars; mouse drags stay
+-- small viewport only.
 
 entity SwipeBarProvider {
     -- Holds three independent registries keyed by sidebar id.
@@ -186,6 +190,54 @@ rule BuiltInToggleHiddenInRail {
         and viewport_width() >= opts.mediaQueryWidth
     ensures: toggle is not rendered
 }
+
+rule SwipeGestureEligibility {
+    -- For left/right sidebars. Decides whether a drag gesture may move the
+    -- sidebar at all. Touch and mouse are gated differently:
+    --   small viewport: touch and mouse both allowed (unchanged behaviour)
+    --   large viewport: mouse never allowed; touch only when
+    --     touchSwipeOnAllScreens is on (default false) and rail is not active.
+    -- Rail keeps the toggle free edge to its own interactive content, so a
+    -- sidebar showing its rail never reacts to swipes. Bottom sidebars ignore
+    -- touchSwipeOnAllScreens and stay small viewport only.
+    when: DragStarts(provider, id, side, input)
+    requires:
+        side in {left, right}
+        and let opts = provider.{side}_options[id]
+        and not opts.disabled
+        and not opts.disableSwipe
+    ensures:
+        let is_small = viewport_width() < opts.mediaQueryWidth
+        and let is_rail_active = opts.showRail and not is_small
+        and case:
+            (is_small):
+                gesture.is_tracked = true
+            (input = touch and opts.touchSwipeOnAllScreens and not is_rail_active):
+                gesture.is_tracked = true
+            otherwise:
+                gesture.is_tracked = false
+}
+
+rule InFlowDragTracksContentEdge {
+    -- While a tracked gesture drags a sidebar that is not absolute, the page
+    -- content edge stays flush with the visible sidebar edge on every frame
+    -- (same effect as the toggle animation, driven by the finger). When the
+    -- gesture settles (open, closed or rail) the sidebar occupies exactly its
+    -- settled width and no drag offset remains. Absolute sidebars float over
+    -- the content, which never moves during a drag.
+    when: DragMoves(provider, id, side, offset)
+    requires:
+        side in {left, right}
+        and gesture.is_tracked
+    ensures:
+        let opts = provider.{side}_options[id]
+        and if not opts.isAbsolute and not viewport_width() < opts.mediaQueryWidth:
+            content_edge_position() = visible_sidebar_edge_position()
+        else:
+            content_edge_position() unchanged
+}
+
+open question "Should bottom sidebars honour touchSwipeOnAllScreens, including midAnchorPoint on large viewports?"
 
 open question "Should the provider accept a declared id list at construction so entries can be pre seeded and lookups be non null from the first render?"
 

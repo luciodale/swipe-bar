@@ -57,6 +57,7 @@ export type TSwipeBarOptions = {
 	resetMetaOnClose?: boolean;
 	showRail?: boolean;
 	railWidthPx?: number;
+	touchSwipeOnAllScreens?: boolean;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -128,6 +129,7 @@ export const SWIPE_TO_OPEN = true;
 export const SWIPE_TO_CLOSE = true;
 export const DISABLE_SWIPE = false;
 export const MID_ANCHOR_POINT = false;
+export const TOUCH_SWIPE_ON_ALL_SCREENS = false;
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
@@ -236,6 +238,34 @@ const getChildElement = (ref: RefObject<HTMLDivElement | null>): HTMLElement | n
 	return ref.current?.firstElementChild as HTMLElement | null;
 };
 
+// In flow panes compensate the drag translate with a negative margin on the
+// content facing edge, so the layout edge follows the finger without
+// resizing the pane on every frame. Open/close/rail animate it back to 0.
+const getDragMarginProperty = (side: TSidebarSide): "marginRight" | "marginLeft" | null => {
+	if (side === "left") return "marginRight";
+	if (side === "right") return "marginLeft";
+	return null;
+};
+
+const resetDragMargin = (ref: RefObject<HTMLDivElement | null>, side: TSidebarSide) => {
+	const marginProperty = getDragMarginProperty(side);
+	if (!ref.current || !marginProperty) return;
+	ref.current.style[marginProperty] = "0px";
+};
+
+// In flow panes animate their layout size (and, for left/right, the drag margin)
+// alongside the transform. Absolute panes only animate the transform.
+const getInFlowTransition = (
+	side: TSidebarSide,
+	dimension: "width" | "height",
+	options: TSwipeBarOptions,
+): string => {
+	if (options.isAbsolute) return "";
+	const timing = `${options.transitionMs}ms ${TRANSFORM_EASING}`;
+	const marginTransition = getDragMarginProperty(side) ? `, margin ${timing}` : "";
+	return `, ${dimension} ${timing}${marginTransition}`;
+};
+
 type TApplyOpenPaneStyles = {
 	ref: RefObject<HTMLDivElement | null>;
 	side: TSidebarSide;
@@ -291,6 +321,7 @@ export const applyOpenPaneStylesImmediate = ({
 	ref.current.style.transition = "none";
 	ref.current.style.transform = side === "bottom" ? "translateY(0px)" : "translateX(0px)";
 	ref.current.style[dimension] = `${sizePx}px`;
+	resetDragMargin(ref, side);
 	if (child) child.style.opacity = "1";
 	applyToggleOpenPosition(toggleRef, side, sizePx);
 	afterApply();
@@ -318,9 +349,7 @@ export const applyOpenPaneStyles = ({
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
 		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
-		const dimensionTransition = options.isAbsolute
-			? ""
-			: `, ${dimension} ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = getInFlowTransition(side, dimension, options);
 		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
 		if (child && options.fadeContent) {
 			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
@@ -329,6 +358,7 @@ export const applyOpenPaneStyles = ({
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
 			ref.current.style.transform = side === "bottom" ? "translateY(0px)" : "translateX(0px)";
+			resetDragMargin(ref, side);
 			if (!options.isAbsolute) {
 				ref.current.style[dimension] = `${sizePx}px`;
 			} else if (ref.current.style[dimension] !== `${sizePx}px`) {
@@ -390,6 +420,7 @@ export const applyClosePaneStylesImmediate = ({
 		ref.current.style.transform = "translateY(100%)";
 		if (!options.isAbsolute) ref.current.style.height = "0px";
 	}
+	resetDragMargin(ref, side);
 
 	if (toggleRef.current) {
 		toggleRef.current.style.opacity = "1";
@@ -433,9 +464,7 @@ export const applyClosePaneStyles = ({
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
 		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
-		const dimensionTransition = options.isAbsolute
-			? ""
-			: `, ${dimension} ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = getInFlowTransition(side, dimension, options);
 		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
 		if (child && options.fadeContent) {
 			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
@@ -460,6 +489,7 @@ export const applyClosePaneStyles = ({
 					ref.current.style.height = "0px";
 				}
 			}
+			resetDragMargin(ref, side);
 
 			if (toggleRef.current) {
 				toggleRef.current.style.opacity = "1";
@@ -523,6 +553,7 @@ export const applyRailPaneStylesImmediate = ({
 	ref.current.style.transition = "none";
 	ref.current.style.transform = "translateX(0px)";
 	ref.current.style.width = `${railWidthPx}px`;
+	resetDragMargin(ref, side);
 	if (child) child.style.opacity = "1";
 	applyToggleRailPosition(toggleRef, side, railWidthPx);
 	afterApply();
@@ -550,9 +581,7 @@ export const applyRailPaneStyles = ({
 	requestAnimationFrame(() => {
 		if (!ref.current) return;
 		const transformTransition = `transform ${options.transitionMs}ms ${TRANSFORM_EASING}`;
-		const dimensionTransition = options.isAbsolute
-			? ""
-			: `, width ${options.transitionMs}ms ${TRANSFORM_EASING}`;
+		const dimensionTransition = getInFlowTransition(side, "width", options);
 		ref.current.style.transition = `${transformTransition}${dimensionTransition}`;
 		if (child && options.fadeContent) {
 			child.style.transition = `opacity ${options.fadeContentTransitionMs}ms ease`;
@@ -561,6 +590,7 @@ export const applyRailPaneStyles = ({
 		requestAnimationFrame(() => {
 			if (!ref.current) return;
 			ref.current.style.transform = "translateX(0px)";
+			resetDragMargin(ref, side);
 			if (!options.isAbsolute) {
 				ref.current.style.width = `${railWidthPx}px`;
 			} else if (ref.current.style.width !== `${railWidthPx}px`) {
@@ -683,6 +713,7 @@ export const applyMidAnchorPaneStyles = ({
 
 type TApplyDragPaneStyles = {
 	ref: RefObject<HTMLDivElement | null>;
+	side: "left" | "right";
 	toggleRef: RefObject<HTMLDivElement | null>;
 	options: TSwipeBarOptions;
 	translateX: number | null;
@@ -690,6 +721,7 @@ type TApplyDragPaneStyles = {
 
 export const applyDragPaneStyles = ({
 	ref,
+	side,
 	toggleRef,
 	options,
 	translateX,
@@ -715,6 +747,10 @@ export const applyDragPaneStyles = ({
 			// Apply width only if it changed to avoid unnecessary layout
 			if (ref.current.style.width !== desiredWidth) {
 				ref.current.style.width = desiredWidth;
+			}
+			const marginProperty = getDragMarginProperty(side);
+			if (marginProperty) {
+				ref.current.style[marginProperty] = `${-Math.abs(translateX)}px`;
 			}
 		}
 		ref.current.style.transform = `translateX(${translateX}px)`;
@@ -820,14 +856,24 @@ type THandleDragCancel = {
 	refs: TDragRefs;
 	dragSidebar: (translateX: number | null) => void;
 	onDeactivate: () => void;
+	// Re-applies the settled state. Without it a cancelled gesture (system
+	// gesture, incoming call) leaves the pane, and in flow content, mid drag.
+	snapBack?: () => void;
 };
 
-export const handleDragCancel = ({ refs, dragSidebar, onDeactivate }: THandleDragCancel) => {
+export const handleDragCancel = ({
+	refs,
+	dragSidebar,
+	onDeactivate,
+	snapBack,
+}: THandleDragCancel) => {
+	const wasActivated = refs.draggingRef.current?.isActivated ?? false;
 	refs.draggingRef.current = null;
 	refs.currentXRef.current = null;
 	refs.prevXRef.current = null;
 	dragSidebar(null);
 	onDeactivate();
+	if (wasActivated) snapBack?.();
 };
 
 type THandleDragCancelY = {
@@ -926,6 +972,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		resetMetaOnClose,
 		showRail,
 		railWidthPx,
+		touchSwipeOnAllScreens,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -961,6 +1008,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			resetMetaOnClose: resetMetaOnClose ?? globalOptions.resetMetaOnClose,
 			showRail: showRail ?? globalOptions.showRail,
 			railWidthPx: railWidthPx ?? globalOptions.railWidthPx,
+			touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? globalOptions.touchSwipeOnAllScreens,
 		};
 	}, [
 		sidebarWidthPx,
@@ -992,6 +1040,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		resetMetaOnClose,
 		showRail,
 		railWidthPx,
+		touchSwipeOnAllScreens,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

@@ -45,6 +45,7 @@ import {
 	SWIPE_TO_OPEN,
 	type TBottomSidebarState,
 	type TLeftRightSidebarState,
+	TOUCH_SWIPE_ON_ALL_SCREENS,
 	TRANSITION_MS,
 	type TSidebarOpts,
 	type TSidebarSide,
@@ -159,6 +160,7 @@ export const SwipeBarProvider = ({
 	resetMetaOnClose,
 	showRail,
 	railWidthPx,
+	touchSwipeOnAllScreens,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 
@@ -262,6 +264,7 @@ export const SwipeBarProvider = ({
 		resetMetaOnClose: resetMetaOnClose ?? false,
 		showRail: showRail ?? SHOW_RAIL,
 		railWidthPx: railWidthPx ?? RAIL_WIDTH_PX,
+		touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? TOUCH_SWIPE_ON_ALL_SCREENS,
 	});
 
 	// --- Left registration ---
@@ -938,6 +941,7 @@ export const SwipeBarProvider = ({
 
 				applyDragPaneStyles({
 					ref: lRefs.sidebarRef,
+					side: "left",
 					toggleRef: lRefs.toggleRef,
 					options: lOpts,
 					translateX: translate,
@@ -950,6 +954,7 @@ export const SwipeBarProvider = ({
 
 				applyDragPaneStyles({
 					ref: rRefs.sidebarRef,
+					side: "right",
 					toggleRef: rRefs.toggleRef,
 					options: rOpts,
 					translateX: translate,

@@ -62,7 +62,7 @@ Swipe from the left edge on mobile or click the toggle on desktop. That's it.
 
 - **Zero dependencies** &mdash; just React
 - **Left, right, and bottom** &mdash; all three directions with the same API
-- **Native touch gestures** &mdash; edge swipe detection, drag tracking, velocity commit/cancel
+- **Native touch gestures** &mdash; edge swipe detection, drag tracking, velocity commit/cancel; opt into touch swipe on tablets and large touch screens with `touchSwipeOnAllScreens`
 - **Multi-instance** &mdash; multiple sidebars per direction with independent state via `id` prop
 - **Bottom sheets with mid-anchor** &mdash; swipe to a halfway stop, then again to fully open
 - **Typed sidebar metadata** &mdash; attach a generic type map and get compile-time safety

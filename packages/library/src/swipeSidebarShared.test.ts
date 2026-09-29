@@ -79,6 +79,24 @@ describe("handleDragCancel", () => {
 		expect(dragSidebar).toHaveBeenCalledWith(null);
 		expect(onDeactivate).toHaveBeenCalled();
 	});
+
+	it("snaps back after an activated drag", () => {
+		const refs = makeDragRefs({ startX: 100, isActivated: true });
+		const snapBack = vi.fn();
+
+		handleDragCancel({ refs, dragSidebar: vi.fn(), onDeactivate: vi.fn(), snapBack });
+
+		expect(snapBack).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not snap back when the drag never activated", () => {
+		const refs = makeDragRefs({ startX: 100, isActivated: false });
+		const snapBack = vi.fn();
+
+		handleDragCancel({ refs, dragSidebar: vi.fn(), onDeactivate: vi.fn(), snapBack });
+
+		expect(snapBack).not.toHaveBeenCalled();
+	});
 });
 
 describe("handleDragCancelY", () => {

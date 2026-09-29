@@ -155,7 +155,11 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>, id: str
 	const prevXRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		if (!isSmallScreen) return;
+		// Rail owns the edge on large screens, so large screen swipe skips it.
+		const isRailActive = options.showRail && !isSmallScreen;
+		const isTouchSwipeAllowed = isSmallScreen || (options.touchSwipeOnAllScreens && !isRailActive);
+		if (!isTouchSwipeAllowed) return;
+		const isMouseSwipeAllowed = isSmallScreen;
 		if (lockedSidebar && lockedSidebar !== "left") return;
 		if (options.disabled) return;
 
@@ -272,6 +276,8 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>, id: str
 				refs,
 				dragSidebar: callbacks.dragSidebar,
 				onDeactivate: unlockPane,
+				snapBack: () =>
+					callbacks.getIsOpen() ? callbacks.openSidebar() : callbacks.closeSidebar(),
 			});
 		}
 
@@ -335,9 +341,11 @@ export function useSwipeLeftSidebar(options: Required<TSwipeBarOptions>, id: str
 		window.addEventListener("touchend", onTouchEnd, { passive: true });
 		window.addEventListener("touchcancel", onTouchCancel, { passive: true });
 
-		window.addEventListener("mousedown", onMouseDown, { passive: true });
-		window.addEventListener("mousemove", onMouseMove, { passive: false });
-		window.addEventListener("mouseup", onMouseUp, { passive: true });
+		if (isMouseSwipeAllowed) {
+			window.addEventListener("mousedown", onMouseDown, { passive: true });
+			window.addEventListener("mousemove", onMouseMove, { passive: false });
+			window.addEventListener("mouseup", onMouseUp, { passive: true });
+		}
 
 		return () => {
 			window.removeEventListener("touchstart", onTouchStart);
