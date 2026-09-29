@@ -15,6 +15,7 @@ function PlaygroundContent() {
 		swipeToOpen: globalOptions.swipeToOpen,
 		swipeToClose: globalOptions.swipeToClose,
 		disableSwipe: globalOptions.disableSwipe,
+		touchSwipeOnAllScreens: globalOptions.touchSwipeOnAllScreens,
 		disabled: globalOptions.disabled,
 	});
 
@@ -110,6 +111,7 @@ function PlaygroundContent() {
 							"swipeToOpen",
 							"swipeToClose",
 							"disableSwipe",
+							"touchSwipeOnAllScreens",
 							"disabled",
 						] as const
 					).map((field) => (

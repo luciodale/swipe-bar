@@ -41,11 +41,11 @@ export const prerender = true;
 		</p>
 		<FeatureList features={[
 			{ highlight: "Zero dependencies", description: "just React. No animation libraries, no gesture systems, no CSS frameworks bundled in", color: "accent" },
-			{ highlight: "Native touch gestures", description: "edge-swipe detection, drag tracking with activation thresholds, velocity-based commit/cancel. Works on touch and mouse", color: "blue" },
+			{ highlight: "Native touch gestures", description: "edge-swipe detection, drag tracking with activation thresholds, velocity-based commit/cancel. Works on touch and mouse, and on tablets with touchSwipeOnAllScreens", color: "blue" },
 			{ highlight: "Cross-direction locking", description: "opening one sidebar locks the others. No accidental double-opens, no conflicting gestures", color: "green" },
 			{ highlight: "Bottom sheets with mid-anchor", description: "swipe up to a mid-point, swipe again to fully open. Like iOS Maps. Multi-instance support with independent state for all directions (left, right, bottom)", color: "purple" },
 			{ highlight: "Typed sidebar metadata", description: "attach a generic type map to the context hook. Each sidebar gets its own typed meta, validated at compile time", color: "yellow" },
-			{ highlight: "Full accessibility", description: "focus trap, Escape to close, aria attributes, keyboard navigation. All automatic", color: "accent" },
+			{ highlight: "Full accessibility", description: "focus trap for modal sidebars, landmark role for in flow ones, Escape to close, aria attributes, keyboard navigation. All automatic", color: "accent" },
 		]} />
 	</ContentSection>
 
@@ -121,7 +121,8 @@ function Page() {
 		<p class="text-white/60 mt-4 leading-relaxed">
 			That's it. On mobile (below 640px), swiping from the left edge also
 			opens the sidebar. On desktop, the toggle button and your custom
-			button both work. Try adding a
+			button both work. To let tablets and touch laptops swipe too, set
+			<InlineCode>touchSwipeOnAllScreens</InlineCode>. Try adding a
 			<InlineCode>SwipeBarRight</InlineCode> or a
 			<InlineCode>SwipeBarBottom</InlineCode> the same way.
 		</p>
