@@ -257,13 +257,19 @@ rule InFlowDragTracksContentEdge {
     -- gesture settles (open, closed or rail) the sidebar occupies exactly its
     -- settled width and no drag offset remains. Absolute sidebars float over
     -- the content, which never moves during a drag.
+    -- trackContentOnDrag (default true) opts out: the content then keeps its
+    -- settled position for the whole drag (layout is frozen once at drag
+    -- start, the sidebar moves by transform only) and catches up through the
+    -- settle animation on release.
     when: DragMoves(provider, id, side, offset)
     requires:
         side in {left, right}
         and gesture.is_tracked
     ensures:
         let opts = provider.{side}_options[id]
-        and if not opts.isAbsolute and not viewport_width() < opts.mediaQueryWidth:
+        and if not opts.isAbsolute
+            and not viewport_width() < opts.mediaQueryWidth
+            and opts.trackContentOnDrag:
             content_edge_position() = visible_sidebar_edge_position()
         else:
             content_edge_position() unchanged

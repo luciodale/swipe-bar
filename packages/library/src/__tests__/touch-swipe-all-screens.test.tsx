@@ -265,6 +265,113 @@ describe("in flow drag keeps the content edge next to the pane", () => {
 	});
 });
 
+describe("in flow drag with trackContentOnDrag off freezes the content", () => {
+	const options = { touchSwipeOnAllScreens: true, trackContentOnDrag: false, sidebarWidthPx: 320 };
+
+	it("keeps a closed left pane's footprint at 0 while dragging open", () => {
+		const sidebar = renderLeft(options);
+
+		dispatchTouch("touchstart", 10);
+		dispatchTouch("touchmove", 40);
+		dispatchTouch("touchmove", 100);
+		expect(sidebar?.style.width).toBe("320px");
+		expect(sidebar?.style.marginRight).toBe("-320px");
+
+		dispatchTouch("touchmove", 150);
+		expect(sidebar?.style.marginRight).toBe("-320px");
+		expect(sidebar?.style.transform).toMatch(/translateX\(-\d+px\)/);
+	});
+
+	it("keeps a closed right pane's footprint at 0 while dragging open", () => {
+		const sidebar = renderRight(options);
+
+		dispatchTouch("touchstart", DESKTOP_INNER_WIDTH - 10);
+		dispatchTouch("touchmove", DESKTOP_INNER_WIDTH - 40);
+		dispatchTouch("touchmove", DESKTOP_INNER_WIDTH - 150);
+
+		expect(sidebar?.style.marginLeft).toBe("-320px");
+	});
+
+	it("leaves an open pane's footprint untouched while dragging closed", async () => {
+		const sidebar = renderLeft(options);
+		touchSwipe(10, 300);
+		await expectOpen(sidebar);
+
+		dispatchTouch("touchstart", 300);
+		dispatchTouch("touchmove", 270);
+		dispatchTouch("touchmove", 150);
+
+		expect(sidebar?.style.width).toBe(OPEN_WIDTH);
+		expect(sidebar?.style.marginRight).toBe("0px");
+		expect(sidebar?.style.transform).toMatch(/translateX\(-\d+px\)/);
+	});
+
+	it("lets the content catch up once the drag settles open", async () => {
+		const sidebar = renderLeft(options);
+
+		dispatchTouch("touchstart", 10);
+		dispatchTouch("touchmove", 40);
+		dispatchTouch("touchmove", 300);
+		expect(sidebar?.style.marginRight).toBe("-320px");
+
+		dispatchTouch("touchend", 300);
+
+		await expectOpen(sidebar);
+		expect(sidebar?.style.marginRight).toBe("0px");
+	});
+
+	it("lets the content catch up once the drag settles closed", async () => {
+		const sidebar = renderLeft(options);
+		touchSwipe(10, 300);
+		await expectOpen(sidebar);
+
+		dispatchTouch("touchstart", 300);
+		dispatchTouch("touchmove", 270);
+		dispatchTouch("touchmove", 10);
+		expect(sidebar?.style.width).toBe(OPEN_WIDTH);
+		expect(sidebar?.style.marginRight).toBe("0px");
+
+		dispatchTouch("touchend", 10);
+
+		await waitFor(() => expect(sidebar?.style.width).toBe("0px"));
+		expect(sidebar?.style.marginRight).toBe("0px");
+		expect(sidebar?.style.transform).toBe("translateX(-100%)");
+	});
+
+	it("returns a half opened pane to closed on touchcancel and clears the margin", () => {
+		const sidebar = renderLeft(options);
+
+		dispatchTouch("touchstart", 10);
+		dispatchTouch("touchmove", 40);
+		dispatchTouch("touchmove", 150);
+		expect(sidebar?.style.marginRight).toBe("-320px");
+
+		dispatchTouch("touchcancel", 150);
+
+		expect(sidebar?.style.transform).toBe("translateX(-100%)");
+		expect(sidebar?.style.width).toBe("0px");
+		expect(sidebar?.style.marginRight).toBe("0px");
+		expectClosed(sidebar);
+	});
+
+	it("returns a half closed pane to open on touchcancel with the margin untouched", async () => {
+		const sidebar = renderLeft(options);
+		touchSwipe(10, 300);
+		await expectOpen(sidebar);
+
+		dispatchTouch("touchstart", 300);
+		dispatchTouch("touchmove", 270);
+		dispatchTouch("touchmove", 150);
+		expect(sidebar?.style.marginRight).toBe("0px");
+
+		dispatchTouch("touchcancel", 150);
+
+		await expectOpen(sidebar);
+		expect(sidebar?.style.transform).toBe("translateX(0px)");
+		expect(sidebar?.style.marginRight).toBe("0px");
+	});
+});
+
 describe("cancelled touch gestures settle the pane", () => {
 	it("returns a half opened in flow pane to closed and clears the margin", () => {
 		const sidebar = renderLeft({ touchSwipeOnAllScreens: true });

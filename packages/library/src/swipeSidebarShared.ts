@@ -58,6 +58,7 @@ export type TSwipeBarOptions = {
 	showRail?: boolean;
 	railWidthPx?: number;
 	touchSwipeOnAllScreens?: boolean;
+	trackContentOnDrag?: boolean;
 };
 
 export type TSwipeSidebar = TSwipeBarOptions & {
@@ -130,6 +131,7 @@ export const SWIPE_TO_CLOSE = true;
 export const DISABLE_SWIPE = false;
 export const MID_ANCHOR_POINT = false;
 export const TOUCH_SWIPE_ON_ALL_SCREENS = false;
+export const TRACK_CONTENT_ON_DRAG = true;
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
@@ -751,13 +753,24 @@ export const applyDragPaneStyles = ({
 
 		if (!options.isAbsolute) {
 			const desiredWidth = `${options.sidebarWidthPx}px`;
-			// Apply width only if it changed to avoid unnecessary layout
-			if (ref.current.style.width !== desiredWidth) {
-				ref.current.style.width = desiredWidth;
-			}
 			const marginProperty = getDragMarginProperty(side);
-			if (marginProperty) {
-				ref.current.style[marginProperty] = `${-Math.abs(translateX)}px`;
+			if (options.trackContentOnDrag) {
+				// Apply width only if it changed to avoid unnecessary layout
+				if (ref.current.style.width !== desiredWidth) {
+					ref.current.style.width = desiredWidth;
+				}
+				if (marginProperty) {
+					ref.current.style[marginProperty] = `${-Math.abs(translateX)}px`;
+				}
+			} else if (ref.current.style.width !== desiredWidth) {
+				// Freeze the layout at its settled footprint with one layout at
+				// drag start; the pane then moves by transform only and the
+				// content catches up through the settle animation on release.
+				const settledWidthPx = Number.parseFloat(ref.current.style.width) || 0;
+				ref.current.style.width = desiredWidth;
+				if (marginProperty) {
+					ref.current.style[marginProperty] = `${settledWidthPx - (options.sidebarWidthPx ?? 0)}px`;
+				}
 			}
 		}
 		ref.current.style.transform = `translateX(${translateX}px)`;
@@ -980,6 +993,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		showRail,
 		railWidthPx,
 		touchSwipeOnAllScreens,
+		trackContentOnDrag,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -1016,6 +1030,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			showRail: showRail ?? globalOptions.showRail,
 			railWidthPx: railWidthPx ?? globalOptions.railWidthPx,
 			touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? globalOptions.touchSwipeOnAllScreens,
+			trackContentOnDrag: trackContentOnDrag ?? globalOptions.trackContentOnDrag,
 		};
 	}, [
 		sidebarWidthPx,
@@ -1048,6 +1063,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		showRail,
 		railWidthPx,
 		touchSwipeOnAllScreens,
+		trackContentOnDrag,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

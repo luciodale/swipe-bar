@@ -16,6 +16,8 @@ function PlaygroundContent() {
 		swipeToClose: globalOptions.swipeToClose,
 		disableSwipe: globalOptions.disableSwipe,
 		touchSwipeOnAllScreens: globalOptions.touchSwipeOnAllScreens,
+		isAbsolute: globalOptions.isAbsolute,
+		trackContentOnDrag: globalOptions.trackContentOnDrag,
 		disabled: globalOptions.disabled,
 	});
 
@@ -34,7 +36,7 @@ function PlaygroundContent() {
 
 	return (
 		<div className="flex h-full w-full">
-			<SwipeBarLeft isAbsolute className="bg-[#1a1a2e] text-white border-r border-white/10">
+			<SwipeBarLeft className="bg-[#1a1a2e] text-white border-r border-white/10">
 				<div className="flex h-full flex-col p-4 gap-3">
 					<div className="text-sm font-semibold text-white/90">Preview Sidebar</div>
 					<p className="text-xs text-white/50">
@@ -112,6 +114,8 @@ function PlaygroundContent() {
 							"swipeToClose",
 							"disableSwipe",
 							"touchSwipeOnAllScreens",
+							"isAbsolute",
+							"trackContentOnDrag",
 							"disabled",
 						] as const
 					).map((field) => (
@@ -141,7 +145,12 @@ function PlaygroundContent() {
 
 export function PropsPlaygroundDemo() {
 	return (
-		<SwipeBarProvider toggleIconEdgeDistancePx={60} swipeBarZIndex={60} overlayZIndex={55}>
+		<SwipeBarProvider
+			isAbsolute
+			toggleIconEdgeDistancePx={60}
+			swipeBarZIndex={60}
+			overlayZIndex={55}
+		>
 			<div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0d0d1a]">
 				<PlaygroundContent />
 			</div>

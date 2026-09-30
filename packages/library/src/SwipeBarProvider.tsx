@@ -46,6 +46,7 @@ import {
 	type TBottomSidebarState,
 	type TLeftRightSidebarState,
 	TOUCH_SWIPE_ON_ALL_SCREENS,
+	TRACK_CONTENT_ON_DRAG,
 	TRANSITION_MS,
 	type TSidebarOpts,
 	type TSidebarSide,
@@ -161,6 +162,7 @@ export const SwipeBarProvider = ({
 	showRail,
 	railWidthPx,
 	touchSwipeOnAllScreens,
+	trackContentOnDrag,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
 
@@ -265,6 +267,7 @@ export const SwipeBarProvider = ({
 		showRail: showRail ?? SHOW_RAIL,
 		railWidthPx: railWidthPx ?? RAIL_WIDTH_PX,
 		touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? TOUCH_SWIPE_ON_ALL_SCREENS,
+		trackContentOnDrag: trackContentOnDrag ?? TRACK_CONTENT_ON_DRAG,
 	});
 
 	// --- Left registration ---

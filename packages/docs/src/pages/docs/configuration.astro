@@ -43,6 +43,7 @@ export const prerender = true;
   swipeToClose={true}
   disableSwipe={false}              // kills all gesture interaction
   touchSwipeOnAllScreens={false}    // touch swipe above mediaQueryWidth too
+  trackContentOnDrag={true}         // in flow content follows the drag
   disabled={false}                  // disables everything
 >
   {children}
@@ -133,6 +134,15 @@ export const prerender = true;
 			(<InlineCode>isAbsolute</InlineCode> off), the content follows the
 			finger during the drag, just like the toggle animation. Bottom
 			sidebars ignore this option.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">trackContentOnDrag</strong> controls
+			that content tracking. Tracking relays out the page on every drag
+			frame; on heavy pages or low end tablets set it to
+			<InlineCode>false</InlineCode>. The content then stays put while the
+			sidebar moves by transform only, and slides into place with the
+			regular open/close animation on release. Default is
+			<InlineCode>true</InlineCode>.
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">Viewport reconciliation</strong> —
