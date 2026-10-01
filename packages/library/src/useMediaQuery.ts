@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { MEDIA_QUERY_WIDTH } from "./swipeSidebarShared";
+import { getSmallViewportQuery, MEDIA_QUERY_WIDTH } from "./swipeSidebarShared";
 
+// True when the viewport is strictly narrower than width (the small viewport).
 export function useMediaQuery(width = MEDIA_QUERY_WIDTH): boolean {
-	// we want to force isAbsolute to true if width is less than MEDIA_QUERY_WIDTH
-	const QUERY = `(max-width: ${Math.min(width, MEDIA_QUERY_WIDTH)}px)`;
+	const QUERY = getSmallViewportQuery(width);
 
 	const getMatches = (): boolean => {
 		if (typeof window === "undefined" || typeof window.matchMedia === "undefined") {

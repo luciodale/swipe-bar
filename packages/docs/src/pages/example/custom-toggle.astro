@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { CustomToggleDemo } from "../../components/demos/CustomToggleDemo";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Custom Toggle" description="Replace the default toggle button with any React element.">
+<DemoPage title="Custom Toggle" description="Replace the default toggle button with any React element.">
 	<ContentSection label="Custom Toggle">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			The <InlineCode>ToggleComponent</InlineCode> prop accepts any React
@@ -19,7 +19,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<CustomToggleDemo client:only="react" />
 	</ContentSection>
 
@@ -69,4 +69,4 @@ function App() {
 			filename="CustomToggleExample.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

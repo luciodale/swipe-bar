@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { BottomSheetDemo } from "../../components/demos/BottomSheet";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Bottom Sheet" description="Bottom sheet with mid-anchor point and swipe gestures.">
+<DemoPage title="Bottom Sheet" description="Bottom sheet with mid-anchor point and swipe gestures.">
 	<ContentSection label="Bottom Sheet">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			A bottom sheet that slides up from the bottom edge. Enable
@@ -18,7 +18,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<BottomSheetDemo client:only="react" />
 	</ContentSection>
 
@@ -72,4 +72,4 @@ function Sheet() {
 			filename="BottomSheetExample.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

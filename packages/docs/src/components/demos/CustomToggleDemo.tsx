@@ -1,19 +1,18 @@
 import {
 	SwipeBarBottom,
 	SwipeBarLeft,
-	SwipeBarProvider,
 	SwipeBarRight,
 	useSwipeBarContext,
 } from "@luciodale/swipe-bar";
 import { useState } from "react";
+import { DemoActions, DemoButton, DemoCard, DemoSwitch } from "./page/DemoControls";
+import { PageDemo } from "./page/PageDemo";
+import { PagePortal } from "./page/PagePortal";
+import { PANE_CLASS, PaneBody } from "./page/Pane";
 
 function ChevronToggle() {
 	return (
-		<div
-			className="rounded-full bg-[#1a1a2e] border border-white/20 text-white
-				shadow-lg hover:bg-[#252540] transition-colors
-				w-10 h-10 flex items-center justify-center"
-		>
+		<div className="flex size-10 items-center justify-center rounded-full border border-accent/40 bg-neutral-950 text-accent shadow-lg transition-colors hover:bg-accent/10">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="18"
@@ -34,121 +33,62 @@ function ChevronToggle() {
 	);
 }
 
-function ToggleContent() {
+function CustomToggleDemoContent() {
 	const { openSidebar, closeSidebar } = useSwipeBarContext();
 	const [useCustom, setUseCustom] = useState(true);
-
 	const toggle = useCustom ? <ChevronToggle /> : undefined;
 
 	return (
-		<div className="flex h-full w-full">
-			<SwipeBarLeft
-				isAbsolute
-				ToggleComponent={toggle}
-				className="bg-[#1a1a2e] text-white border-r border-white/10"
+		<>
+			<DemoCard
+				title="Try it"
+				description="The toggles on the left, right and bottom edges of this page are custom React elements. Switch back to the built in icon to compare."
 			>
-				<div className="flex h-full flex-col p-4 gap-3">
-					<div className="text-sm font-semibold text-white/90">Left Sidebar</div>
-					<button
-						type="button"
-						onClick={() => closeSidebar("left")}
-						className="mt-auto w-full rounded-lg px-3 py-2 text-sm text-white/60 hover:bg-white/10 border border-white/10"
-					>
-						Close
-					</button>
-				</div>
-			</SwipeBarLeft>
+				<DemoSwitch
+					label="ToggleComponent"
+					hint="Use the custom chevron toggle"
+					checked={useCustom}
+					onToggle={() => setUseCustom((prev) => !prev)}
+				/>
+				<DemoActions>
+					<DemoButton onClick={() => openSidebar("left")}>Open left</DemoButton>
+					<DemoButton onClick={() => openSidebar("right")}>Open right</DemoButton>
+					<DemoButton onClick={() => openSidebar("bottom")}>Open bottom</DemoButton>
+				</DemoActions>
+			</DemoCard>
 
-			<div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 min-h-[400px]">
-				<p className="text-sm text-white/50 mb-2">
-					Replace the default toggle with any React element.
-				</p>
-				<div className="flex items-center gap-2">
-					<label className="relative inline-flex items-center cursor-pointer">
-						<input
-							type="checkbox"
-							className="sr-only peer"
-							checked={useCustom}
-							onChange={() => setUseCustom(!useCustom)}
-						/>
-						<div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-emerald-500/50 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
-						<span className="ms-2 text-xs text-white/60">Custom toggle</span>
-					</label>
-				</div>
-				<div className="flex gap-3">
-					<button
-						type="button"
-						onClick={() => openSidebar("left")}
-						className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/15"
-					>
-						Open Left
-					</button>
-					<button
-						type="button"
-						onClick={() => openSidebar("right")}
-						className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/15"
-					>
-						Open Right
-					</button>
-					<button
-						type="button"
-						onClick={() => openSidebar("bottom")}
-						className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/15"
-					>
-						Open Bottom
-					</button>
-				</div>
-			</div>
-
-			<SwipeBarRight
-				isAbsolute
-				ToggleComponent={toggle}
-				className="bg-[#1a1a2e] text-white border-l border-white/10"
-			>
-				<div className="flex h-full flex-col p-4 gap-3">
-					<div className="text-sm font-semibold text-white/90">Right Sidebar</div>
-					<button
-						type="button"
-						onClick={() => closeSidebar("right")}
-						className="mt-auto w-full rounded-lg px-3 py-2 text-sm text-white/60 hover:bg-white/10 border border-white/10"
-					>
-						Close
-					</button>
-				</div>
-			</SwipeBarRight>
-
-			<SwipeBarBottom
-				sidebarHeightPx={300}
-				isAbsolute
-				ToggleComponent={toggle}
-				className="bg-[#1a1a2e] text-white border-t border-white/10"
-			>
-				<div className="flex h-full flex-col p-4 gap-3">
-					<div className="flex items-center justify-between">
-						<span className="text-sm font-semibold text-white/90">Bottom Sheet</span>
-						<button
-							type="button"
-							onClick={() => closeSidebar("bottom")}
-							className="rounded-lg border border-white/10 bg-white/10 px-3 py-1 text-xs hover:bg-white/15"
-						>
-							Close
-						</button>
-					</div>
-					<p className="text-xs text-white/50">
-						The same custom toggle component works on all three sidebar directions.
-					</p>
-				</div>
-			</SwipeBarBottom>
-		</div>
+			<PagePortal host="left">
+				<SwipeBarLeft isAbsolute ToggleComponent={toggle} className={PANE_CLASS.left}>
+					<PaneBody title="Left sidebar" onClose={() => closeSidebar("left")} />
+				</SwipeBarLeft>
+			</PagePortal>
+			<PagePortal host="right">
+				<SwipeBarRight isAbsolute ToggleComponent={toggle} className={PANE_CLASS.right}>
+					<PaneBody title="Right sidebar" onClose={() => closeSidebar("right")} />
+				</SwipeBarRight>
+			</PagePortal>
+			<PagePortal host="bottom">
+				<SwipeBarBottom
+					sidebarHeightPx={300}
+					isAbsolute
+					ToggleComponent={toggle}
+					className={PANE_CLASS.bottom}
+				>
+					<PaneBody title="Bottom sheet" onClose={() => closeSidebar("bottom")}>
+						<p className="text-sm text-white/60">
+							The same custom toggle works on all three directions.
+						</p>
+					</PaneBody>
+				</SwipeBarBottom>
+			</PagePortal>
+		</>
 	);
 }
 
 export function CustomToggleDemo() {
 	return (
-		<SwipeBarProvider swipeBarZIndex={60} overlayZIndex={55}>
-			<div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0d0d1a]">
-				<ToggleContent />
-			</div>
-		</SwipeBarProvider>
+		<PageDemo>
+			<CustomToggleDemoContent />
+		</PageDemo>
 	);
 }

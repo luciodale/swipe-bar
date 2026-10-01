@@ -1,159 +1,99 @@
-import { SwipeBarLeft, SwipeBarProvider, useSwipeBarContext } from "@luciodale/swipe-bar";
-import { useState } from "react";
+import { SwipeBarLeft, useSwipeBarContext } from "@luciodale/swipe-bar";
+import {
+	DemoActions,
+	DemoButton,
+	DemoCard,
+	DemoGroup,
+	DemoNote,
+	DemoNumber,
+	DemoSegment,
+	DemoStatus,
+	DemoSwitch,
+} from "./page/DemoControls";
+import { PageDemo } from "./page/PageDemo";
+import { PagePortal } from "./page/PagePortal";
+import { PANE_CLASS, PaneBody } from "./page/Pane";
+import { useBreakpointStatus } from "./useBreakpointStatus";
+import {
+	PLAYGROUND_BOOLEAN_OPTIONS,
+	PLAYGROUND_NUMBER_OPTIONS,
+	SMALL_SCREEN_MODES,
+	usePlaygroundOptions,
+} from "./usePlaygroundOptions";
 
-function PlaygroundContent() {
-	const { openSidebar, closeSidebar, globalOptions, setGlobalOptions, isLeftOpen } =
-		useSwipeBarContext();
-
-	const [formValues, setFormValues] = useState({
-		transitionMs: globalOptions.transitionMs,
-		sidebarWidthPx: globalOptions.sidebarWidthPx,
-		edgeActivationWidthPx: globalOptions.edgeActivationWidthPx,
-		showOverlay: globalOptions.showOverlay,
-		fadeContent: globalOptions.fadeContent,
-		showToggle: globalOptions.showToggle,
-		swipeToOpen: globalOptions.swipeToOpen,
-		swipeToClose: globalOptions.swipeToClose,
-		disableSwipe: globalOptions.disableSwipe,
-		touchSwipeOnAllScreens: globalOptions.touchSwipeOnAllScreens,
-		isAbsolute: globalOptions.isAbsolute,
-		trackContentOnDrag: globalOptions.trackContentOnDrag,
-		disabled: globalOptions.disabled,
-	});
-
-	function handleNumber(field: keyof typeof formValues, value: string) {
-		const num = Number.parseInt(value, 10);
-		if (Number.isNaN(num)) return;
-		setFormValues((prev) => ({ ...prev, [field]: num }));
-		setGlobalOptions({ [field]: num });
-	}
-
-	function handleBoolean(field: keyof typeof formValues) {
-		const next = !formValues[field];
-		setFormValues((prev) => ({ ...prev, [field]: next }));
-		setGlobalOptions({ [field]: next });
-	}
+function PlaygroundControls() {
+	const { openSidebar, closeSidebar, isLeftOpen } = useSwipeBarContext();
+	const { globalOptions, handleToggle, handleNumber, handleSmallScreenMode } =
+		usePlaygroundOptions();
+	const breakpointStatus = useBreakpointStatus(globalOptions);
 
 	return (
-		<div className="flex h-full w-full">
-			<SwipeBarLeft className="bg-[#1a1a2e] text-white border-r border-white/10">
-				<div className="flex h-full flex-col p-4 gap-3">
-					<div className="text-sm font-semibold text-white/90">Preview Sidebar</div>
-					<p className="text-xs text-white/50">
-						Adjust the props on the right to see changes here in real time.
+		<DemoCard
+			title="Playground"
+			description="Every change applies to the sidebar on the left edge of this page right away. Try smallScreenMode push with a large mediaQueryWidth, then open the sidebar."
+		>
+			<DemoActions>
+				<DemoButton tone="accent" onClick={() => openSidebar("left")}>
+					Open sidebar
+				</DemoButton>
+				<DemoButton onClick={() => closeSidebar("left")}>Close sidebar</DemoButton>
+			</DemoActions>
+			<DemoStatus items={[{ label: "left", value: isLeftOpen ? "open" : "closed" }]} />
+
+			<DemoGroup>
+				<DemoSegment
+					label="smallScreenMode"
+					value={globalOptions.smallScreenMode}
+					options={SMALL_SCREEN_MODES}
+					onChange={handleSmallScreenMode}
+				/>
+				<DemoNote>{breakpointStatus}</DemoNote>
+				{PLAYGROUND_NUMBER_OPTIONS.map((option) => (
+					<DemoNumber
+						key={option}
+						id={`playground-${option}`}
+						label={option}
+						value={globalOptions[option]}
+						onChange={(value) => handleNumber(option, value)}
+					/>
+				))}
+			</DemoGroup>
+
+			<DemoGroup>
+				{PLAYGROUND_BOOLEAN_OPTIONS.map((option) => (
+					<DemoSwitch
+						key={option}
+						label={option}
+						checked={globalOptions[option]}
+						onToggle={() => handleToggle(option)}
+					/>
+				))}
+			</DemoGroup>
+		</DemoCard>
+	);
+}
+
+function PlaygroundPane() {
+	const { closeSidebar } = useSwipeBarContext();
+
+	return (
+		<PagePortal host="left">
+			<SwipeBarLeft className={PANE_CLASS.left} ariaLabel="Preview sidebar">
+				<PaneBody title="Preview sidebar" onClose={() => closeSidebar("left")}>
+					<p className="text-sm text-white/60">
+						Adjust the props in the playground to see changes here in real time.
 					</p>
-					<button
-						type="button"
-						onClick={() => closeSidebar("left")}
-						className="mt-auto w-full rounded-lg px-3 py-2 text-sm text-white/60 hover:bg-white/10 border border-white/10"
-					>
-						Close
-					</button>
-				</div>
+				</PaneBody>
 			</SwipeBarLeft>
-
-			<div className="flex-1 flex flex-col gap-4 p-4 min-h-[500px] overflow-y-auto">
-				<div className="flex items-center justify-between">
-					<span className="text-sm font-semibold text-white/90">Props Playground</span>
-					<button
-						type="button"
-						onClick={() => openSidebar("left")}
-						className="rounded-lg bg-white/10 border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/15"
-					>
-						{isLeftOpen ? "Sidebar Open" : "Open Sidebar"}
-					</button>
-				</div>
-
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-					<div className="rounded-lg border border-white/10 bg-white/5 p-3">
-						<label htmlFor="pp-transition" className="block text-xs text-white/50 mb-1">
-							transitionMs
-						</label>
-						<input
-							id="pp-transition"
-							type="number"
-							value={formValues.transitionMs}
-							onChange={(e) => handleNumber("transitionMs", e.target.value)}
-							className="w-full rounded border border-white/20 bg-white/10 px-2 py-1 text-sm text-white"
-						/>
-					</div>
-					<div className="rounded-lg border border-white/10 bg-white/5 p-3">
-						<label htmlFor="pp-width" className="block text-xs text-white/50 mb-1">
-							sidebarWidthPx
-						</label>
-						<input
-							id="pp-width"
-							type="number"
-							value={formValues.sidebarWidthPx}
-							onChange={(e) => handleNumber("sidebarWidthPx", e.target.value)}
-							className="w-full rounded border border-white/20 bg-white/10 px-2 py-1 text-sm text-white"
-						/>
-					</div>
-					<div className="rounded-lg border border-white/10 bg-white/5 p-3">
-						<label htmlFor="pp-edge" className="block text-xs text-white/50 mb-1">
-							edgeActivationWidthPx
-						</label>
-						<input
-							id="pp-edge"
-							type="number"
-							value={formValues.edgeActivationWidthPx}
-							onChange={(e) => handleNumber("edgeActivationWidthPx", e.target.value)}
-							className="w-full rounded border border-white/20 bg-white/10 px-2 py-1 text-sm text-white"
-						/>
-					</div>
-				</div>
-
-				<div className="rounded-lg border border-white/10 bg-white/5 p-3 space-y-3">
-					<div className="text-xs text-white/50 mb-2">Boolean Options</div>
-					{(
-						[
-							"showOverlay",
-							"fadeContent",
-							"showToggle",
-							"swipeToOpen",
-							"swipeToClose",
-							"disableSwipe",
-							"touchSwipeOnAllScreens",
-							"isAbsolute",
-							"trackContentOnDrag",
-							"disabled",
-						] as const
-					).map((field) => (
-						<div key={field} className="flex items-center justify-between">
-							<span className="text-sm text-white/70">{field}</span>
-							<button
-								type="button"
-								onClick={() => handleBoolean(field)}
-								aria-label={`Toggle ${field}`}
-								className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-									formValues[field] ? "bg-emerald-500/50" : "bg-white/10"
-								}`}
-							>
-								<span
-									className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-										formValues[field] ? "translate-x-[18px]" : "translate-x-[3px]"
-									}`}
-								/>
-							</button>
-						</div>
-					))}
-				</div>
-			</div>
-		</div>
+		</PagePortal>
 	);
 }
 
 export function PropsPlaygroundDemo() {
 	return (
-		<SwipeBarProvider
-			isAbsolute
-			toggleIconEdgeDistancePx={60}
-			swipeBarZIndex={60}
-			overlayZIndex={55}
-		>
-			<div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0d0d1a]">
-				<PlaygroundContent />
-			</div>
-		</SwipeBarProvider>
+		<PageDemo>
+			<PlaygroundControls />
+			<PlaygroundPane />
+		</PageDemo>
 	);
 }

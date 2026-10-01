@@ -5,43 +5,14 @@ import { SwipeBarLeft } from "../components/SwipeBarLeft";
 import { SwipeBarRight } from "../components/SwipeBarRight";
 import { SwipeBarProvider } from "../SwipeBarProvider";
 import type { TSwipeBarOptions } from "../swipeSidebarShared";
+import { dispatchTouch } from "./gestureMock";
+import { installViewportMock, setViewportWidth } from "./viewportMock";
 
 const DESKTOP_INNER_WIDTH = 1024;
 const SMALL_INNER_WIDTH = 480;
 
-function setViewportWidth(width: number) {
-	Object.defineProperty(window, "innerWidth", {
-		value: width,
-		configurable: true,
-		writable: true,
-	});
-}
-
-function matchesQuery(query: string): boolean {
-	const m = query.match(/max-width:\s*(\d+)px/);
-	if (!m) return false;
-	return window.innerWidth <= Number(m[1]);
-}
-
 beforeEach(() => {
-	setViewportWidth(DESKTOP_INNER_WIDTH);
-	const matchMediaImpl = (query: string): MediaQueryList =>
-		({
-			matches: matchesQuery(query),
-			media: query,
-			onchange: null,
-			addListener: () => {},
-			removeListener: () => {},
-			addEventListener: () => {},
-			removeEventListener: () => {},
-			dispatchEvent: () => true,
-		}) as unknown as MediaQueryList;
-	vi.stubGlobal("matchMedia", matchMediaImpl);
-	Object.defineProperty(window, "matchMedia", {
-		value: matchMediaImpl,
-		configurable: true,
-		writable: true,
-	});
+	installViewportMock(DESKTOP_INNER_WIDTH);
 	vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
 		cb(0);
 		return 0;
@@ -54,19 +25,6 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 	setViewportWidth(DESKTOP_INNER_WIDTH);
 });
-
-function dispatchTouch(
-	type: "touchstart" | "touchmove" | "touchend" | "touchcancel",
-	clientX: number,
-) {
-	const event = new Event(type, { bubbles: true, cancelable: true });
-	Object.defineProperty(event, "changedTouches", {
-		value: [{ identifier: 1, clientX, clientY: 300 }],
-	});
-	act(() => {
-		window.dispatchEvent(event);
-	});
-}
 
 function dispatchMouse(type: "mousedown" | "mousemove" | "mouseup", clientX: number) {
 	act(() => {

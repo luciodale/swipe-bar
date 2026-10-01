@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { MultiInstanceDemo } from "../../components/demos/MultiInstance";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Multi-Instance" description="Multiple independent bottom sheets with z-index stacking.">
+<DemoPage title="Multi-Instance" description="Multiple independent bottom sheets with z-index stacking.">
 	<ContentSection label="Multi-Instance Bottom Sheets">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			Give each <InlineCode>SwipeBarBottom</InlineCode> an
@@ -18,7 +18,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<MultiInstanceDemo client:only="react" />
 	</ContentSection>
 
@@ -82,4 +82,4 @@ function Panels() {
 			filename="MultiInstanceExample.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

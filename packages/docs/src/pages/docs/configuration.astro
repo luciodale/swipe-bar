@@ -4,6 +4,7 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import DocsPage from "../../layouts/DocsPage.astro";
+import { href } from "../../lib/link";
 
 export const prerender = true;
 ---
@@ -30,12 +31,13 @@ export const prerender = true;
   closeSidebarOnOverlayClick={true} // tap overlay to close
   fadeContent={false}               // fade main content when open
   fadeContentTransitionMs={100}     // fade animation duration
-  isAbsolute={false}                // overlay vs. push layout
+  isAbsolute={false}                // float over the page vs. sit in the layout
   showToggle={true}                 // show built-in toggle button
   toggleIconColor="white"
   toggleIconSizePx={40}
   toggleIconEdgeDistancePx={40}
-  mediaQueryWidth={640}             // swipe gestures below this width (see touchSwipeOnAllScreens)
+  mediaQueryWidth={640}             // small viewport below this width (any value)
+  smallScreenMode="overlay"         // "overlay" | "push" below mediaQueryWidth
   swipeBarZIndex={30}
   toggleZIndex={15}
   overlayZIndex={20}
@@ -121,9 +123,28 @@ export const prerender = true;
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">mediaQueryWidth</strong> sets the
-			breakpoint below which swipe gestures activate. Above this width,
-			sidebars respond only to toggle clicks and programmatic control.
+			breakpoint of the small viewport. Below it sidebars float, swipe
+			gestures activate and the rail is suppressed; above it sidebars
+			respond only to toggle clicks and programmatic control. A viewport
+			exactly this wide counts as large. Any value is honoured, so
+			<InlineCode>1024</InlineCode> treats tablets as small viewports.
 			Default is 640px.
+		</p>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			<strong class="text-white/80">smallScreenMode</strong> decides what
+			left and right sidebars do to the page below
+			<InlineCode>mediaQueryWidth</InlineCode>. The default
+			<InlineCode>"overlay"</InlineCode> floats the sidebar over static
+			content. <InlineCode>"push"</InlineCode> slides the content aside by
+			exactly the visible sidebar width, during the open and close
+			animation and while dragging, and clips whatever leaves the
+			viewport. Push needs the content wrapped in
+			<InlineCode>SwipeBarContent</InlineCode> (or registered with
+			<InlineCode>useSwipeBarContentRef</InlineCode>); without it the
+			sidebar falls back to overlay and logs a warning. The overlay keeps
+			working as configured, and <InlineCode>isAbsolute</InlineCode>
+			always wins over push. See the
+			<a class="text-accent hover:underline" href={href("/example/push-content")}>Push Content example</a>.
 		</p>
 		<p class="text-white/60 mb-4 leading-relaxed">
 			<strong class="text-white/80">touchSwipeOnAllScreens</strong> lifts

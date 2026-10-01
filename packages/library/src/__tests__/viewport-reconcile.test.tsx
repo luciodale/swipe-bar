@@ -6,84 +6,13 @@ import { SwipeBarBottom } from "../components/SwipeBarBottom";
 import { SwipeBarLeft } from "../components/SwipeBarLeft";
 import { SwipeBarRight } from "../components/SwipeBarRight";
 import { SwipeBarProvider } from "../SwipeBarProvider";
+import { installViewportMock, setViewportWidth } from "./viewportMock";
 
 const DESKTOP_INNER_WIDTH = 1024;
 const SMALL_INNER_WIDTH = 480;
 
-type TMediaQueryListLike = {
-	matches: boolean;
-	media: string;
-	onchange: null;
-	addListener: (cb: () => void) => void;
-	removeListener: (cb: () => void) => void;
-	addEventListener: (event: string, cb: () => void) => void;
-	removeEventListener: (event: string, cb: () => void) => void;
-	dispatchEvent: () => boolean;
-};
-
-type TMqlRecord = {
-	mql: TMediaQueryListLike;
-	listeners: Set<() => void>;
-};
-
-const mqlRegistry = new Map<string, TMqlRecord>();
-let currentInnerWidth = DESKTOP_INNER_WIDTH;
-
-function matchesQuery(query: string, innerWidth: number): boolean {
-	const m = query.match(/max-width:\s*(\d+)px/);
-	if (!m) return false;
-	const max = Number(m[1]);
-	return innerWidth <= max;
-}
-
-function makeMql(query: string): TMqlRecord {
-	const listeners = new Set<() => void>();
-	const mql: TMediaQueryListLike = {
-		matches: matchesQuery(query, currentInnerWidth),
-		media: query,
-		onchange: null,
-		addListener: (cb) => listeners.add(cb),
-		removeListener: (cb) => listeners.delete(cb),
-		addEventListener: (_event, cb) => listeners.add(cb),
-		removeEventListener: (_event, cb) => listeners.delete(cb),
-		dispatchEvent: () => true,
-	};
-	return { mql, listeners };
-}
-
-function setViewportWidth(width: number) {
-	currentInnerWidth = width;
-	Object.defineProperty(window, "innerWidth", {
-		value: width,
-		configurable: true,
-		writable: true,
-	});
-	for (const [query, record] of mqlRegistry) {
-		const next = matchesQuery(query, width);
-		if (record.mql.matches !== next) {
-			record.mql.matches = next;
-			for (const cb of record.listeners) cb();
-		}
-	}
-}
-
 beforeEach(() => {
-	mqlRegistry.clear();
-	setViewportWidth(DESKTOP_INNER_WIDTH);
-	const matchMediaImpl = (query: string): MediaQueryList => {
-		let record = mqlRegistry.get(query);
-		if (!record) {
-			record = makeMql(query);
-			mqlRegistry.set(query, record);
-		}
-		return record.mql as unknown as MediaQueryList;
-	};
-	vi.stubGlobal("matchMedia", matchMediaImpl);
-	Object.defineProperty(window, "matchMedia", {
-		value: matchMediaImpl,
-		configurable: true,
-		writable: true,
-	});
+	installViewportMock(DESKTOP_INNER_WIDTH);
 	vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
 		cb(0);
 		return 0;
@@ -94,7 +23,6 @@ afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
-	mqlRegistry.clear();
 	setViewportWidth(DESKTOP_INNER_WIDTH);
 });
 

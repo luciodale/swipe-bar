@@ -12,6 +12,12 @@
 -- Swipe gestures are small viewport only by default. touchSwipeOnAllScreens
 -- lifts that limit for touch input on left/right sidebars; mouse drags stay
 -- small viewport only.
+--
+-- "Small viewport" has one definition everywhere: is_small(opts) below.
+--
+-- Below the breakpoint left/right panes float. smallScreenMode picks how the
+-- page reacts: overlay (default, the pane covers static content) or push (a
+-- registered content element slides aside by the visible pane width).
 
 entity SwipeBarProvider {
     -- Holds three independent registries keyed by sidebar id.
@@ -207,7 +213,9 @@ rule PaneModality {
 }
 
 -- pane_is_modal(opts) =
---     opts.isAbsolute or viewport_width() < opts.mediaQueryWidth or opts.showOverlay
+--     opts.isAbsolute or is_small(opts) or opts.showOverlay
+
+-- is_small(opts) = viewport_width() < opts.mediaQueryWidth
 
 rule BuiltInToggleHiddenInRail {
     -- The built-in toggle button is the affordance for opening from a fully
@@ -274,6 +282,111 @@ rule InFlowDragTracksContentEdge {
         else:
             content_edge_position() unchanged
 }
+
+rule SingleBreakpoint {
+    -- mediaQueryWidth is honoured exactly as given, for any positive value
+    -- (no upper clamp). Every small viewport decision uses is_small(opts):
+    -- floating, rail routing on close, rail reconcile, built in toggle,
+    -- gesture eligibility, modality, breakpoint auto close and the bottom
+    -- mid anchor. A viewport exactly mediaQueryWidth wide is large.
+    when: ViewportWidthEvaluated(provider, id, side)
+    ensures:
+        let opts = provider.{side}_options[id]
+        and is_small(opts) = (viewport_width() < opts.mediaQueryWidth)
+}
+
+entity ContentRegistration {
+    -- At most one content element per provider. Registered through
+    -- SwipeBarContent or useSwipeBarContentRef; unregistered on unmount or
+    -- when the ref receives null.
+    element: Element?
+    push_owner: SidebarInstance?   -- the pane currently pushing, if any
+}
+
+rule PushActivation {
+    -- A left/right pane pushes the content when all hold at gesture start or
+    -- open time. Ownership is taken by the first pane that pushes and kept
+    -- until that pane closes; a second pane opening on top (stacked panes)
+    -- floats over the already pushed content without pushing further.
+    when: SidebarStartsOpening(provider, id, side)
+    requires: side in {left, right}
+    ensures:
+        let opts = provider.{side}_options[id]
+        and let pushes =
+            opts.smallScreenMode = push
+            and not opts.isAbsolute
+            and is_small(opts)
+            and provider.content.element != null
+            and (provider.content.push_owner = null
+                 or provider.content.push_owner = instance)
+        and if pushes:
+            provider.content.push_owner = instance
+}
+
+rule PushTracksPane {
+    -- While a pane owns the push, the content is translated horizontally by
+    -- exactly the visible pane width at every moment: settled open, settled
+    -- closed, mid animation and mid drag. Left pushes toward the right
+    -- (positive offset), right pushes toward the left (negative offset).
+    -- The content is never resized, only moved; whatever leaves the viewport
+    -- is clipped and never produces horizontal page scroll.
+    when: PaneVisibleWidthChanges(provider, instance, visible_width)
+    requires: provider.content.push_owner = instance
+    ensures:
+        if instance.side = left:
+            content_offset() = visible_width
+        else:
+            content_offset() = -visible_width
+}
+
+rule PushReleasesOnClose {
+    -- Closing the owning pane by any path (toggle, overlay, Escape, swipe,
+    -- cancelled touch snapping back closed, breakpoint auto close, unmount)
+    -- settles the content at offset 0, removes its transform once settled
+    -- and releases ownership. This holds even when the viewport is no longer
+    -- small at close time.
+    when: SidebarCloses(provider, instance)
+    requires: provider.content.push_owner = instance
+    ensures:
+        content_offset() = 0
+        and content_transform_cleared()
+        and provider.content.push_owner = null
+}
+
+rule PushKeepsOverlay {
+    -- Push mode does not change overlay behaviour: showOverlay,
+    -- overlayBackgroundColor and closeSidebarOnOverlayClick apply exactly as
+    -- in overlay mode. The pane stays modal (it is floating on a small viewport).
+    when: SwipeBarLeftOrRight.render(instance)
+    requires: provider.{instance.side}_options[instance.id].smallScreenMode = push
+    ensures: overlay behaviour identical to smallScreenMode = overlay
+}
+
+rule PushFallsBackWithoutContent {
+    -- smallScreenMode = push with no registered content element behaves as
+    -- overlay mode and emits one console warning per sidebar instance.
+    when: SidebarStartsOpening(provider, id, side)
+    requires:
+        side in {left, right}
+        and provider.{side}_options[id].smallScreenMode = push
+        and is_small(provider.{side}_options[id])
+        and provider.content.element = null
+    ensures:
+        content_offset() unchanged
+        and WarnedOnce(instance, "push mode needs SwipeBarContent")
+}
+
+rule PushIgnoredOnLargeViewport {
+    -- Above the breakpoint smallScreenMode has no effect: panes are in flow
+    -- (or absolute) exactly as before.
+    when: SidebarStartsOpening(provider, id, side)
+    requires: not is_small(provider.{side}_options[id])
+    ensures: provider.content.push_owner unchanged
+}
+
+open question "Should the pushed content dim progressively with the drag instead of using the overlay fade?"
+
+open question "Should bottom sidebars push the content upward in push mode?"
 
 open question "Should bottom sidebars honour touchSwipeOnAllScreens, including midAnchorPoint on large viewports?"
 

@@ -63,6 +63,7 @@ Swipe from the left edge on mobile or click the toggle on desktop. That's it.
 - **Zero dependencies** &mdash; just React
 - **Left, right, and bottom** &mdash; all three directions with the same API
 - **Native touch gestures** &mdash; edge swipe detection, drag tracking, velocity commit/cancel; opt into touch swipe on tablets and large touch screens with `touchSwipeOnAllScreens`
+- **Push mode** &mdash; below a breakpoint you choose, `smallScreenMode="push"` slides the whole page aside with the sidebar instead of covering it
 - **Multi-instance** &mdash; multiple sidebars per direction with independent state via `id` prop
 - **Bottom sheets with mid-anchor** &mdash; swipe to a halfway stop, then again to fully open
 - **Typed sidebar metadata** &mdash; attach a generic type map and get compile-time safety
@@ -95,6 +96,25 @@ import { SwipeBarBottom } from "@luciodale/swipe-bar";
 <SwipeBarBottom sidebarHeightPx={400} isAbsolute midAnchorPoint>
   <div>Sheet content</div>
 </SwipeBarBottom>
+```
+
+## Push Content
+
+Below `mediaQueryWidth` the page content slides aside with the sidebar, on open, close and while dragging. Wrap the content in `SwipeBarContent` and keep the sidebars outside it.
+
+```tsx
+import { SwipeBarContent, SwipeBarLeft, SwipeBarProvider } from "@luciodale/swipe-bar";
+
+<SwipeBarProvider smallScreenMode="push" mediaQueryWidth={1024}>
+  <div className="flex">
+    <SwipeBarLeft>
+      <nav>Navigation</nav>
+    </SwipeBarLeft>
+    <SwipeBarContent className="flex-1">
+      <main>Your app content</main>
+    </SwipeBarContent>
+  </div>
+</SwipeBarProvider>
 ```
 
 ## Multi-Instance

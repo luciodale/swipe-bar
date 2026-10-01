@@ -96,6 +96,7 @@ export function makeOptions(overrides?: Partial<TSwipeBarOptions>): Required<TSw
 		railWidthPx: 64,
 		touchSwipeOnAllScreens: false,
 		trackContentOnDrag: true,
+		smallScreenMode: "overlay",
 		...overrides,
 	};
 }

@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { MultiInstanceLeftRightDemo } from "../../components/demos/MultiInstanceLeftRight";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Multi-Instance Left & Right" description="Multiple independent left sidebars with z-index stacking.">
+<DemoPage title="Multi-Instance Left & Right" description="Multiple independent left sidebars with z-index stacking.">
 	<ContentSection label="Multi-Instance Left Sidebars">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			Give each <InlineCode>SwipeBarLeft</InlineCode> an
@@ -18,7 +18,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<MultiInstanceLeftRightDemo client:only="react" />
 	</ContentSection>
 
@@ -78,4 +78,4 @@ function Content() {
 			filename="MultiInstanceLeftRightExample.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

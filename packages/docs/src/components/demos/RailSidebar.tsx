@@ -1,4 +1,8 @@
-import { SwipeBarLeft, SwipeBarProvider, useSwipeBarContext } from "@luciodale/swipe-bar";
+import { SwipeBarLeft, useSwipeBarContext } from "@luciodale/swipe-bar";
+import { DemoActions, DemoButton, DemoCard, DemoStatus } from "./page/DemoControls";
+import { PageDemo } from "./page/PageDemo";
+import { PagePortal } from "./page/PagePortal";
+import { PANE_CLASS } from "./page/Pane";
 
 type TNavItem = {
 	id: string;
@@ -14,106 +18,92 @@ const NAV_ITEMS: TNavItem[] = [
 	{ id: "settings", label: "Settings", icon: "✦" },
 ];
 
-function RailContent() {
-	const { openSidebar, closeSidebar, isLeftOpen, isLeftRail } = useSwipeBarContext();
+function useRailToggle() {
+	const { openSidebar, closeSidebar, isLeftOpen } = useSwipeBarContext();
 
-	const showLabels = isLeftOpen;
+	function handleToggle() {
+		if (isLeftOpen) closeSidebar("left");
+		else openSidebar("left");
+	}
+
+	return { isExpanded: isLeftOpen, handleToggle };
+}
+
+function RailContent() {
+	const { isExpanded, handleToggle } = useRailToggle();
+	const alignClass = isExpanded ? "justify-start gap-3" : "justify-center";
 
 	return (
-		<div className="flex h-full flex-col p-2 gap-2">
+		<div className="flex h-full flex-col gap-2 p-2">
 			<div
-				className="flex items-center gap-3 px-2 py-3 border-b border-white/10"
-				style={{ justifyContent: showLabels ? "space-between" : "center" }}
+				className={`flex items-center border-b border-white/10 px-2 py-3 ${
+					isExpanded ? "justify-between" : "justify-center"
+				}`}
 			>
-				{showLabels && <span className="text-sm font-semibold text-white/90">Navigation</span>}
+				{isExpanded && <span className="text-sm font-semibold text-white">Navigation</span>}
 				<button
 					type="button"
-					onClick={() => {
-						if (isLeftOpen) closeSidebar("left");
-						else openSidebar("left");
-					}}
-					aria-label={isLeftOpen ? "Collapse navigation" : "Expand navigation"}
-					className="flex items-center justify-center rounded-md w-8 h-8 text-white/60 hover:bg-white/10 hover:text-white/90 transition-colors"
+					onClick={handleToggle}
+					aria-label={isExpanded ? "Collapse navigation" : "Expand navigation"}
+					className="flex size-8 cursor-pointer items-center justify-center rounded-md text-white/60 transition-colors hover:bg-white/10 hover:text-white"
 				>
-					{isLeftOpen ? "←" : "→"}
+					{isExpanded ? "←" : "→"}
 				</button>
 			</div>
 
-			<nav className="flex flex-col gap-1 mt-1">
+			<nav className="flex flex-col gap-1">
 				{NAV_ITEMS.map((item) => (
 					<button
 						key={item.id}
 						type="button"
-						title={!showLabels ? item.label : undefined}
+						title={isExpanded ? undefined : item.label}
 						aria-label={item.label}
-						className="flex items-center rounded-md px-2 py-2 text-white/70 hover:bg-white/10 hover:text-white/95 transition-colors"
-						style={{
-							gap: showLabels ? "0.75rem" : 0,
-							justifyContent: showLabels ? "flex-start" : "center",
-						}}
+						className={`flex cursor-pointer items-center rounded-md px-2 py-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white ${alignClass}`}
 					>
-						<span className="flex items-center justify-center w-8 h-8 text-lg" aria-hidden="true">
+						<span className="flex size-8 items-center justify-center text-lg" aria-hidden="true">
 							{item.icon}
 						</span>
-						{showLabels && <span className="text-sm">{item.label}</span>}
+						{isExpanded && <span className="text-sm">{item.label}</span>}
 					</button>
 				))}
 			</nav>
-
-			<div className="mt-auto pt-3 border-t border-white/10">
-				<div
-					className="flex items-center gap-3 px-2 py-2 text-xs text-white/40"
-					style={{ justifyContent: showLabels ? "flex-start" : "center" }}
-				>
-					<span aria-hidden="true">●</span>
-					{showLabels && <span>{isLeftRail ? "Rail mode" : "Open"}</span>}
-				</div>
-			</div>
 		</div>
 	);
 }
 
-function MainPanel() {
-	const { isLeftOpen, isLeftRail } = useSwipeBarContext();
+function RailControls() {
+	const { openSidebar, closeSidebar, isLeftOpen, isLeftRail } = useSwipeBarContext();
 	const mode = isLeftOpen ? "open" : isLeftRail ? "rail" : "closed";
 
 	return (
-		<div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 min-h-[420px]">
-			<p className="text-sm text-white/50 text-center max-w-md">
-				Desktop: the sidebar collapses to a 64px rail instead of disappearing. Click the arrow at
-				the top of the rail to expand. Resize below 640px to see the traditional overlay close
-				behavior.
-			</p>
-			<div className="flex gap-3 text-xs text-white/40">
-				<span>Mode: {mode}</span>
-			</div>
-		</div>
-	);
-}
-
-function RailLayout() {
-	return (
-		<div className="flex h-full w-full">
-			<SwipeBarLeft
-				showRail
-				railWidthPx={64}
-				sidebarWidthPx={240}
-				className="bg-[#1a1a2e] text-white border-r border-white/10"
-			>
-				<RailContent />
-			</SwipeBarLeft>
-
-			<MainPanel />
-		</div>
+		<DemoCard
+			title="Try it"
+			description="On desktop the sidebar on the far left of this page collapses to a 64px rail instead of disappearing. Below 640px the rail is suppressed and the sidebar closes fully."
+		>
+			<DemoActions>
+				<DemoButton onClick={() => openSidebar("left")}>Expand</DemoButton>
+				<DemoButton onClick={() => closeSidebar("left")}>Collapse</DemoButton>
+			</DemoActions>
+			<DemoStatus items={[{ label: "mode", value: mode }]} />
+		</DemoCard>
 	);
 }
 
 export function RailSidebarDemo() {
 	return (
-		<SwipeBarProvider transitionMs={250} swipeBarZIndex={60} overlayZIndex={55}>
-			<div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0d0d1a]">
-				<RailLayout />
-			</div>
-		</SwipeBarProvider>
+		<PageDemo transitionMs={250}>
+			<RailControls />
+			<PagePortal host="left">
+				<SwipeBarLeft
+					showRail
+					railWidthPx={64}
+					sidebarWidthPx={240}
+					className={PANE_CLASS.left}
+					ariaLabel="Navigation"
+				>
+					<RailContent />
+				</SwipeBarLeft>
+			</PagePortal>
+		</PageDemo>
 	);
 }

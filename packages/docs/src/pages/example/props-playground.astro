@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { PropsPlaygroundDemo } from "../../components/demos/PropsPlayground";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Props Playground" description="Adjust swipe-bar props in real-time and see changes instantly.">
+<DemoPage title="Props Playground" description="Adjust swipe-bar props in real-time and see changes instantly.">
 	<ContentSection label="Props Playground">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			Tweak provider-level options at runtime using
@@ -18,7 +18,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<PropsPlaygroundDemo client:only="react" />
 	</ContentSection>
 
@@ -65,4 +65,4 @@ function SettingsPanel() {
 			filename="SettingsPanel.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

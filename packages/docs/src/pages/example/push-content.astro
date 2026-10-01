@@ -1,0 +1,90 @@
+---
+import Callout from "@luciodale/docs-ui-kit/components/Callout.astro";
+import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
+import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
+import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
+import { PushContentDemo } from "../../components/demos/PushContent";
+import DemoPage from "../../layouts/DemoPage.astro";
+
+export const prerender = true;
+---
+
+<DemoPage
+	title="Push Content"
+	description="Below a chosen width the whole page slides aside with the sidebar instead of being covered."
+>
+	<ContentSection label="Push Content">
+		<p class="text-white/60 mb-6 leading-relaxed">
+			With <InlineCode>smallScreenMode="push"</InlineCode>, sidebars below
+			<InlineCode>mediaQueryWidth</InlineCode> slide the page content aside
+			by exactly their visible width, on open, close and while dragging.
+			The content is never resized: whatever leaves the viewport is clipped.
+			Above the breakpoint nothing changes, so you pick the width that
+			separates the in layout sidebar from the push behaviour.
+		</p>
+	</ContentSection>
+
+	<ContentSection label="Try It">
+		<PushContentDemo client:only="react" />
+	</ContentSection>
+
+	<ContentSection label="Source">
+		<p class="text-white/60 mb-4 leading-relaxed">
+			Wrap the page content in <InlineCode>SwipeBarContent</InlineCode>.
+			It clips horizontal overflow and registers the element that gets
+			pushed. Keep the sidebars outside of it:
+		</p>
+		<CodeBlock
+			code={`import {
+  SwipeBarContent,
+  SwipeBarLeft,
+  SwipeBarProvider,
+} from "@luciodale/swipe-bar";
+
+function App() {
+  return (
+    <SwipeBarProvider smallScreenMode="push" mediaQueryWidth={1024}>
+      <div className="flex">
+        <SwipeBarLeft>
+          <nav>...</nav>
+        </SwipeBarLeft>
+
+        <SwipeBarContent className="flex-1">
+          <main>...</main>
+        </SwipeBarContent>
+      </div>
+    </SwipeBarProvider>
+  );
+}`}
+			language="tsx"
+			filename="PushContent.tsx"
+		/>
+		<p class="text-white/60 mb-4 leading-relaxed">
+			When the content is not rendered by React (server markup, a
+			framework layout), register it with
+			<InlineCode>useSwipeBarContentRef</InlineCode> and clip horizontal
+			overflow on one of its ancestors yourself. This page does exactly that:
+		</p>
+		<CodeBlock
+			code={`const contentRef = useSwipeBarContentRef();
+
+useEffect(() => {
+  contentRef(document.getElementById("page"));
+  return () => contentRef(null);
+}, [contentRef]);`}
+			language="tsx"
+			filename="register-content.tsx"
+		/>
+		<Callout type="info" title="Overlay stays yours">
+			Push mode does not touch the overlay. <InlineCode>showOverlay</InlineCode>,
+			<InlineCode>overlayBackgroundColor</InlineCode> and
+			<InlineCode>closeSidebarOnOverlayClick</InlineCode> behave exactly
+			as in the default overlay mode, so a tap on the pushed content
+			closes the sidebar first.
+		</Callout>
+		<Callout type="tip" title="Stacked sidebars">
+			Only the first sidebar that opens pushes the content. A second
+			sidebar opened on top floats over the already pushed page.
+		</Callout>
+	</ContentSection>
+</DemoPage>

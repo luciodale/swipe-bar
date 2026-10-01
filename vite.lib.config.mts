@@ -12,6 +12,7 @@ export default defineConfig({
       exclude: [
         "packages/library/src/**/*.test.ts",
         "packages/library/src/**/*.test.tsx",
+        "packages/library/src/__tests__/**",
       ],
       tsconfigPath: "packages/library/tsconfig.json",
     }),

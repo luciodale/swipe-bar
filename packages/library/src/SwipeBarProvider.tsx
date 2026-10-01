@@ -8,6 +8,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { toPaneOptions } from "./contentPush";
 import {
 	applyClosePaneStyles,
 	applyClosePaneStylesImmediate,
@@ -33,6 +34,7 @@ import {
 	FADE_CONTENT,
 	FADE_CONTENT_TRANSITION_MS,
 	IS_ABSOLUTE,
+	isViewportSmall,
 	MEDIA_QUERY_WIDTH,
 	MID_ANCHOR_POINT,
 	PANE_HEIGHT_PX,
@@ -41,6 +43,7 @@ import {
 	SHOW_OVERLAY,
 	SHOW_RAIL,
 	SHOW_TOGGLE,
+	SMALL_SCREEN_MODE,
 	SWIPE_TO_CLOSE,
 	SWIPE_TO_OPEN,
 	type TBottomSidebarState,
@@ -52,6 +55,7 @@ import {
 	type TSidebarSide,
 	type TSwipeBarOptions,
 } from "./swipeSidebarShared";
+import { useContentPush } from "./useContentPush";
 
 type TLockedSidebar = TSidebarSide | null;
 
@@ -118,6 +122,7 @@ export type TSwipeSidebarContextInternal = {
 	setRightSidebarOptionsById: (id: string, options: Required<TSwipeBarOptions>) => void;
 	setBottomSidebarOptionsById: (id: string, options: Required<TSwipeBarOptions>) => void;
 	setMeta: (side: TSidebarSide, metaOrOpts: unknown) => void;
+	registerContent: (el: HTMLElement | null) => void;
 };
 
 export const SwipeSidebarContext = createContext<TSwipeSidebarContextInternal | null>(null);
@@ -163,8 +168,18 @@ export const SwipeBarProvider = ({
 	railWidthPx,
 	touchSwipeOnAllScreens,
 	trackContentOnDrag,
+	smallScreenMode,
 }: { children: ReactNode } & TSwipeBarOptions) => {
 	const [lockedSidebar, setLockedSidebar] = useState<TLockedSidebar>(null);
+	const {
+		registerContent,
+		acquirePush,
+		getOwnedPush,
+		pushContentOpen,
+		pushContentDrag,
+		releasePush,
+		releasePushOnUnmount,
+	} = useContentPush();
 
 	// --- Multi-instance left sidebar state ---
 	const [leftSidebars, setLeftSidebars] = useState<Record<string, TLeftRightSidebarState>>({});
@@ -268,6 +283,7 @@ export const SwipeBarProvider = ({
 		railWidthPx: railWidthPx ?? RAIL_WIDTH_PX,
 		touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? TOUCH_SWIPE_ON_ALL_SCREENS,
 		trackContentOnDrag: trackContentOnDrag ?? TRACK_CONTENT_ON_DRAG,
+		smallScreenMode: smallScreenMode ?? SMALL_SCREEN_MODE,
 	});
 
 	// --- Left registration ---
@@ -279,19 +295,23 @@ export const SwipeBarProvider = ({
 		});
 	}, []);
 
-	const unregisterLeftSidebar = useCallback((id: string) => {
-		leftSidebarRefsMap.current.delete(id);
-		setLeftSidebars((prev) => {
-			const next = { ...prev };
-			delete next[id];
-			return next;
-		});
-		setLeftSidebarOptionsMap((prev) => {
-			const next = { ...prev };
-			delete next[id];
-			return next;
-		});
-	}, []);
+	const unregisterLeftSidebar = useCallback(
+		(id: string) => {
+			releasePushOnUnmount("left", id);
+			leftSidebarRefsMap.current.delete(id);
+			setLeftSidebars((prev) => {
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+			setLeftSidebarOptionsMap((prev) => {
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+		},
+		[releasePushOnUnmount],
+	);
 
 	const getLeftSidebarRefs = useCallback((id: string) => {
 		return leftSidebarRefsMap.current.get(id);
@@ -317,19 +337,23 @@ export const SwipeBarProvider = ({
 		});
 	}, []);
 
-	const unregisterRightSidebar = useCallback((id: string) => {
-		rightSidebarRefsMap.current.delete(id);
-		setRightSidebars((prev) => {
-			const next = { ...prev };
-			delete next[id];
-			return next;
-		});
-		setRightSidebarOptionsMap((prev) => {
-			const next = { ...prev };
-			delete next[id];
-			return next;
-		});
-	}, []);
+	const unregisterRightSidebar = useCallback(
+		(id: string) => {
+			releasePushOnUnmount("right", id);
+			rightSidebarRefsMap.current.delete(id);
+			setRightSidebars((prev) => {
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+			setRightSidebarOptionsMap((prev) => {
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+		},
+		[releasePushOnUnmount],
+	);
 
 	const getRightSidebarRefs = useCallback((id: string) => {
 		return rightSidebarRefsMap.current.get(id);
@@ -641,16 +665,18 @@ export const SwipeBarProvider = ({
 				if (lOpts.disabled) return;
 				applyLeftRightMeta("left", id, opts);
 
+				const push = acquirePush({ side, id, options: lOpts });
 				applyOpen({
 					side,
 					ref: lRefs.sidebarRef,
-					options: lOpts,
+					options: toPaneOptions(push, lOpts),
 					toggleRef: lRefs.toggleRef,
 					afterApply: () => {
 						setLeftSidebarOpen(id, true);
 						pushLeftFocus(id);
 					},
 				});
+				if (push) pushContentOpen(push, lOpts, !!opts?.skipTransition);
 			} else if (side === "right") {
 				const id = opts?.id ?? "primary";
 				const rOpts = rightSidebarOptionsMap[id];
@@ -659,16 +685,18 @@ export const SwipeBarProvider = ({
 				if (rOpts.disabled) return;
 				applyLeftRightMeta("right", id, opts);
 
+				const push = acquirePush({ side, id, options: rOpts });
 				applyOpen({
 					side,
 					ref: rRefs.sidebarRef,
-					options: rOpts,
+					options: toPaneOptions(push, rOpts),
 					toggleRef: rRefs.toggleRef,
 					afterApply: () => {
 						setRightSidebarOpen(id, true);
 						pushRightFocus(id);
 					},
 				});
+				if (push) pushContentOpen(push, rOpts, !!opts?.skipTransition);
 			} else if (side === "bottom") {
 				const id = opts?.id ?? "primary";
 				const bOpts = bottomSidebarOptionsMap[id];
@@ -678,8 +706,7 @@ export const SwipeBarProvider = ({
 				applyBottomMeta(id, opts);
 
 				const sidebarHeightPx = bOpts.sidebarHeightPx ?? 0;
-				const mqWidth = bOpts.mediaQueryWidth ?? 640;
-				const isSmallScreen = window.innerWidth < mqWidth;
+				const isSmallScreen = isViewportSmall(bOpts.mediaQueryWidth);
 				const midAnchorPx = isSmallScreen ? (bOpts.midAnchorPointPx ?? 0) : sidebarHeightPx;
 
 				const midAnchorActive =
@@ -729,6 +756,8 @@ export const SwipeBarProvider = ({
 			pushBottomFocus,
 			applyLeftRightMeta,
 			applyBottomMeta,
+			acquirePush,
+			pushContentOpen,
 		],
 	);
 
@@ -794,11 +823,6 @@ export const SwipeBarProvider = ({
 		],
 	);
 
-	const isViewportSmall = useCallback((mqWidth: number) => {
-		if (typeof window === "undefined") return false;
-		return window.innerWidth < mqWidth;
-	}, []);
-
 	const closeSidebar = useCallback(
 		(side: TSidebarSide, opts?: TSidebarOpts) => {
 			if (side === "left") {
@@ -813,6 +837,7 @@ export const SwipeBarProvider = ({
 						: opts;
 				applyLeftRightMeta("left", id, effectiveOpts);
 
+				const paneOptions = toPaneOptions(getOwnedPush("left", id), lOpts);
 				const shouldRail = lOpts.showRail && !isViewportSmall(lOpts.mediaQueryWidth);
 				if (shouldRail) {
 					const applyRail = opts?.skipTransition
@@ -821,7 +846,7 @@ export const SwipeBarProvider = ({
 					applyRail({
 						ref: lRefs.sidebarRef,
 						side: "left",
-						options: lOpts,
+						options: paneOptions,
 						toggleRef: lRefs.toggleRef,
 						afterApply: () => {
 							setLeftSidebarRail(id);
@@ -834,7 +859,7 @@ export const SwipeBarProvider = ({
 						: applyClosePaneStyles;
 					applyClose({
 						ref: lRefs.sidebarRef,
-						options: lOpts,
+						options: paneOptions,
 						toggleRef: lRefs.toggleRef,
 						side,
 						afterApply: () => {
@@ -843,6 +868,13 @@ export const SwipeBarProvider = ({
 						},
 					});
 				}
+				releasePush({
+					side: "left",
+					id,
+					paneRef: lRefs.sidebarRef,
+					transitionMs: lOpts.transitionMs,
+					immediate: !!opts?.skipTransition,
+				});
 			} else if (side === "right") {
 				const id = opts?.id ?? "primary";
 				const rOpts = rightSidebarOptionsMap[id];
@@ -855,6 +887,7 @@ export const SwipeBarProvider = ({
 						: opts;
 				applyLeftRightMeta("right", id, effectiveOpts);
 
+				const paneOptions = toPaneOptions(getOwnedPush("right", id), rOpts);
 				const shouldRail = rOpts.showRail && !isViewportSmall(rOpts.mediaQueryWidth);
 				if (shouldRail) {
 					const applyRail = opts?.skipTransition
@@ -863,7 +896,7 @@ export const SwipeBarProvider = ({
 					applyRail({
 						ref: rRefs.sidebarRef,
 						side: "right",
-						options: rOpts,
+						options: paneOptions,
 						toggleRef: rRefs.toggleRef,
 						afterApply: () => {
 							setRightSidebarRail(id);
@@ -876,7 +909,7 @@ export const SwipeBarProvider = ({
 						: applyClosePaneStyles;
 					applyClose({
 						ref: rRefs.sidebarRef,
-						options: rOpts,
+						options: paneOptions,
 						toggleRef: rRefs.toggleRef,
 						side,
 						afterApply: () => {
@@ -885,6 +918,13 @@ export const SwipeBarProvider = ({
 						},
 					});
 				}
+				releasePush({
+					side: "right",
+					id,
+					paneRef: rRefs.sidebarRef,
+					transitionMs: rOpts.transitionMs,
+					immediate: !!opts?.skipTransition,
+				});
 			} else if (side === "bottom") {
 				const id = opts?.id ?? "primary";
 				const bOpts = bottomSidebarOptionsMap[id];
@@ -930,7 +970,8 @@ export const SwipeBarProvider = ({
 			popBottomFocus,
 			applyLeftRightMeta,
 			applyBottomMeta,
-			isViewportSmall,
+			getOwnedPush,
+			releasePush,
 		],
 	);
 
@@ -942,26 +983,30 @@ export const SwipeBarProvider = ({
 				const lRefs = leftSidebarRefsMap.current.get(id);
 				if (!lOpts || !lRefs) return;
 
+				const push = translate === null ? null : acquirePush({ side: "left", id, options: lOpts });
 				applyDragPaneStyles({
 					ref: lRefs.sidebarRef,
 					side: "left",
 					toggleRef: lRefs.toggleRef,
-					options: lOpts,
+					options: toPaneOptions(push, lOpts),
 					translateX: translate,
 				});
+				if (push && translate !== null) pushContentDrag(push, lOpts.sidebarWidthPx + translate);
 			} else if (side === "right") {
 				const id = opts?.id ?? "primary";
 				const rOpts = rightSidebarOptionsMap[id];
 				const rRefs = rightSidebarRefsMap.current.get(id);
 				if (!rOpts || !rRefs) return;
 
+				const push = translate === null ? null : acquirePush({ side: "right", id, options: rOpts });
 				applyDragPaneStyles({
 					ref: rRefs.sidebarRef,
 					side: "right",
 					toggleRef: rRefs.toggleRef,
-					options: rOpts,
+					options: toPaneOptions(push, rOpts),
 					translateX: translate,
 				});
+				if (push && translate !== null) pushContentDrag(push, rOpts.sidebarWidthPx - translate);
 			} else if (side === "bottom") {
 				const id = opts?.id ?? "primary";
 				const bOpts = bottomSidebarOptionsMap[id];
@@ -978,7 +1023,13 @@ export const SwipeBarProvider = ({
 				assertNever(side);
 			}
 		},
-		[leftSidebarOptionsMap, rightSidebarOptionsMap, bottomSidebarOptionsMap],
+		[
+			leftSidebarOptionsMap,
+			rightSidebarOptionsMap,
+			bottomSidebarOptionsMap,
+			acquirePush,
+			pushContentDrag,
+		],
 	);
 
 	return (
@@ -1041,6 +1092,7 @@ export const SwipeBarProvider = ({
 				setRightSidebarOptionsById,
 				setBottomSidebarOptionsById,
 				setMeta,
+				registerContent,
 			}}
 		>
 			{children}

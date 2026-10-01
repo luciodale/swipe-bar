@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { LeftRightSidebarDemo } from "../../components/demos/LeftRightSidebar";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Left & Right Sidebar" description="Basic left and right sidebars with swipe gestures and programmatic control.">
+<DemoPage title="Left & Right Sidebar" description="Basic left and right sidebars with swipe gestures and programmatic control.">
 	<ContentSection label="Left & Right Sidebar">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			The simplest use case. A left navigation drawer and a right settings
@@ -17,7 +17,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<LeftRightSidebarDemo client:only="react" />
 	</ContentSection>
 
@@ -73,4 +73,4 @@ function Layout() {
 			filename="LeftRightExample.tsx"
 		/>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

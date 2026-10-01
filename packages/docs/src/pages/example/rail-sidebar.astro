@@ -3,12 +3,12 @@ import CodeBlock from "@luciodale/docs-ui-kit/components/CodeBlock.astro";
 import ContentSection from "@luciodale/docs-ui-kit/components/ContentSection.astro";
 import InlineCode from "@luciodale/docs-ui-kit/components/InlineCode.astro";
 import { RailSidebarDemo } from "../../components/demos/RailSidebar";
-import DocsPage from "../../layouts/DocsPage.astro";
+import DemoPage from "../../layouts/DemoPage.astro";
 
 export const prerender = true;
 ---
 
-<DocsPage title="Rail Sidebar" description="Sidebar that collapses to an icon rail on desktop instead of disappearing.">
+<DemoPage title="Rail Sidebar" description="Sidebar that collapses to an icon rail on desktop instead of disappearing.">
 	<ContentSection label="Rail Sidebar">
 		<p class="text-white/60 mb-6 leading-relaxed">
 			With <InlineCode>showRail</InlineCode>, closing the sidebar on desktop
@@ -20,7 +20,7 @@ export const prerender = true;
 		</p>
 	</ContentSection>
 
-	<ContentSection label="Live Demo">
+	<ContentSection label="Try It">
 		<RailSidebarDemo client:only="react" />
 	</ContentSection>
 
@@ -115,4 +115,4 @@ function Layout() {
 			</li>
 		</ul>
 	</ContentSection>
-</DocsPage>
+</DemoPage>

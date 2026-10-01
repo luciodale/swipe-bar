@@ -59,7 +59,12 @@ export type TSwipeBarOptions = {
 	railWidthPx?: number;
 	touchSwipeOnAllScreens?: boolean;
 	trackContentOnDrag?: boolean;
+	smallScreenMode?: TSmallScreenMode;
 };
+
+// How left/right panes meet the page below mediaQueryWidth: float over static
+// content (overlay) or slide a registered content element aside (push).
+export type TSmallScreenMode = "overlay" | "push";
 
 export type TSwipeSidebar = TSwipeBarOptions & {
 	id?: string;
@@ -132,6 +137,7 @@ export const DISABLE_SWIPE = false;
 export const MID_ANCHOR_POINT = false;
 export const TOUCH_SWIPE_ON_ALL_SCREENS = false;
 export const TRACK_CONTENT_ON_DRAG = true;
+export const SMALL_SCREEN_MODE: TSmallScreenMode = "overlay";
 export const TRANSFORM_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export const swipeBarStyle = {
@@ -231,6 +237,18 @@ export const toggleIconWrapperStyle = {
 } satisfies CSSProperties;
 
 export type TSidebarSide = "left" | "right" | "bottom";
+
+// Single definition of "small viewport": strictly below mediaQueryWidth.
+// The negated min-width query matches exactly when innerWidth < width, so the
+// media query and the imperative check never disagree at the boundary.
+export function getSmallViewportQuery(mediaQueryWidth: number) {
+	return `not all and (min-width: ${mediaQueryWidth}px)`;
+}
+
+export function isViewportSmall(mediaQueryWidth: number) {
+	if (typeof window === "undefined") return false;
+	return window.innerWidth < mediaQueryWidth;
+}
 
 // Modal panes (floating, or blocking the page with an overlay) are dialogs.
 // In flow panes without overlay are page landmarks, where aria-modal is invalid.
@@ -751,8 +769,11 @@ export const applyDragPaneStyles = ({
 			child.style.minWidth = `${options.sidebarWidthPx}px`;
 		}
 
+		const desiredWidth = `${options.sidebarWidthPx}px`;
+		if (options.isAbsolute && ref.current.style.width !== desiredWidth) {
+			ref.current.style.width = desiredWidth;
+		}
 		if (!options.isAbsolute) {
-			const desiredWidth = `${options.sidebarWidthPx}px`;
 			const marginProperty = getDragMarginProperty(side);
 			if (options.trackContentOnDrag) {
 				// Apply width only if it changed to avoid unnecessary layout
@@ -994,6 +1015,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		railWidthPx,
 		touchSwipeOnAllScreens,
 		trackContentOnDrag,
+		smallScreenMode,
 	} = options;
 
 	const mergedOptions = useMemo(() => {
@@ -1031,6 +1053,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 			railWidthPx: railWidthPx ?? globalOptions.railWidthPx,
 			touchSwipeOnAllScreens: touchSwipeOnAllScreens ?? globalOptions.touchSwipeOnAllScreens,
 			trackContentOnDrag: trackContentOnDrag ?? globalOptions.trackContentOnDrag,
+			smallScreenMode: smallScreenMode ?? globalOptions.smallScreenMode,
 		};
 	}, [
 		sidebarWidthPx,
@@ -1064,6 +1087,7 @@ export const useSetMergedOptions = (side: TSidebarSide, options: TSwipeBarOption
 		railWidthPx,
 		touchSwipeOnAllScreens,
 		trackContentOnDrag,
+		smallScreenMode,
 	]) satisfies Required<TSwipeBarOptions>;
 
 	useEffect(() => {

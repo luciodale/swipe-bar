@@ -1,0 +1,32 @@
+---
+import DocsLayout from "@luciodale/docs-ui-kit/components/DocsLayout.astro";
+import { siteConfig } from "../config";
+import Base from "./Base.astro";
+
+type Props = {
+	title: string;
+	description?: string;
+};
+
+const { title, description } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<!--
+	Example pages host their sidebars on the whole page. The hosts use
+	display: contents so portaled panes become flex siblings of the page; the
+	page wrapper is the content pushed aside in smallScreenMode="push", and
+	overflow-x-clip keeps the pushed page from scrolling horizontally.
+-->
+<Base title={title} description={description} type="article">
+	<div class="flex min-h-dvh overflow-x-clip">
+		<div id="swipebar-host-left" class="contents"></div>
+		<div id="swipebar-page" class="flex min-w-0 flex-1 flex-col">
+			<DocsLayout config={siteConfig} currentPath={currentPath}>
+				<slot />
+			</DocsLayout>
+		</div>
+		<div id="swipebar-host-right" class="contents"></div>
+	</div>
+	<div id="swipebar-host-bottom"></div>
+</Base>
